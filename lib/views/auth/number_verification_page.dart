@@ -116,7 +116,7 @@ class NumberVerificationHeader extends StatelessWidget {
           child: const AspectRatio(
             aspectRatio: 1 / 1,
             child: NetworkImageWithLoader(
-              AppImages.numberVerfication,
+              AppImages.illustrations404,
             ),
           ),
         ),
