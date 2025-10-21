@@ -62,29 +62,31 @@ class AppTheme {
       sliderTheme: const SliderThemeData(
         showValueIndicator: ShowValueIndicator.onDrag,
         thumbColor: Colors.white,
+
+        
       ),
-      tabBarTheme: const TabBarTheme(
-        labelColor: AppColors.primary,
-        unselectedLabelColor: AppColors.placeholder,
-        labelPadding: EdgeInsets.all(AppDefaults.padding),
-        indicatorSize: TabBarIndicatorSize.label,
-        labelStyle: TextStyle(
-          fontWeight: FontWeight.bold,
-          color: AppColors.primary,
-        ),
-        unselectedLabelStyle: TextStyle(
-          fontWeight: FontWeight.bold,
-          color: AppColors.placeholder,
-        ),
-        indicator: UnderlineTabIndicator(
-          borderSide: BorderSide(
-            color: AppColors.primary,
-            width: 2,
-          ),
-        ),
-      ),
+tabBarTheme: TabBarThemeData(
+  labelColor: AppColors.primary,
+  unselectedLabelColor: AppColors.placeholder,
+  labelPadding: EdgeInsets.all(AppDefaults.padding),
+  indicatorSize: TabBarIndicatorSize.label,
+  labelStyle: TextStyle(
+    fontWeight: FontWeight.bold,
+    color: AppColors.primary,
+  ),
+  unselectedLabelStyle: TextStyle(
+    fontWeight: FontWeight.bold,
+    color: AppColors.placeholder,
+  ),
+  indicator: UnderlineTabIndicator(
+    borderSide: BorderSide(
+      color: AppColors.primary,
+      width: 2,
+    ),
+  ),
+),
     );
-  }
+}
 
   /* <---- Input Decorations Theme -----> */
   static const defaultInputDecorationTheme = InputDecorationTheme(

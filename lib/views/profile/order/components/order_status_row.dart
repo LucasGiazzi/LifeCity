@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/svg.dart';
+import 'package:flutter_svg/flutter_svg.dart'; // <- import recomendado
 
 import '../../../../core/constants/constants.dart';
 import '../../../../core/enums/dummy_order_status.dart';
@@ -56,14 +56,8 @@ class OrderStatusRow extends StatelessWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
-                    date,
-                    style: Theme.of(context).textTheme.bodySmall,
-                  ),
-                  Text(
-                    time,
-                    style: Theme.of(context).textTheme.bodySmall,
-                  ),
+                  Text(date, style: Theme.of(context).textTheme.bodySmall),
+                  Text(time, style: Theme.of(context).textTheme.bodySmall),
                 ],
               ),
             ],
@@ -85,9 +79,6 @@ class OrderStatusRow extends StatelessWidget {
         return const Color(0xFF30DFB8);
       case OrderStatus.cancelled:
         return const Color(0xFFFF1F1F);
-
-      default:
-        return Colors.red;
     }
   }
 
@@ -103,9 +94,6 @@ class OrderStatusRow extends StatelessWidget {
         return 'Order Delivered';
       case OrderStatus.cancelled:
         return 'Order Cancelled';
-
-      default:
-        return 'Order null';
     }
   }
 
@@ -120,9 +108,6 @@ class OrderStatusRow extends StatelessWidget {
       case OrderStatus.delivery:
         return AppIcons.orderDelivered;
       case OrderStatus.cancelled:
-        return AppIcons.delete;
-
-      default:
         return AppIcons.delete;
     }
   }
