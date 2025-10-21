@@ -5,19 +5,18 @@ class OnboardingData {
   static List<OnboardingModel> items = [
     OnboardingModel(
       imageUrl: AppImages.onboarding1,
-      headline: 'Browse all the category',
-      description:
-          'In aliquip aute exercitation ut et nisi ut mollit. Deserunt dolor elit pariatur aute .',
+      headline: 'Bem vindo ao LifeCity',
+      description: 'In aliquip aute exercitation ut et nisi ut mollit...',
     ),
     OnboardingModel(
       imageUrl: AppImages.onboarding2,
-      headline: 'Amazing Discounts & Offers',
+      headline: 'Aqui você se conecta!',
       description:
           'In aliquip aute exercitation ut et nisi ut mollit. Deserunt dolor elit pariatur aute .',
     ),
     OnboardingModel(
       imageUrl: AppImages.onboarding3,
-      headline: 'Delivery in 30 Min',
+      headline: 'Conheça sua cidade!',
       description:
           'In aliquip aute exercitation ut et nisi ut mollit. Deserunt dolor elit pariatur aute .',
     ),
