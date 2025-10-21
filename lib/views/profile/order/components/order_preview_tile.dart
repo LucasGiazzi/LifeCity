@@ -42,14 +42,14 @@ class OrderPreviewTile extends StatelessWidget {
                     const Text('Order ID:'),
                     const SizedBox(width: 5),
                     Text(
-                      '2324252627',
+                      orderID,
                       style: Theme.of(context)
                           .textTheme
                           .bodyLarge
                           ?.copyWith(color: Colors.black),
                     ),
                     const Spacer(),
-                    const Text('25 Nov'),
+                    Text(date),
                   ],
                 ),
                 Row(
@@ -57,10 +57,10 @@ class OrderPreviewTile extends StatelessWidget {
                     const Text('Status'),
                     Expanded(
                       child: RangeSlider(
-                        values: RangeValues(0, _orderSliderValue()),
-                        max: 3,
+                        values: RangeValues(0.0, _orderSliderValue()),
+                        max: 3.0,
                         divisions: 3,
-                        onChanged: (v) {},
+                        onChanged: (v) {}, // mantém interativo (não altera estado aqui)
                         activeColor: _orderColor(),
                         inactiveColor: AppColors.placeholder.withOpacity(0.2),
                       ),
@@ -131,24 +131,23 @@ class OrderPreviewTile extends StatelessWidget {
     );
   }
 
+  // Removido 'default' (inalcançável). Use valores double.
   double _orderSliderValue() {
     switch (status) {
       case OrderStatus.confirmed:
-        return 0;
+        return 0.0;
       case OrderStatus.processing:
-        return 1;
+        return 1.0;
       case OrderStatus.shipped:
-        return 2;
+        return 2.0;
       case OrderStatus.delivery:
-        return 3;
+        return 3.0;
       case OrderStatus.cancelled:
-        return 3;
-
-      default:
-        return 0;
+        return 3.0;
     }
   }
 
+  // Removido 'default' (inalcançável).
   Color _orderColor() {
     switch (status) {
       case OrderStatus.confirmed:
@@ -161,9 +160,6 @@ class OrderPreviewTile extends StatelessWidget {
         return const Color(0xFF41AA55);
       case OrderStatus.cancelled:
         return const Color(0xFFFF1F1F);
-
-      default:
-        return Colors.red;
     }
   }
 }
