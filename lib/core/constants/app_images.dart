@@ -16,6 +16,8 @@ class AppImages {
   static const onboarding2 = 'https://i.imgur.com/sMLlh1i.png';
   static const onboarding3 = 'https://i.imgur.com/lHlOUT5.png';
 
+  static const capivaraCidade = 'assets/images/capivas-na-city.png';
+
   /* <---- Other Illustrations -----> */
   static const numberVerfication = 'https://i.imgur.com/tCCmY3I.png';
   static const verified = 'https://i.imgur.com/vF1jB6b.png';

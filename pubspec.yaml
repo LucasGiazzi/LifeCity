@@ -16,6 +16,7 @@ dependencies:
   cached_network_image: ^3.4.0
   form_field_validator: ^1.1.0
   animations: ^2.0.11
+  mask_text_input_formatter: ^2.9.0
 
 dev_dependencies:
   flutter_test:
