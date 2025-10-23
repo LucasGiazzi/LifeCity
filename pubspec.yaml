@@ -27,7 +27,7 @@ dev_dependencies:
 
 flutter_native_splash:
   color: "#ffffff"
-  image: "assets/images/app_logo_splash.png"
+  image: "assets/images/logo2.png"
   android: true
   ios: true
   web: false
@@ -35,7 +35,7 @@ flutter_native_splash:
 flutter_icons:
   android: "launcher_icon"
   ios: true
-  image_path: "assets/images/app_logo.png"
+  image_path: "assets/images/logo2.png"
 
 flutter:
   uses-material-design: true
