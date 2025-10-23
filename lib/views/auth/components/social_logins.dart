@@ -44,7 +44,7 @@ class SocialLogins extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(width: AppDefaults.margin),
+          /* const SizedBox(width: AppDefaults.margin),
           Expanded(
             child: OutlinedButton(
               onPressed: () {},
@@ -73,7 +73,7 @@ class SocialLogins extends StatelessWidget {
                 ],
               ),
             ),
-          ),
+          ), */
         ],
       ),
     );

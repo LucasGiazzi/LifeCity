@@ -1,7 +1,4 @@
 import 'package:flutter/material.dart';
-
-import '../../core/constants/constants.dart';
-import 'components/intro_page_background_wrapper.dart';
 import 'components/intro_page_body_area.dart';
 
 class IntroLoginPage extends StatelessWidget {
@@ -9,11 +6,16 @@ class IntroLoginPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
+    return Scaffold(
       body: Stack(
         children: [
-          IntroLoginBackgroundWrapper(imageURL: AppImages.introBackground1),
-          IntroPageBodyArea(),
+          Positioned.fill(
+            child: Image.asset(
+              'assets/images/capivas-na-city.png',
+              fit: BoxFit.contain, 
+            ),
+          ),
+          const IntroPageBodyArea(),
         ],
       ),
     );

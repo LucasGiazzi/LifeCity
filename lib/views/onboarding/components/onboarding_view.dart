@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
-
-import '../../../core/components/network_image.dart';
 import '../../../core/constants/constants.dart';
 import '../data/onboarding_model.dart';
+
 
 class OnboardingView extends StatelessWidget {
   const OnboardingView({
@@ -22,10 +21,7 @@ class OnboardingView extends StatelessWidget {
           height: MediaQuery.of(context).size.width,
           child: Padding(
             padding: const EdgeInsets.all(AppDefaults.padding * 2),
-            child: NetworkImageWithLoader(
-              data.imageUrl,
-              fit: BoxFit.contain,
-            ),
+            child: _buildImage(data.imageUrl),
           ),
         ),
         Padding(
@@ -51,5 +47,13 @@ class OnboardingView extends StatelessWidget {
         ),
       ],
     );
+  }
+
+  Widget _buildImage(String path) {
+    if (path.startsWith('http')) {
+      return Image.network(path, fit: BoxFit.contain);
+    } else {
+      return Image.asset(path, fit: BoxFit.contain);
+    }
   }
 }

@@ -9,17 +9,26 @@ class SignUpPageHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Align(
-      alignment: Alignment.centerLeft,
-      child: Padding(
-        padding: const EdgeInsets.all(AppDefaults.padding),
-        child: Text(
-          'Welcome to our\ngrocery shop',
-          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+    return Column(
+      children: [
+        SizedBox(
+          width: MediaQuery.of(context).size.width * 0.3,
+          child: const AspectRatio(
+            aspectRatio: 1 / 1,
+            child: Image(
+              image: AssetImage('assets/images/onboarding1.png'),
+              fit: BoxFit.contain,
+            ),
+          ),
+        ),
+        Text(
+          'Registre-se',
+          style: Theme.of(context).textTheme.titleLarge?.copyWith(
                 fontWeight: FontWeight.bold,
+                color: AppColors.primary,
               ),
         ),
-      ),
+      ],
     );
   }
 }

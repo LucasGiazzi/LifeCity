@@ -1,25 +1,23 @@
-import '../../../core/constants/app_images.dart';
 import 'onboarding_model.dart';
 
 class OnboardingData {
   static List<OnboardingModel> items = [
     OnboardingModel(
-      imageUrl: AppImages.onboarding1,
-      headline: 'Browse all the category',
-      description:
-          'In aliquip aute exercitation ut et nisi ut mollit. Deserunt dolor elit pariatur aute .',
+      imageUrl: 'assets/images/onboarding1.png',
+      headline: 'Bem vindo ao LifeCity',
+      description: '',
     ),
     OnboardingModel(
-      imageUrl: AppImages.onboarding2,
-      headline: 'Amazing Discounts & Offers',
+      imageUrl: 'assets/images/onboarding2.png',
+      headline: 'Aqui você se conecta!',
       description:
-          'In aliquip aute exercitation ut et nisi ut mollit. Deserunt dolor elit pariatur aute .',
+          '',
     ),
     OnboardingModel(
-      imageUrl: AppImages.onboarding3,
-      headline: 'Delivery in 30 Min',
+      imageUrl: 'assets/images/onboarding3.png',
+      headline: 'Conheça sua cidade!',
       description:
-          'In aliquip aute exercitation ut et nisi ut mollit. Deserunt dolor elit pariatur aute .',
+          '',
     ),
   ];
 }
