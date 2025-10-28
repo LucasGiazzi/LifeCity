@@ -14,7 +14,7 @@ class ForgetPasswordPage extends StatelessWidget {
       backgroundColor: AppColors.scaffoldWithBoxBackground,
       appBar: AppBar(
         leading: const AppBackButton(),
-        title: const Text('Forget Password'),
+        title: const Text('Esqueceu a senha?'),
         backgroundColor: AppColors.scaffoldBackground,
       ),
       body: Center(
@@ -36,7 +36,7 @@ class ForgetPasswordPage extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
-                      'Reset your password',
+                      'Esqueceu sua senha?',
                       style: Theme.of(context)
                           .textTheme
                           .titleLarge
@@ -44,25 +44,31 @@ class ForgetPasswordPage extends StatelessWidget {
                     ),
                     const SizedBox(height: AppDefaults.padding),
                     const Text(
-                      'Please enter your number. We will send a code\nto your phone to reset your password.',
+                      'Sem problemas! Digite seu E-mail para enviarmos o processo de recuperação',
                     ),
-                    const SizedBox(height: AppDefaults.padding * 3),
-                    const Text("Phone Number"),
+                              const Text("E-mail"),
                     const SizedBox(height: 8),
                     TextFormField(
-                      autofocus: true,
+                      keyboardType: TextInputType.emailAddress,
                       textInputAction: TextInputAction.next,
-                      keyboardType: TextInputType.number,
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'E-mail é obrigatório';
+                        }
+                        // Validação simples de formato de e-mail
+                        if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
+                          return 'E-mail inválido';
+                        }
+                        return null;
+                      },
                     ),
-                    const SizedBox(height: AppDefaults.padding),
-                    const SizedBox(height: AppDefaults.padding),
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton(
                         onPressed: () {
                           Navigator.pushNamed(context, AppRoutes.passwordReset);
                         },
-                        child: const Text('Send me link'),
+                        child: const Text('Enviar'),
                       ),
                     ),
                   ],

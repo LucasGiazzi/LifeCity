@@ -23,12 +23,12 @@ class IntroPageBodyArea extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Welcome to our',
+                    'Bem vindo ao',
                     style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                         fontWeight: FontWeight.bold, color: Colors.black),
                   ),
                   Text(
-                    'E-Grocery',
+                    'LifeCity',
                     style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                         fontWeight: FontWeight.w700, color: AppColors.primary),
                   ),
@@ -45,8 +45,8 @@ class IntroPageBodyArea extends StatelessWidget {
                   width: double.infinity,
                   child: ElevatedButton(
                     onPressed: () =>
-                        Navigator.pushNamed(context, AppRoutes.loginOrSignup),
-                    child: const Text('Continue with Email or Phone'),
+                        Navigator.pushNamed(context, AppRoutes.login),
+                    child: const Text('Entrar'),
                   ),
                 ),
                 const SizedBox(height: AppDefaults.padding),
@@ -59,7 +59,7 @@ class IntroPageBodyArea extends StatelessWidget {
                       foregroundColor: Colors.black,
                       backgroundColor: Colors.white,
                     ),
-                    child: const Text('Create an account'),
+                    child: const Text('Criar uma conta'),
                   ),
                 )
               ],
