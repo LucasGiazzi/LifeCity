@@ -57,7 +57,6 @@ class _OnboardingPageState extends State<OnboardingPage> {
       body: SafeArea(
         child: Column(
           children: [
-            const Spacer(),
             Expanded(
               flex: 8,
               child: PageView.builder(

@@ -73,7 +73,7 @@ class RouteGenerator {
         return CupertinoPageRoute(builder: (_) => const CartPage());
 
       case AppRoutes.savePage:
-        return CupertinoPageRoute(builder: (_) => const SavePage());
+        return CupertinoPageRoute(builder: (_) => const SavePage(isHomePage: false,));
 
       case AppRoutes.checkoutPage:
         return CupertinoPageRoute(builder: (_) => const CheckoutPage());

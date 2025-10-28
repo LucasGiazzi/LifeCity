@@ -28,7 +28,7 @@ class _LoginPageFormState extends State<LoginPageForm> {
   void onLogin() {
     final bool isFormOkay = _key.currentState?.validate() ?? false;
     if (isFormOkay) {
-      Navigator.pushNamed(context, AppRoutes.entryPoint);
+      Navigator.pushReplacementNamed(context, AppRoutes.entryPoint);
     }
   }
 
@@ -46,20 +46,20 @@ class _LoginPageFormState extends State<LoginPageForm> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Phone Field
-              const Text("Phone Number"),
+              const Text("Usuário ou número de telefone"),
               const SizedBox(height: 8),
               TextFormField(
-                keyboardType: TextInputType.number,
-                validator: Validators.requiredWithFieldName('Phone').call,
-                textInputAction: TextInputAction.next,
+                //keyboardType: TextInputType.number,
+                //validator: Validators.requiredWithFieldName('Phone').call,
+                //textInputAction: TextInputAction.next,
               ),
               const SizedBox(height: AppDefaults.padding),
 
               // Password Field
-              const Text("Password"),
+              const Text("Senha"),
               const SizedBox(height: 8),
               TextFormField(
-                validator: Validators.password.call,
+                //validator: Validators.password.call,
                 onFieldSubmitted: (v) => onLogin(),
                 textInputAction: TextInputAction.done,
                 obscureText: !isPasswordShown,
@@ -84,7 +84,7 @@ class _LoginPageFormState extends State<LoginPageForm> {
                   onPressed: () {
                     Navigator.pushNamed(context, AppRoutes.forgotPassword);
                   },
-                  child: const Text('Forget Password?'),
+                  child: const Text('Esqueceu a senha?'),
                 ),
               ),
 
