@@ -8,13 +8,13 @@ class OnboardingData {
       description: '',
     ),
     OnboardingModel(
-      imageUrl: 'assets/images/onboarding2.png',
+      imageUrl: 'assets/images/onboarding2.PNG',
       headline: 'Aqui você se conecta!',
       description:
           '',
     ),
     OnboardingModel(
-      imageUrl: 'assets/images/onboarding3.png',
+      imageUrl: 'assets/images/onboarding3.PNG',
       headline: 'Conheça sua cidade!',
       description:
           '',
