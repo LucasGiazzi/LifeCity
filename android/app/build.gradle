@@ -1,7 +1,8 @@
 plugins {
-  id "com.android.application"
-  id "org.jetbrains.kotlin.android"
-  id "dev.flutter.flutter-gradle-plugin"
+    id "com.android.application"
+    id "org.jetbrains.kotlin.android"
+    id "dev.flutter.flutter-gradle-plugin"
+    id 'com.google.gms.google-services'
 }
 
 
@@ -29,7 +30,7 @@ android {
 
   defaultConfig {
     applicationId "br.com.lucas.lifecity"  // <= igual ao namespace
-    minSdkVersion flutter.minSdkVersion
+    minSdkVersion 21
     targetSdk 36
     versionCode 1               // <= ISSO resolve o "Manifest versionCode not found"
     versionName "1.0"
@@ -47,4 +48,7 @@ flutter {
     source '../..'
 }
 
-dependencies {}
+dependencies {
+    implementation platform('com.google.firebase:firebase-bom:34.5.0')
+    implementation 'com.google.firebase:firebase-analytics'
+}

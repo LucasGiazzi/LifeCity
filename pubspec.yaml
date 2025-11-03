@@ -17,8 +17,8 @@ dependencies:
   form_field_validator: ^1.1.0
   animations: ^2.0.11
   mask_text_input_formatter: ^2.9.0
-  firebase_core: ^3.1.1
-  firebase_auth: ^5.1.1
+  firebase_core: ^4.2.1
+  firebase_auth: ^6.1.2
   
   #só pra fazer o começo da entrypoint page
   flutter_map: any
