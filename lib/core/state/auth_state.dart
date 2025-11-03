@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import '../services/auth_service.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class AuthState extends ChangeNotifier {
   final AuthService _authService = AuthService();
@@ -11,27 +12,53 @@ class AuthState extends ChangeNotifier {
   String? get errorMessage => _errorMessage;
 
   Future<bool> login(String email, String password) async {
-    _setLoading(true);
-    _setErrorMessage(null);
+    setLoading(true);
+    setErrorMessage(null);
 
     final userCredential = await _authService.signInWithEmailAndPassword(email, password);
 
-    _setLoading(false);
+    setLoading(false);
 
     if (userCredential != null) {
       return true;
     } else {
-      _setErrorMessage('E-mail ou senha inválidos. Tente novamente.');
+      setErrorMessage('E-mail ou senha inválidos. Tente novamente.');
       return false;
     }
   }
 
-  void _setLoading(bool value) {
+  Future<bool> signUp(
+      {required String email, required String password, required String name, required String cpf, required String phone}) async {
+    setLoading(true);
+    setErrorMessage(null);
+
+    try {
+      final userCredential = await _authService.signUp(
+        email: email,
+        password: password,
+        name: name,
+        cpf: cpf,
+        phone: phone,
+      );
+      setLoading(false);
+      return userCredential != null;
+    } on FirebaseAuthException catch (e) {
+      if (e.code == 'email-already-in-use') {
+        setErrorMessage('Este e-mail já está em uso.');
+      } else {
+        setErrorMessage('Ocorreu um erro durante o cadastro.');
+      }
+      setLoading(false);
+      return false;
+    }
+  }
+
+  void setLoading(bool value) {
     _isLoading = value;
     notifyListeners();
   }
 
-  void _setErrorMessage(String? message) {
+  void setErrorMessage(String? message) {
     _errorMessage = message;
     notifyListeners();
   }
