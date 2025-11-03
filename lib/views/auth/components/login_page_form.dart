@@ -49,7 +49,8 @@ class _LoginPageFormState extends State<LoginPageForm> {
     );
 
     if (success && mounted) {
-      Navigator.pushReplacementNamed(context, AppRoutes.entryPoint);
+      // Go back to the Wrapper, which will decide which screen to show.
+      Navigator.of(context).popUntil((route) => route.isFirst);
     }
   }
 
