@@ -42,8 +42,8 @@ class AuthState extends ChangeNotifier {
       );
       setLoading(false);
       return userCredential != null;
-    } on FirebaseAuthException catch (e) {
-      if (e.code == 'email-already-in-use') {
+    } catch (e) {
+      if (e is FirebaseAuthException && e.code == 'email-already-in-use') {
         setErrorMessage('Este e-mail já está em uso.');
       } else {
         setErrorMessage('Ocorreu um erro durante o cadastro.');
@@ -51,6 +51,26 @@ class AuthState extends ChangeNotifier {
       setLoading(false);
       return false;
     }
+  }
+  
+  Future<bool> loginWithGoogle() async {
+    setLoading(true);
+    setErrorMessage(null);
+
+    final userCredential = await _authService.signInWithGoogle();
+
+    setLoading(false);
+
+    if (userCredential != null) {
+      return true;
+    } else {
+      setErrorMessage('Falha ao fazer login com o Google.');
+      return false;
+    }
+  }
+
+  Future<void> logout() async {
+    await _authService.signOut();
   }
 
   void setLoading(bool value) {

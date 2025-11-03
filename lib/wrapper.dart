@@ -1,27 +1,19 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'views/entrypoint/entrypoint_ui.dart';
+import 'views/auth/intro_login_page.dart';
 
-class Wrapper extends StatefulWidget {
+class Wrapper extends StatelessWidget {
   const Wrapper({super.key});
 
   @override
-  State<Wrapper> createState() => _WrapperState();
-}
-
-class _WrapperState extends State<Wrapper> {
-  @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: StreamBuilder(
-          stream: FirebaseAuth.instance.authStateChanges(),
-          builder: (context, snapshot){
-            if (snapshot.hasData){
-              return Homepage();
-            } else {
-              return Login();
-            }
-          }
-      )
-    );
+    final firebaseUser = context.watch<User?>();
+
+    if (firebaseUser != null) {
+      return const EntryPointUI();
+    }
+    return const IntroLoginPage();
   }
 }
