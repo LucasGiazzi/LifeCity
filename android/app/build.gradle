@@ -30,7 +30,7 @@ android {
 
   defaultConfig {
     applicationId "br.com.lucas.lifecity"  // <= igual ao namespace
-    minSdkVersion 21
+    minSdkVersion flutter.minSdkVersion
     targetSdk 36
     versionCode 1               // <= ISSO resolve o "Manifest versionCode not found"
     versionName "1.0"
