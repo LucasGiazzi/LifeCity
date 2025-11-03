@@ -19,7 +19,8 @@ dependencies:
   mask_text_input_formatter: ^2.9.0
   firebase_core: ^4.2.1
   firebase_auth: ^6.1.2
-  
+  provider: ^6.1.2
+
   #só pra fazer o começo da entrypoint page
   flutter_map: any
   latlong2: any

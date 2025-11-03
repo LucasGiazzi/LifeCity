@@ -8,7 +8,7 @@ class Validators {
   static final password = MultiValidator([
     RequiredValidator(errorText: 'Password is required'),
     MinLengthValidator(8, errorText: 'Password must be at least 8 digits long'),
-    PatternValidator(r'(?=.*?[#?!@$%^&*-])',
+    PatternValidator(r'(?=.*?[#?!@$%^&*,.-])',
         errorText: 'Passwords must have at least one special character')
   ]);
 
