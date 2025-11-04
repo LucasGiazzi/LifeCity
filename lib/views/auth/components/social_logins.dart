@@ -17,7 +17,14 @@ class SocialLogins extends StatelessWidget {
         children: [
           Expanded(
             child: OutlinedButton(
-              onPressed: () {},
+              onPressed: () async {
+                final authState = Provider.of<AuthState>(context, listen: false);
+                final success = await authState.loginWithGoogle();
+                if (success && context.mounted) {
+                  // Go back to the Wrapper, which will decide which screen to show.
+                  Navigator.of(context).popUntil((route) => route.isFirst);
+                }
+              },
               style: OutlinedButton.styleFrom(
                 side: const BorderSide(color: Colors.red),
                 padding: const EdgeInsets.symmetric(
@@ -44,36 +51,6 @@ class SocialLogins extends StatelessWidget {
               ),
             ),
           ),
-          /* const SizedBox(width: AppDefaults.margin),
-          Expanded(
-            child: OutlinedButton(
-              onPressed: () {},
-              style: OutlinedButton.styleFrom(
-                side: const BorderSide(color: Colors.black),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppDefaults.padding * 2,
-                  vertical: AppDefaults.padding,
-                ),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  SvgPicture.asset(
-                    AppIcons.appleIconRounded,
-                    width: 24,
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    'Apple',
-                    style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                          color: Colors.black,
-                          fontWeight: FontWeight.bold,
-                        ),
-                  ),
-                ],
-              ),
-            ),
-          ), */
         ],
       ),
     );
