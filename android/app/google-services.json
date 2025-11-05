@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "785538208755",
+    "project_id": "lifecity-725e8",
+    "storage_bucket": "lifecity-725e8.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:785538208755:android:4198cb1182440aa1543886",
+        "android_client_info": {
+          "package_name": "br.com.lucas.lifecity"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC4x_jKJn9Oe-svm4Tjf1xkwSvJim8BmI8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
