@@ -1,28 +1,31 @@
 const supabasePool = require('../infra/supabasePool');
 const { encryptPassword, generateSalt } = require('../infra/crypto');
 const { uploadPublicFile, deletePublicFile } = require('../infra/supabaseStorageClient');
+const jwt = require('jsonwebtoken')
 
 exports.login = async (req, res) => {
     const { email, password } = req.body;
-
+    
     try {
         const pool = await supabasePool.getPgPool();
-
+        
         const { rows: user } = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
-
+        
+        function isPasswordValid(password, originalPassword) {
+            return encryptPassword(password, originalPassword.salt) == originalPassword.password;
+        }
+        
         if (user.length === 0) {
             return res.status(401).json({ message: 'Email ou senha inválidos.' });
         }
-
-        const isPasswordValid = await bcrypt.compare(password, user[0].password);
-
+                
         if (!isPasswordValid) {
             return res.status(401).json({ message: 'Email ou senha inválidos.' });
         }
-
+        
         const accessToken = jwt.sign({ userId: user[0].id }, process.env.JWT_SECRET, { expiresIn: '15m' });
         const refreshToken = jwt.sign({ userId: user[0].id }, process.env.JWT_REFRESH_SECRET, { expiresIn: '7d' });
-
+        
         res.status(200).json({ message: 'Login bem sucedido', user: {
             id: user[0].id,
             email: user[0].email,
@@ -90,6 +93,7 @@ exports.logout = async (req, res) => {
 }
 
 exports.register = async (req, res) => {
+    console.log(req)
     const { email, password, name, cpf, phone } = req.body;
 
     try {

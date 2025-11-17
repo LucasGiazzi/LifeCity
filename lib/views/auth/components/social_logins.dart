@@ -17,7 +17,7 @@ class SocialLogins extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Expanded(
+          /* Expanded(
             child: OutlinedButton(
               onPressed: () async {
                 final authState = Provider.of<AuthState>(context, listen: false);
@@ -52,7 +52,7 @@ class SocialLogins extends StatelessWidget {
                 ],
               ),
             ),
-          ),
+          ), */
         ],
       ),
     );

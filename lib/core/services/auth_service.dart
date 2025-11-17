@@ -1,102 +1,74 @@
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:google_sign_in/google_sign_in.dart';
+import 'package:dio/dio.dart';
+import 'api_service.dart';
 
 class AuthService {
-  final FirebaseAuth _auth = FirebaseAuth.instance;
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  final GoogleSignIn _googleSignIn = GoogleSignIn();
+  final ApiService _api = ApiService();
 
-  // Sign in with email and password
-  Future<UserCredential?> signInWithEmailAndPassword(String email, String password) async {
+  Future<Map<String, dynamic>?> signInWithEmailAndPassword(
+      String email, String password) async {
     try {
-      UserCredential userCredential = await _auth.signInWithEmailAndPassword(
-        email: email,
-        password: password,
-      );
-      return userCredential;
-    } on FirebaseAuthException {
+      final response = await _api.post('/api/auth/login', {
+        'email': email,
+        'password': password,
+      });
+      return response.data;
+    } on ApiException catch (e) {
+      print('Erro login: ${e.message}');
       return null;
     }
   }
 
-  // Sign up with email and password
-  Future<UserCredential?> signUp(
-      {required String email, required String password, required String name, required String cpf, required String phone}) async {
-    UserCredential? userCredential;
+  Future<Map<String, dynamic>?> signUp({
+    required String email,
+    required String password,
+    required String name,
+    required String cpf,
+    required String phone,
+  }) async {
     try {
-      userCredential = await _auth.createUserWithEmailAndPassword(
-        email: email,
-        password: password,
-      );
-      
-      await _createUserDocument(userCredential.user!, name, cpf, phone);
-      
-      return userCredential;
-    } catch (e) {
-      if (userCredential != null) {
-        await userCredential.user?.delete();
-      }
-      rethrow;
-    }
-  }
-  
-  // Sign in with Google (using stable API)
-  Future<UserCredential?> signInWithGoogle() async {
-    try {
-      // Trigger the Google Sign-In flow
-      final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
-      if (googleUser == null) {
-        return null; // User cancelled the flow
-      }
+      final response = await _api.post('/api/auth/register', {
+        'email': email,
+        'password': password,
+        'name': name,
+        'cpf': cpf,
+        'phone': phone,
+      });
 
-      // Obtain the auth details from the request
-      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
-
-      // Create a new credential for Firebase
-      final AuthCredential credential = GoogleAuthProvider.credential(
-        accessToken: googleAuth.accessToken,
-        idToken: googleAuth.idToken,
-      );
-
-      // Sign in to Firebase with the credential
-      UserCredential userCredential = await _auth.signInWithCredential(credential);
-
-      // If it's a new user, create a document in Firestore
-      if (userCredential.additionalUserInfo?.isNewUser == true) {
-        await _firestore.collection('users').doc(userCredential.user!.uid).set({
-          'uid': userCredential.user!.uid,
-          'email': userCredential.user!.email,
-          'name': userCredential.user!.displayName ?? '',
-          'cpf': '', // Google Sign-In doesn't provide CPF
-          'phone': userCredential.user!.phoneNumber ?? '', // Or phone
-          'createdAt': FieldValue.serverTimestamp(),
-        });
-      }
-
-      return userCredential;
-    } catch (e) {
+      return response.data;
+    } on ApiException catch (e) {
+      print('Erro register: ${e.message}');
       return null;
     }
   }
 
-  Future<void> _createUserDocument(User user, String name, String cpf, String phone) async {
-    return _firestore.collection('users').doc(user.uid).set({
-      'uid': user.uid,
-      'email': user.email,
-      'name': name,
-      'cpf': cpf,
-      'phone': phone,
-      'createdAt': FieldValue.serverTimestamp(),
-    });
+  Future<bool> editUser({
+    required String token,
+    String? name,
+    String? cpf,
+    String? phone,
+  }) async {
+    try {
+      final response = await _api.put(
+        '/api/auth/editUser',
+        {
+          'name': name,
+          'cpf': cpf,
+          'phone': phone,
+        },
+      );
+
+      return response.statusCode == 200;
+    } on ApiException catch (e) {
+      print('Erro editUser: ${e.message}');
+      return false;
+    }
   }
 
-  // Sign out
   Future<void> signOut() async {
-    await _googleSignIn.signOut();
-    await _auth.signOut();
+    try {
+      await _api.post('/api/auth/logout', {});
+    } catch (_) {
+      // opcional: sem erro
+    }
   }
-
-  // Stream for auth state changes
-  Stream<User?> get authStateChanges => _auth.authStateChanges();
 }
