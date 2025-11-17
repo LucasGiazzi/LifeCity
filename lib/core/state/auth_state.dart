@@ -53,7 +53,7 @@ class AuthState extends ChangeNotifier {
     }
   }
   
-  Future<bool> loginWithGoogle() async {
+  /* Future<bool> loginWithGoogle() async {
     setLoading(true);
     setErrorMessage(null);
 
@@ -67,7 +67,7 @@ class AuthState extends ChangeNotifier {
       setErrorMessage('Falha ao fazer login com o Google.');
       return false;
     }
-  }
+  } */
 
   Future<void> logout() async {
     await _authService.signOut();
