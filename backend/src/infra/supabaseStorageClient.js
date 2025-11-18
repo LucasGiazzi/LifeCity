@@ -30,6 +30,7 @@ async function uploadPublicFile({ bucket, path, file }) {
 
     // Gera URL pública
     const { data: publicData } = supabase.storage.from(bucket).getPublicUrl(data.path);
+    console.log(`publicData: ${JSON.stringify(publicData)}`);
 
     return {
         path: data.path,

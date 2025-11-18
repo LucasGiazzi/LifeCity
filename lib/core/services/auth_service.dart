@@ -41,26 +41,53 @@ class AuthService {
     }
   }
 
-  Future<bool> editUser({
-    required String token,
+  Future<Map<String, dynamic>?> getMe() async {
+    try {
+      final response = await _api.get('/api/auth/me');
+      return response.data;
+    } on ApiException catch (e) {
+      print('Erro getMe: ${e.message}');
+      return null;
+    }
+  }
+
+  Future<Map<String, dynamic>?> editUser({
     String? name,
     String? cpf,
     String? phone,
+    String? birthDate,
+    String? photoPath,
   }) async {
     try {
-      final response = await _api.put(
-        '/api/auth/editUser',
-        {
-          'name': name,
-          'cpf': cpf,
-          'phone': phone,
-        },
-      );
+      FormData formData = FormData.fromMap({
+        if (name != null) 'name': name,
+        if (cpf != null) 'cpf': cpf,
+        if (phone != null) 'phone': phone,
+        if (birthDate != null) 'birthDate': birthDate,
+        if (photoPath != null)
+          'pfp': await MultipartFile.fromFile(
+            photoPath,
+            filename: 'profile_photo.jpg',
+          ),
+      });
 
-      return response.statusCode == 200;
+      final response = await _api.putMultipart('/api/auth/editUser', formData);
+      return response.data;
     } on ApiException catch (e) {
       print('Erro editUser: ${e.message}');
-      return false;
+      return null;
+    }
+  }
+
+  Future<String?> refreshToken(String refreshToken) async {
+    try {
+      final response = await _api.post('/api/auth/refreshToken', {
+        'refreshToken': refreshToken,
+      });
+      return response.data['accessToken'] as String?;
+    } on ApiException catch (e) {
+      print('Erro refreshToken: ${e.message}');
+      return null;
     }
   }
 

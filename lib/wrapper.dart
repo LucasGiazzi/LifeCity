@@ -1,6 +1,6 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'core/state/auth_state.dart';
 import 'views/entrypoint/entrypoint_ui.dart';
 import 'views/auth/intro_login_page.dart';
 
@@ -9,9 +9,9 @@ class Wrapper extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final firebaseUser = context.watch<User?>();
+    final authState = context.watch<AuthState>();
 
-    if (firebaseUser != null) {
+    if (authState.isAuthenticated) {
       return const EntryPointUI();
     }
     return const IntroLoginPage();

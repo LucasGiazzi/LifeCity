@@ -1,9 +1,13 @@
 import 'package:dio/dio.dart';
 
 class ApiService {
-  final Dio _dio;
+  static final ApiService _instance = ApiService._internal();
+  
+  factory ApiService() {
+    return _instance;
+  }
 
-  ApiService()
+  ApiService._internal()
       : _dio = Dio(
           BaseOptions(
             baseUrl: 'http://10.0.2.2:3000', // seu backend local
@@ -14,6 +18,82 @@ class ApiService {
             },
           ),
         ) {
+    // Interceptor para adicionar token de autenticação
+    _dio.interceptors.add(InterceptorsWrapper(
+      onRequest: (options, handler) {
+        // Não adiciona Authorization em requisições de refreshToken
+        if (_accessToken != null && !options.path.contains('/refreshToken')) {
+          options.headers['Authorization'] = 'Bearer $_accessToken';
+        }
+        handler.next(options);
+      },
+      onError: (error, handler) async {
+        // Se receber 403 (token expirado), tenta fazer refresh
+        if (error.response?.statusCode == 403 && _refreshTokenCallback != null) {
+          print('Token expirado');
+          try {
+            // Evita loop infinito: não faz refresh em requisições de refresh
+            if (error.requestOptions.path == '/api/auth/refreshToken') {
+              handler.next(error);
+              return;
+            }
+
+            // Busca o refreshToken usando o callback
+            final refreshToken = await _refreshTokenCallback?.call();
+            if (refreshToken == null || refreshToken.isEmpty) {
+              handler.next(error);
+              return;
+            }
+
+            // Tenta fazer refresh do token
+            try {
+              final refreshResponse = await _dio.post(
+                '/api/auth/refreshToken',
+                data: {'refreshToken': refreshToken},
+              );
+
+              final newAccessToken = refreshResponse.data['accessToken'] as String?;
+              if (newAccessToken != null && newAccessToken.isNotEmpty) {
+                // Atualiza o token
+                _accessToken = newAccessToken;
+                
+                // Chama o callback para atualizar o token no AuthState
+                await _onTokenRefreshedCallback?.call(newAccessToken);
+
+                // Atualiza o header da requisição original
+                error.requestOptions.headers['Authorization'] = 'Bearer $newAccessToken';
+
+                // Refaz a requisição original com o novo token
+                final opts = Options(
+                  method: error.requestOptions.method,
+                  headers: error.requestOptions.headers,
+                );
+                final cloneReq = await _dio.request<dynamic>(
+                  error.requestOptions.path,
+                  options: opts,
+                  data: error.requestOptions.data,
+                  queryParameters: error.requestOptions.queryParameters,
+                );
+                handler.resolve(cloneReq);
+                return;
+              }
+            } catch (refreshError) {
+              // Se o refresh falhar, retorna o erro original
+              handler.next(error);
+              return;
+            }
+          } catch (e) {
+            // Se houver algum erro, retorna o erro original
+            handler.next(error);
+            return;
+          }
+        }
+
+        // Para outros erros, passa adiante normalmente
+        handler.next(error);
+      },
+    ));
+
     // Interceptor de log (opcional, pode remover em produção)
     _dio.interceptors.add(LogInterceptor(
       request: true,
@@ -23,6 +103,29 @@ class ApiService {
       error: true,
       requestHeader: false,
     ));
+  }
+
+  final Dio _dio;
+  String? _accessToken;
+  
+  // Callback para buscar o refreshToken
+  Future<String?> Function()? _refreshTokenCallback;
+  
+  // Callback para notificar quando o token foi atualizado
+  Future<void> Function(String newToken)? _onTokenRefreshedCallback;
+
+  void setAccessToken(String? token) {
+    _accessToken = token;
+  }
+
+  // Configura callback para buscar refreshToken
+  void setRefreshTokenCallback(Future<String?> Function() callback) {
+    _refreshTokenCallback = callback;
+  }
+
+  // Configura callback para notificar atualização do token
+  void setOnTokenRefreshedCallback(Future<void> Function(String newToken) callback) {
+    _onTokenRefreshedCallback = callback;
   }
 
   // -----------------------------
@@ -50,6 +153,36 @@ class ApiService {
   Future<Response> put(String endpoint, dynamic data) async {
     try {
       final response = await _dio.put(endpoint, data: data);
+      return response;
+    } on DioException catch (e) {
+      throw ApiException.fromDioError(e);
+    }
+  }
+
+  Future<Response> postMultipart(String endpoint, FormData formData) async {
+    try {
+      final response = await _dio.post(
+        endpoint,
+        data: formData,
+        options: Options(
+          contentType: 'multipart/form-data',
+        ),
+      );
+      return response;
+    } on DioException catch (e) {
+      throw ApiException.fromDioError(e);
+    }
+  }
+
+  Future<Response> putMultipart(String endpoint, FormData formData) async {
+    try {
+      final response = await _dio.put(
+        endpoint,
+        data: formData,
+        options: Options(
+          contentType: 'multipart/form-data',
+        ),
+      );
       return response;
     } on DioException catch (e) {
       throw ApiException.fromDioError(e);

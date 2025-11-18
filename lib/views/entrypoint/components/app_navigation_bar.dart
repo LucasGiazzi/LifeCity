@@ -23,13 +23,13 @@ class AppBottomNavigationBar extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           BottomAppBarItem(
-            name: 'Home',
+            name: 'Mapa',
             iconLocation: AppIcons.home,
             isActive: currentIndex == 0,
             onTap: () => onNavTap(0),
           ),
           BottomAppBarItem(
-            name: 'Menu',
+            name: 'Filtro',
             iconLocation: AppIcons.menu,
             isActive: currentIndex == 1,
             onTap: () => onNavTap(1),
@@ -41,13 +41,13 @@ class AppBottomNavigationBar extends StatelessWidget {
           /* <---- We have to leave this 3rd index (2) for the cart item -----> */
 
           BottomAppBarItem(
-            name: 'Save',
+            name: 'Eventos',
             iconLocation: AppIcons.save,
             isActive: currentIndex == 3,
             onTap: () => onNavTap(3),
           ),
           BottomAppBarItem(
-            name: 'Profile',
+            name: 'Perfil',
             iconLocation: AppIcons.profile,
             isActive: currentIndex == 4,
             onTap: () => onNavTap(4),

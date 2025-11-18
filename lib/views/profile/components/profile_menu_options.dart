@@ -1,15 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-
 import '../../../core/constants/constants.dart';
 import '../../../core/routes/app_routes.dart';
 import '../../../core/state/auth_state.dart';
 import 'profile_list_tile.dart';
 
 class ProfileMenuOptions extends StatelessWidget {
-  const ProfileMenuOptions({
-    super.key,
-  });
+  const ProfileMenuOptions({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -22,33 +19,22 @@ class ProfileMenuOptions extends StatelessWidget {
         borderRadius: AppDefaults.borderRadius,
       ),
       child: Column(
+        mainAxisSize: MainAxisSize.min, // ✅ evita overflow interno
         children: [
           ProfileListTile(
-            title: 'My Profile',
+            title: 'Editar Perfil',
             icon: AppIcons.profilePerson,
             onTap: () => Navigator.pushNamed(context, AppRoutes.profileEdit),
           ),
           const Divider(thickness: 0.1),
           ProfileListTile(
-            title: 'Notification',
+            title: 'Publicações',
             icon: AppIcons.profileNotification,
             onTap: () => Navigator.pushNamed(context, AppRoutes.notifications),
           ),
           const Divider(thickness: 0.1),
           ProfileListTile(
-            title: 'Setting',
-            icon: AppIcons.profileSetting,
-            onTap: () => Navigator.pushNamed(context, AppRoutes.settings),
-          ),
-          const Divider(thickness: 0.1),
-          ProfileListTile(
-            title: 'Payment',
-            icon: AppIcons.profilePayment,
-            onTap: () => Navigator.pushNamed(context, AppRoutes.paymentMethod),
-          ),
-          const Divider(thickness: 0.1),
-          ProfileListTile(
-            title: 'Logout',
+            title: 'Sair',
             icon: AppIcons.profileLogout,
             onTap: () {
               Provider.of<AuthState>(context, listen: false).logout();
