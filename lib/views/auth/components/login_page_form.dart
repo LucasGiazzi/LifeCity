@@ -49,8 +49,12 @@ class _LoginPageFormState extends State<LoginPageForm> {
     );
 
     if (success && mounted) {
-      // Go back to the Wrapper, which will decide which screen to show.
-      Navigator.of(context).popUntil((route) => route.isFirst);
+      // Navega para EntryPointUI removendo todas as rotas anteriores
+      Navigator.pushNamedAndRemoveUntil(
+        context,
+        AppRoutes.entryPoint,
+        (route) => false,
+      );
     }
   }
 

@@ -61,6 +61,11 @@ class _SignUpFormState extends State<SignUpForm> {
     }
 
     final authState = Provider.of<AuthState>(context, listen: false);
+    debugPrint('email: ${_emailController.text.trim()}');
+    debugPrint('password: ${_passwordController.text.trim()}');
+    debugPrint('name: ${_nameController.text.trim()}');
+    debugPrint('cpf: ${_cpfController.text}');
+    debugPrint('phone: ${_phoneController.text}');
     final success = await authState.signUp(
       email: _emailController.text.trim(),
       password: _passwordController.text.trim(),

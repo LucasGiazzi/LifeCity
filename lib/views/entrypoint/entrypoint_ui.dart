@@ -1,12 +1,13 @@
 import 'package:animations/animations.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_defaults.dart';
-import '../../core/constants/app_icons.dart';
+import '../../core/models/event_model.dart';
+import '../../core/routes/app_routes.dart';
+import '../../core/services/event_service.dart';
 import '../../core/state/filter_controller.dart';
 import '../../core/state/filter_scope.dart';
 
@@ -27,6 +28,7 @@ class EntryPointUI extends StatefulWidget {
 class _EntryPointUIState extends State<EntryPointUI> {
   int currentIndex = 0;
   late final FilterController _filters;
+  final GlobalKey<_MapBodyState> _mapBodyKey = GlobalKey<_MapBodyState>();
 
   @override
   void initState() {
@@ -44,12 +46,12 @@ class _EntryPointUIState extends State<EntryPointUI> {
     setState(() => currentIndex = index);
   }
 
-  final List<Widget> pages = const [
-    _MapBody(), // 0 - mapa
-    MenuPage(), // 1 - filtro
-    CartPage(isHomePage: true),
-    SavePage(isHomePage: false),
-    ProfilePage(),
+  List<Widget> get pages => [
+    _MapBody(key: _mapBodyKey), // 0 - mapa
+    const MenuPage(), // 1 - filtro
+    const CartPage(isHomePage: true),
+    const SavePage(isHomePage: false),
+    const ProfilePage(),
   ];
 
   @override
@@ -69,9 +71,16 @@ class _EntryPointUIState extends State<EntryPointUI> {
           child: pages[currentIndex],
         ),
         floatingActionButton: FloatingActionButton(
-          onPressed: () => onBottomNavigationTap(2),
+          onPressed: () async {
+            final result = await Navigator.pushNamed(context, AppRoutes.createEvent);
+            // Se um evento foi criado, recarregar a lista no mapa
+            if (result == true && currentIndex == 0) {
+              // Recarregar eventos do mapa
+              _mapBodyKey.currentState?.reloadEvents();
+            }
+          },
           backgroundColor: AppColors.primary,
-          child: SvgPicture.asset(AppIcons.cart),
+          child: const Icon(Icons.add, color: Colors.white, size: 32),
         ),
         floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
         bottomNavigationBar: AppBottomNavigationBar(
@@ -95,48 +104,57 @@ class _MapBody extends StatefulWidget {
 class _MapBodyState extends State<_MapBody> {
   final mapController = MapController();
   final LatLng _center = const LatLng(-22.9099, -47.0626);
+  final EventService _eventService = EventService();
 
-  final List<_Event> _events = const [
-    _Event(
-      id: '1',
-      type: 'eventos',
-      title: 'Evento Municipal - Feira Cultural',
-      point: LatLng(-22.9093, -47.0645),
-      likes: 42,
-      comments: 10,
-    ),
-    _Event(
-      id: '2',
-      type: 'festas',
-      title: 'Festa na Praça Central',
-      point: LatLng(-22.9120, -47.0600),
-      likes: 120,
-      comments: 35,
-    ),
-    _Event(
-      id: '3',
-      type: 'esportes',
-      title: 'Corrida de Rua LifeRun',
-      point: LatLng(-22.9072, -47.0585),
-      likes: 15,
-      comments: 6,
-    ),
-    _Event(
-      id: '4',
-      type: 'educacao',
-      title: 'Palestra: Cidadania e Sustentabilidade',
-      point: LatLng(-22.9088, -47.0632),
-      likes: 60,
-      comments: 14,
-    ),
-  ];
+  List<EventModel> _events = [];
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadEvents();
+  }
+
+  Future<void> _loadEvents() async {
+    if (!mounted) return;
+    
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final eventsData = await _eventService.getAllEvents();
+      final events = eventsData
+          .map((e) => EventModel.fromJson(e))
+          .where((e) => e.latitude != null && e.longitude != null) // Apenas eventos com coordenadas
+          .toList();
+
+      if (mounted) {
+        setState(() {
+          _events = events;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      debugPrint('Erro ao carregar eventos: $e');
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  void reloadEvents() {
+    _loadEvents();
+  }
 
   @override
   Widget build(BuildContext context) {
     final filters = FilterScope.of(context).selected;
     final visible = filters.isEmpty
         ? _events
-        : _events.where((e) => filters.contains(e.type)).toList();
+        : _events.where((e) => e.category != null && filters.contains(e.categoryType)).toList();
 
     return Scaffold(
       body: Stack(
@@ -150,19 +168,24 @@ class _MapBodyState extends State<_MapBody> {
                 urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
                 userAgentPackageName: 'com.lifecity.app',
               ),
-              MarkerLayer(
-                markers: visible.map((e) {
-                  return Marker(
-                    point: e.point,
-                    width: 40,
-                    height: 40,
-                    child: GestureDetector(
-                      onTap: () => _openEventSheet(e),
-                      child: _Pin(type: e.type),
-                    ),
-                  );
-                }).toList(),
-              ),
+              if (!_isLoading)
+                MarkerLayer(
+                  markers: visible.map((e) {
+                    return Marker(
+                      point: LatLng(e.latitude!, e.longitude!),
+                      width: 40,
+                      height: 40,
+                      child: GestureDetector(
+                        onTap: () => _openEventSheet(e),
+                        child: _EventPin(category: e.categoryType),
+                      ),
+                    );
+                  }).toList(),
+                ),
+              if (_isLoading)
+                const Center(
+                  child: CircularProgressIndicator(),
+                ),
             ],
           ),
 
@@ -209,7 +232,7 @@ class _MapBodyState extends State<_MapBody> {
     );
   }
 
-  void _openEventSheet(_Event e) {
+  void _openEventSheet(EventModel e) {
     showModalBottomSheet(
       context: context,
       showDragHandle: true,
@@ -222,70 +245,114 @@ class _MapBodyState extends State<_MapBody> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(e.title,
-                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
+            Text(
+              e.description,
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+            ),
             const SizedBox(height: 8),
+            if (e.category != null) ...[
+              _TypePill(type: e.categoryType),
+              const SizedBox(height: 8),
+            ],
+            if (e.address != null) ...[
+              Row(
+                children: [
+                  const Icon(Icons.location_on, size: 16),
+                  const SizedBox(width: 4),
+                  Expanded(
+                    child: Text(
+                      e.address!,
+                      style: const TextStyle(fontSize: 14),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+            ],
             Row(
               children: [
-                _TypePill(type: e.type),
-                const SizedBox(width: 12),
-                const Icon(Icons.thumb_up_alt_outlined, size: 18),
+                const Icon(Icons.access_time, size: 16),
                 const SizedBox(width: 4),
-                Text('${e.likes}'),
-                const SizedBox(width: 12),
-                const Icon(Icons.mode_comment_outlined, size: 18),
-                const SizedBox(width: 4),
-                Text('${e.comments}'),
+                Text(
+                  _formatDateTime(e.startDate),
+                  style: const TextStyle(fontSize: 14),
+                ),
               ],
             ),
+            if (e.endDate != null) ...[
+              const SizedBox(height: 4),
+              Row(
+                children: [
+                  const Icon(Icons.event_busy, size: 16),
+                  const SizedBox(width: 4),
+                  Text(
+                    'Até ${_formatDateTime(e.endDate!)}',
+                    style: const TextStyle(fontSize: 14),
+                  ),
+                ],
+              ),
+            ],
+            if (e.createdByName != null) ...[
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  const Icon(Icons.person, size: 16),
+                  const SizedBox(width: 4),
+                  Text(
+                    'Criado por: ${e.createdByName}',
+                    style: const TextStyle(fontSize: 12, color: Colors.grey),
+                  ),
+                ],
+              ),
+            ],
           ],
         ),
       ),
     );
   }
+
+  String _formatDateTime(DateTime dateTime) {
+    final day = dateTime.day.toString().padLeft(2, '0');
+    final month = dateTime.month.toString().padLeft(2, '0');
+    final year = dateTime.year;
+    final hour = dateTime.hour.toString().padLeft(2, '0');
+    final minute = dateTime.minute.toString().padLeft(2, '0');
+    return '$day/$month/$year às $hour:$minute';
+  }
 }
 
 /* ====================== HELPERS ====================== */
 
-class _Event {
-  final String id;
-  final String type; // festas, eventos, esportes, etc
-  final String title;
-  final LatLng point;
-  final int likes;
-  final int comments;
-
-  const _Event({
-    required this.id,
-    required this.type,
-    required this.title,
-    required this.point,
-    required this.likes,
-    required this.comments,
-  });
-}
-
-class _Pin extends StatelessWidget {
-  final String type;
-  const _Pin({required this.type});
+class _EventPin extends StatelessWidget {
+  final String category;
+  const _EventPin({required this.category});
 
   @override
   Widget build(BuildContext context) {
-    final Color c = switch (type) {
+    final Color pinColor = switch (category) {
       'festas' => Colors.pink,
       'eventos' => Colors.blueAccent,
       'esportes' => Colors.green,
       'educacao' => Colors.orange,
       _ => Colors.grey,
     };
+
+    final IconData pinIcon = switch (category) {
+      'festas' => Icons.celebration,
+      'eventos' => Icons.event,
+      'esportes' => Icons.sports_soccer,
+      'educacao' => Icons.school,
+      _ => Icons.place,
+    };
+
     return Container(
       decoration: BoxDecoration(
-        color: c,
+        color: pinColor,
         shape: BoxShape.circle,
         boxShadow: const [BoxShadow(blurRadius: 6, color: Colors.black26)],
       ),
-      child: const Center(
-        child: Icon(Icons.place, color: Colors.white, size: 20),
+      child: Center(
+        child: Icon(pinIcon, color: Colors.white, size: 20),
       ),
     );
   }

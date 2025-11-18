@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import '../../../core/components/network_image.dart';
 import '../../../core/constants/constants.dart';
+import '../../../core/state/auth_state.dart';
 import 'profile_header_options.dart';
 
 class ProfileHeader extends StatelessWidget {
@@ -42,40 +44,74 @@ class _UserData extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final authState = context.watch<AuthState>();
+    final user = authState.currentUser;
+
+    final String userName = user?['name'] as String? ?? 'Usuário';
+    final String userEmail = user?['email'] as String? ?? '';
+    final String? photoUrl = user?['photo_url'] as String?;
+    final String userId = user?['id']?.toString() ?? '';
+    debugPrint('photoUrl: $photoUrl');
+
     return Padding(
       padding: const EdgeInsets.all(AppDefaults.padding),
       child: Row(
         children: [
           const SizedBox(width: AppDefaults.padding),
-          const SizedBox(
+          SizedBox(
             width: 100,
             height: 100,
             child: ClipOval(
               child: AspectRatio(
-                  aspectRatio: 1 / 1,
-                  child: NetworkImageWithLoader(
-                      'https://images.unsplash.com/photo-1628157588553-5eeea00af15c?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=880&q=80')),
+                aspectRatio: 1 / 1,
+                child: photoUrl != null && photoUrl.isNotEmpty
+                    ? NetworkImageWithLoader(photoUrl)
+                    : Container(
+                        color: Colors.grey[300],
+                        child: const Icon(
+                          Icons.person,
+                          size: 50,
+                          color: Colors.grey,
+                        ),
+                      ),
+              ),
             ),
           ),
           const SizedBox(width: AppDefaults.padding),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Shakibul Islam',
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold, color: Colors.white),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'ID: 1540580',
-                style: Theme.of(context)
-                    .textTheme
-                    .bodyLarge
-                    ?.copyWith(color: Colors.white),
-              ),
-            ],
-          )
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  userName,
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.bold, color: Colors.white),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  userEmail,
+                  style: Theme.of(context)
+                      .textTheme
+                      .bodyMedium
+                      ?.copyWith(color: Colors.white70),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                if (userId.isNotEmpty) ...[
+                  const SizedBox(height: 4),
+                  Text(
+                    'ID: $userId',
+                    style: Theme.of(context)
+                        .textTheme
+                        .bodySmall
+                        ?.copyWith(color: Colors.white60),
+                  ),
+                ],
+              ],
+            ),
+          ),
         ],
       ),
     );

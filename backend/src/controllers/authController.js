@@ -19,7 +19,8 @@ exports.login = async (req, res) => {
             return res.status(401).json({ message: 'Email ou senha inválidos.' });
         }
                 
-        if (!isPasswordValid) {
+        if (!isPasswordValid(password, user[0])) {
+            console.log('Senha inválida');
             return res.status(401).json({ message: 'Email ou senha inválidos.' });
         }
         
@@ -93,7 +94,6 @@ exports.logout = async (req, res) => {
 }
 
 exports.register = async (req, res) => {
-    console.log(req)
     const { email, password, name, cpf, phone } = req.body;
 
     try {
@@ -119,8 +119,27 @@ exports.register = async (req, res) => {
 
 }
 
+exports.getMe = async (req, res) => {
+    try {
+        const pool = await supabasePool.getPgPool();
+        
+        const { rows: user } = await pool.query('SELECT id, email, name, phone, cpf, photo_url, birth_date FROM users WHERE id = $1', [req.user.id]);
+        
+        if (user.length === 0) {
+            return res.status(404).json({ message: 'Usuário não encontrado.' });
+        }
+
+        res.status(200).json({
+            user: user[0]
+        });
+    } catch (error) {
+        console.error('Erro ao buscar usuário:', error);
+        res.status(500).json({ message: 'Erro ao buscar dados do usuário.' });
+    }
+};
+
 exports.editUser = async (req, res) => {
-    const { email, name, phone, cpf, birthDate } = req.body;
+    const { name, phone, cpf, birthDate } = req.body;
     const pfp = req.file;
 
     try {
@@ -139,23 +158,29 @@ exports.editUser = async (req, res) => {
         await pool.query('UPDATE users SET name = $1, phone = $2, cpf = $3, birth_date = $4 WHERE id = $5', [name, phone, cpf, birthDate, req.user.id]);
 
         if (pfp) {
-            // Upload do novo pfp
-            const { path, publicUrl } = await uploadPublicFile({ bucket: 'profile_pictures', path: `${req.user.id}/pfp.png`, file: pfp });
-            
             // Deletar o arquivo antigo
             if (user.rows[0].photo_path) {
-                await deletePublicFile({ bucket: 'profile_pictures', path: user.rows[0].photo_path });
+                await deletePublicFile({ bucket: 'pfp', path: user.rows[0].photo_path });
             }
+
+            // Upload do novo pfp
+            const { path, publicUrl } = await uploadPublicFile({ bucket: 'pfp', path: `${req.user.id}/pfp.png`, file: pfp });
 
             // Atualizar o usuário com o novo pfp
             await pool.query('UPDATE users SET photo_url = $1, photo_path = $2 WHERE id = $3', [publicUrl, path, req.user.id]);
 
         }
 
-        res.status(200).json({ message: 'Usuário editado com sucesso' });
+        // Buscar dados atualizados do usuário
+        const { rows: updatedUser } = await pool.query('SELECT id, email, name, phone, cpf, photo_url, birth_date FROM users WHERE id = $1', [req.user.id]);
+
+        res.status(200).json({ 
+            message: 'Usuário editado com sucesso',
+            user: updatedUser[0]
+        });
 
     } catch (error) {
         console.error('Erro ao editar usuário:', error);
-        res.status(500).json({ message: 'Erro ao editar usuário.' });
+        res.status(500).json({ message: 'Erro ao editar usuário.', error: error.message });
     }
 }

@@ -28,6 +28,10 @@ dependencies:
   latlong2: any
   geolocator: any
   dio: ^5.9.0
+  shared_preferences: ^2.2.2
+  image_picker: ^1.0.7
+  intl: ^0.19.0
+  http: ^1.2.0
 
 dev_dependencies:
   flutter_test:
