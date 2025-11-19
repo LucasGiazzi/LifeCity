@@ -2,20 +2,20 @@ import 'package:form_field_validator/form_field_validator.dart';
 
 class Validators {
   /// Email Validator
-  static final email = EmailValidator(errorText: 'Enter a valid email address');
+  static final email = EmailValidator(errorText: 'Insira um email válido');
 
   /// Password Validator
   static final password = MultiValidator([
-    RequiredValidator(errorText: 'Password is required'),
-    MinLengthValidator(8, errorText: 'Password must be at least 8 digits long'),
+    RequiredValidator(errorText: 'Digite sua senha'),
+    MinLengthValidator(8, errorText: 'Sua senha deve ter pelo menos 8 dígitos'),
     PatternValidator(r'(?=.*?[#?!@$%^&*,.-])',
-        errorText: 'Passwords must have at least one special character')
+        errorText: 'Sua senha deve ter pelo menos um caractere especial')
   ]);
 
   /// Required Validator with Optional Field Name
   static RequiredValidator requiredWithFieldName(String? fieldName) =>
-      RequiredValidator(errorText: '${fieldName ?? 'Field'} is required');
+      RequiredValidator(errorText: '${fieldName ?? 'Field'} é obrigatório');
 
   /// Plain Required Validator
-  static final required = RequiredValidator(errorText: 'Field is required');
+  static final required = RequiredValidator(errorText: 'Campo obrigatório');
 }
