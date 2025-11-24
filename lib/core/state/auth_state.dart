@@ -1,7 +1,6 @@
 import 'package:flutter/foundation.dart';
 import '../services/auth_service.dart';
 import '../services/api_service.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class AuthState extends ChangeNotifier {
@@ -80,11 +79,7 @@ class AuthState extends ChangeNotifier {
       setLoading(false);
       return userCredential != null;
     } catch (e) {
-      if (e is FirebaseAuthException && e.code == 'email-already-in-use') {
-        setErrorMessage('Este e-mail já está em uso.');
-      } else {
-        setErrorMessage('Ocorreu um erro durante o cadastro.');
-      }
+      setErrorMessage('Ocorreu um erro durante o cadastro.');
       setLoading(false);
       return false;
     }
