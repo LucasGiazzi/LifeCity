@@ -36,8 +36,13 @@ class ProfileMenuOptions extends StatelessWidget {
           ProfileListTile(
             title: 'Sair',
             icon: AppIcons.profileLogout,
-            onTap: () {
-              Provider.of<AuthState>(context, listen: false).logout();
+            onTap: () async {
+              await Provider.of<AuthState>(context, listen: false).logout();
+              // Limpar a pilha de navegação e ir para o onboarding
+              Navigator.of(context).pushNamedAndRemoveUntil(
+                AppRoutes.onboarding,
+                (route) => false,
+              );
             },
           ),
         ],

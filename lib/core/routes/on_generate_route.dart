@@ -17,6 +17,7 @@ import '../../views/drawer/help_page.dart';
 import '../../views/drawer/terms_and_conditions_page.dart';
 import '../../views/entrypoint/entrypoint_ui.dart';
 import '../../views/events/create_event_page.dart';
+import '../../views/complaints/create_complaint_page.dart';
 import '../../views/home/bundle_create_page.dart';
 import '../../views/home/bundle_details_page.dart';
 import '../../views/home/bundle_product_details_page.dart';
@@ -66,6 +67,9 @@ class RouteGenerator {
 
       case AppRoutes.createEvent:
         return CupertinoPageRoute(builder: (_) => const CreateEventPage());
+
+      case AppRoutes.createComplaint:
+        return CupertinoPageRoute(builder: (_) => const CreateComplaintPage());
 
       case AppRoutes.search:
         return CupertinoPageRoute(builder: (_) => const SearchPage());

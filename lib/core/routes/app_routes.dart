@@ -14,6 +14,7 @@ class AppRoutes {
   /* <---- ENTRYPOINT -----> */
   static const entryPoint = '/entry_point';
   static const createEvent = '/create_event';
+  static const createComplaint = '/create_complaint';
 
   /* <---- Products Order Process -----> */
   static const home = '/home';

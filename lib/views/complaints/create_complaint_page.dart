@@ -7,25 +7,22 @@ import 'package:geolocator/geolocator.dart';
 import '../../core/components/app_back_button.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_defaults.dart';
-import '../../core/services/event_service.dart';
+import '../../core/services/complaint_service.dart';
 
-class CreateEventPage extends StatefulWidget {
-  const CreateEventPage({super.key});
+class CreateComplaintPage extends StatefulWidget {
+  const CreateComplaintPage({super.key});
 
   @override
-  State<CreateEventPage> createState() => _CreateEventPageState();
+  State<CreateComplaintPage> createState() => _CreateComplaintPageState();
 }
 
-class _CreateEventPageState extends State<CreateEventPage> {
+class _CreateComplaintPageState extends State<CreateComplaintPage> {
   final _formKey = GlobalKey<FormState>();
   final _descriptionController = TextEditingController();
   final _addressController = TextEditingController();
   final _dateController = TextEditingController();
-  final _timeController = TextEditingController();
-  final _endDateController = TextEditingController();
-  final _endTimeController = TextEditingController();
   
-  final EventService _eventService = EventService();
+  final ComplaintService _complaintService = ComplaintService();
   bool _isLoading = false;
   bool _isGeocoding = false;
   bool _isGettingLocation = false;
@@ -41,11 +38,12 @@ class _CreateEventPageState extends State<CreateEventPage> {
   OverlayEntry? _overlayEntry;
   Timer? _debounceTimer;
   
-  final List<Map<String, dynamic>> _eventTypes = [
-    {'value': 'festas', 'label': 'Festas', 'icon': Icons.celebration},
-    {'value': 'eventos', 'label': 'Eventos', 'icon': Icons.event},
-    {'value': 'esportes', 'label': 'Esportes', 'icon': Icons.sports},
-    {'value': 'educacao', 'label': 'Educação', 'icon': Icons.school},
+  final List<Map<String, dynamic>> _complaintTypes = [
+    {'value': 'infraestrutura', 'label': 'Infraestrutura', 'icon': Icons.construction},
+    {'value': 'seguranca', 'label': 'Segurança', 'icon': Icons.security},
+    {'value': 'limpeza', 'label': 'Limpeza', 'icon': Icons.cleaning_services},
+    {'value': 'transito', 'label': 'Trânsito', 'icon': Icons.traffic},
+    {'value': 'outros', 'label': 'Outros', 'icon': Icons.report_problem},
   ];
 
   @override
@@ -60,9 +58,6 @@ class _CreateEventPageState extends State<CreateEventPage> {
     _descriptionController.dispose();
     _addressController.dispose();
     _dateController.dispose();
-    _timeController.dispose();
-    _endDateController.dispose();
-    _endTimeController.dispose();
     _addressFocusNode.dispose();
     _debounceTimer?.cancel();
     _removeOverlay();
@@ -95,54 +90,12 @@ class _CreateEventPageState extends State<CreateEventPage> {
     final DateTime? picked = await showDatePicker(
       context: context,
       initialDate: DateTime.now(),
-      firstDate: DateTime.now(),
-      lastDate: DateTime.now().add(const Duration(days: 365)),
+      firstDate: DateTime(2020),
+      lastDate: DateTime.now(),
     );
     if (picked != null) {
       setState(() {
         _dateController.text = "${picked.day}/${picked.month}/${picked.year}";
-      });
-    }
-  }
-
-  Future<void> _selectTime() async {
-    final TimeOfDay? picked = await showTimePicker(
-      context: context,
-      initialTime: TimeOfDay.now(),
-    );
-    if (picked != null) {
-      setState(() {
-        _timeController.text = "${picked.hour.toString().padLeft(2, '0')}:${picked.minute.toString().padLeft(2, '0')}";
-      });
-    }
-  }
-
-  Future<void> _selectEndDate() async {
-    final DateTime? picked = await showDatePicker(
-      context: context,
-      initialDate: _dateController.text.isNotEmpty
-          ? _parseDate(_dateController.text)
-          : DateTime.now(),
-      firstDate: _dateController.text.isNotEmpty
-          ? _parseDate(_dateController.text)
-          : DateTime.now(),
-      lastDate: DateTime.now().add(const Duration(days: 365)),
-    );
-    if (picked != null) {
-      setState(() {
-        _endDateController.text = "${picked.day}/${picked.month}/${picked.year}";
-      });
-    }
-  }
-
-  Future<void> _selectEndTime() async {
-    final TimeOfDay? picked = await showTimePicker(
-      context: context,
-      initialTime: TimeOfDay.now(),
-    );
-    if (picked != null) {
-      setState(() {
-        _endTimeController.text = "${picked.hour.toString().padLeft(2, '0')}:${picked.minute.toString().padLeft(2, '0')}";
       });
     }
   }
@@ -458,7 +411,7 @@ class _CreateEventPageState extends State<CreateEventPage> {
       
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Não foi possível encontrar a localização. Você pode criar o evento sem coordenadas.'),
+          content: Text('Não foi possível encontrar a localização. Você pode criar a reclamação sem coordenadas.'),
           backgroundColor: Colors.orange,
           duration: Duration(seconds: 3),
         ),
@@ -474,10 +427,10 @@ class _CreateEventPageState extends State<CreateEventPage> {
 
   Future<void> _onSubmit() async {
     if (_formKey.currentState?.validate() ?? false) {
-      // Validação de data e hora
-      if (_dateController.text.isEmpty || _timeController.text.isEmpty) {
+      // Validação de data
+      if (_dateController.text.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Por favor, selecione data e hora')),
+          const SnackBar(content: Text('Por favor, selecione a data de ocorrência')),
         );
         return;
       }
@@ -487,28 +440,20 @@ class _CreateEventPageState extends State<CreateEventPage> {
       });
 
       try {
-        // Combinar data e hora no formato ISO 8601 para o backend
-        final dateTime = _parseDateTime(_dateController.text, _timeController.text);
-        final startDate = dateTime.toIso8601String();
-
-        // Data de fim (opcional)
-        String? endDate;
-        if (_endDateController.text.isNotEmpty && _endTimeController.text.isNotEmpty) {
-          final endDateTime = _parseDateTime(_endDateController.text, _endTimeController.text);
-          endDate = endDateTime.toIso8601String();
-        }
+        // Converter data para formato YYYY-MM-DD
+        final date = _parseDate(_dateController.text);
+        final occurrenceDate = '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
 
         // Tentar geocoding se ainda não foi feito
         if (_latitude == null || _longitude == null) {
           await _geocodeAddress();
         }
 
-        final result = await _eventService.createEvent(
+        final result = await _complaintService.createComplaint(
           description: _descriptionController.text.trim(),
-          startDate: startDate,
+          occurrenceDate: occurrenceDate,
           address: _addressController.text.trim(),
-          category: _selectedType,
-          endDate: endDate,
+          type: _selectedType,
           latitude: _latitude,
           longitude: _longitude,
         );
@@ -520,16 +465,16 @@ class _CreateEventPageState extends State<CreateEventPage> {
         if (result != null && mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text('Evento criado com sucesso!'),
+              content: Text('Reclamação criada com sucesso!'),
               backgroundColor: Colors.green,
             ),
           );
-          Navigator.of(context).pop(true); // Retorna true para indicar que evento foi criado
+          Navigator.of(context).pop(true); // Retorna true para indicar que reclamação foi criada
         } else {
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
-                content: Text('Erro ao criar evento. Tente novamente.'),
+                content: Text('Erro ao criar reclamação. Tente novamente.'),
                 backgroundColor: Colors.red,
               ),
             );
@@ -551,28 +496,13 @@ class _CreateEventPageState extends State<CreateEventPage> {
     }
   }
 
-  DateTime _parseDateTime(String dateStr, String timeStr) {
-    // dateStr está no formato "dd/mm/yyyy"
-    // timeStr está no formato "HH:mm"
-    final dateParts = dateStr.split('/');
-    final timeParts = timeStr.split(':');
-    
-    final day = int.parse(dateParts[0]);
-    final month = int.parse(dateParts[1]);
-    final year = int.parse(dateParts[2]);
-    final hour = int.parse(timeParts[0]);
-    final minute = int.parse(timeParts[1]);
-    
-    return DateTime(year, month, day, hour, minute);
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.cardColor,
       appBar: AppBar(
         leading: const AppBackButton(),
-        title: const Text('Criar Evento'),
+        title: const Text('Criar Reclamação'),
       ),
       body: SingleChildScrollView(
         child: Form(
@@ -600,7 +530,7 @@ class _CreateEventPageState extends State<CreateEventPage> {
                   maxLines: 4,
                   textInputAction: TextInputAction.newline,
                   decoration: const InputDecoration(
-                    hintText: 'Descreva o evento...',
+                    hintText: 'Descreva a reclamação...',
                   ),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
@@ -611,13 +541,13 @@ class _CreateEventPageState extends State<CreateEventPage> {
                 ),
                 const SizedBox(height: AppDefaults.padding),
 
-                /* <---- Categoria (Opcional) -----> */
-                const Text("Categoria (Opcional)"),
+                /* <---- Tipo (Opcional) -----> */
+                const Text("Tipo (Opcional)"),
                 const SizedBox(height: 8),
                 Wrap(
                   spacing: 8,
                   runSpacing: 8,
-                  children: _eventTypes.map((type) {
+                  children: _complaintTypes.map((type) {
                     final isSelected = _selectedType == type['value'];
                     return ChoiceChip(
                       label: Row(
@@ -735,94 +665,25 @@ class _CreateEventPageState extends State<CreateEventPage> {
                   ),
                 const SizedBox(height: AppDefaults.padding * 2),
 
-                /* <---- Data e Hora -----> */
-                Row(
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text("Data"),
-                          const SizedBox(height: 8),
-                          TextFormField(
-                            controller: _dateController,
-                            readOnly: true,
-                            onTap: _selectDate,
-                            decoration: const InputDecoration(
-                              hintText: 'Selecione a data',
-                              suffixIcon: Icon(Icons.calendar_today),
-                            ),
-                            validator: (value) {
-                              if (value == null || value.isEmpty) {
-                                return 'Selecione uma data';
-                              }
-                              return null;
-                            },
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(width: AppDefaults.padding),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text("Hora"),
-                          const SizedBox(height: 8),
-                          TextFormField(
-                            controller: _timeController,
-                            readOnly: true,
-                            onTap: _selectTime,
-                            decoration: const InputDecoration(
-                              hintText: 'Selecione a hora',
-                              suffixIcon: Icon(Icons.access_time),
-                            ),
-                            validator: (value) {
-                              if (value == null || value.isEmpty) {
-                                return 'Selecione uma hora';
-                              }
-                              return null;
-                            },
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: AppDefaults.padding),
-
-                /* <---- Data e Hora de Fim (Opcional) -----> */
-                const Text("Data e Hora de Fim (Opcional)"),
+                /* <---- Data de Ocorrência -----> */
+                const Text("Data de Ocorrência"),
                 const SizedBox(height: 8),
-                Row(
-                  children: [
-                    Expanded(
-                      child: TextFormField(
-                        controller: _endDateController,
-                        readOnly: true,
-                        onTap: _selectEndDate,
-                        decoration: const InputDecoration(
-                          hintText: 'Data fim',
-                          suffixIcon: Icon(Icons.calendar_today),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: AppDefaults.padding),
-                    Expanded(
-                      child: TextFormField(
-                        controller: _endTimeController,
-                        readOnly: true,
-                        onTap: _selectEndTime,
-                        decoration: const InputDecoration(
-                          hintText: 'Hora fim',
-                          suffixIcon: Icon(Icons.access_time),
-                        ),
-                      ),
-                    ),
-                  ],
+                TextFormField(
+                  controller: _dateController,
+                  readOnly: true,
+                  onTap: _selectDate,
+                  decoration: const InputDecoration(
+                    hintText: 'Selecione a data',
+                    suffixIcon: Icon(Icons.calendar_today),
+                  ),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Selecione uma data';
+                    }
+                    return null;
+                  },
                 ),
                 const SizedBox(height: AppDefaults.padding * 2),
-                
 
                 /* <---- Botão Salvar -----> */
                 SizedBox(
@@ -844,7 +705,7 @@ class _CreateEventPageState extends State<CreateEventPage> {
                               valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                             ),
                           )
-                        : const Text('Criar Evento'),
+                        : const Text('Criar Reclamação'),
                   ),
                 ),
               ],

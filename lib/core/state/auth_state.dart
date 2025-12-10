@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
 import '../services/api_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -6,7 +7,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 class AuthState extends ChangeNotifier {
   final AuthService _authService = AuthService();
   final ApiService _apiService = ApiService();
-
   bool _isLoading = false;
   bool get isLoading => _isLoading;
 
@@ -102,7 +102,7 @@ class AuthState extends ChangeNotifier {
   } */
 
   Future<void> logout() async {
-    await _authService.signOut();
+    await _authService.signOut(_refreshToken ?? '');
     _accessToken = null;
     _refreshToken = null;
     _currentUser = null;

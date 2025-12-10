@@ -82,10 +82,6 @@ exports.logout = async (req, res) => {
             return res.status(401).json({ message: 'Token de refresh inválido.' });
         }
 
-        const pool = await supabasePool.getPgPool();
-
-        await pool.query('DELETE FROM refresh_tokens WHERE user_id = $1', [decoded.userId]);
-
         res.status(200).json({ message: 'Logout successful' });
     } catch (error) {
         console.error('Erro ao fazer logout:', error);
@@ -109,14 +105,13 @@ exports.register = async (req, res) => {
         const salt = generateSalt();
         const hashedPassword = encryptPassword(password, salt);
 
-        await pool.query('INSERT INTO users (email, password, name, phone, salt) VALUES ($1, $2, $3, $4, $5)', [email, hashedPassword, name, phone, salt]);
+        await pool.query('INSERT INTO users (email, password, name, cpf, phone, salt) VALUES ($1, $2, $3, $4, $5, $6)', [email, hashedPassword, name, cpf, phone, salt]);
 
-        res.status(200).json({ message: 'Register successful' });
+        return res.status(200).json({ message: 'Registrado com sucesso' });
     } catch (error) {
         console.error('Erro ao registrar usuário:', error);
-        res.status(500).json({ message: 'Erro ao registrar usuário.' });
+        return res.status(500).json({ message: 'Erro ao registrar usuário. Tente novamente.' });
     }
-
 }
 
 exports.getMe = async (req, res) => {

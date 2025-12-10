@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:provider/provider.dart';
 
 import '../../core/components/app_back_button.dart';
 import '../../core/constants/app_defaults.dart';
 import '../../core/constants/app_icons.dart';
 import '../../core/routes/app_routes.dart';
 import '../../core/components/app_settings_tile.dart';
+import '../../core/state/auth_state.dart';
 
 class DrawerPage extends StatelessWidget {
   const DrawerPage({super.key});
@@ -65,7 +67,14 @@ class DrawerPage extends StatelessWidget {
             AppSettingsListTile(
               label: 'Logout',
               trailing: SvgPicture.asset(AppIcons.right),
-              onTap: () => Navigator.pushNamed(context, AppRoutes.introLogin),
+              onTap: () async {
+                await Provider.of<AuthState>(context, listen: false).logout();
+                // Limpar a pilha de navegação e ir para o onboarding
+                Navigator.of(context).pushNamedAndRemoveUntil(
+                  AppRoutes.onboarding,
+                  (route) => false,
+                );
+              },
             ),
           ],
         ),

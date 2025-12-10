@@ -2,9 +2,16 @@ import 'package:dio/dio.dart';
 
 class ApiService {
   static final ApiService _instance = ApiService._internal();
-  
+
   factory ApiService() {
     return _instance;
+  }
+
+    // Callback para logout (limpar tokens e voltar para onboarding)
+  Future<void> Function()? _onLogoutCallback;
+
+  void setOnLogoutCallback(Future<void> Function() callback) {
+    _onLogoutCallback = callback;
   }
 
   ApiService._internal()
@@ -19,80 +26,86 @@ class ApiService {
           ),
         ) {
     // Interceptor para adicionar token de autenticação
-    _dio.interceptors.add(InterceptorsWrapper(
-      onRequest: (options, handler) {
-        // Não adiciona Authorization em requisições de refreshToken
-        if (_accessToken != null && !options.path.contains('/refreshToken')) {
-          options.headers['Authorization'] = 'Bearer $_accessToken';
-        }
-        handler.next(options);
-      },
-      onError: (error, handler) async {
-        // Se receber 403 (token expirado), tenta fazer refresh
-        if (error.response?.statusCode == 403 && _refreshTokenCallback != null) {
-          print('Token expirado');
-          try {
-            // Evita loop infinito: não faz refresh em requisições de refresh
-            if (error.requestOptions.path == '/api/auth/refreshToken') {
-              handler.next(error);
-              return;
-            }
-
-            // Busca o refreshToken usando o callback
-            final refreshToken = await _refreshTokenCallback?.call();
-            if (refreshToken == null || refreshToken.isEmpty) {
-              handler.next(error);
-              return;
-            }
-
-            // Tenta fazer refresh do token
-            try {
-              final refreshResponse = await _dio.post(
-                '/api/auth/refreshToken',
-                data: {'refreshToken': refreshToken},
-              );
-
-              final newAccessToken = refreshResponse.data['accessToken'] as String?;
-              if (newAccessToken != null && newAccessToken.isNotEmpty) {
-                // Atualiza o token
-                _accessToken = newAccessToken;
-                
-                // Chama o callback para atualizar o token no AuthState
-                await _onTokenRefreshedCallback?.call(newAccessToken);
-
-                // Atualiza o header da requisição original
-                error.requestOptions.headers['Authorization'] = 'Bearer $newAccessToken';
-
-                // Refaz a requisição original com o novo token
-                final opts = Options(
-                  method: error.requestOptions.method,
-                  headers: error.requestOptions.headers,
-                );
-                final cloneReq = await _dio.request<dynamic>(
-                  error.requestOptions.path,
-                  options: opts,
-                  data: error.requestOptions.data,
-                  queryParameters: error.requestOptions.queryParameters,
-                );
-                handler.resolve(cloneReq);
-                return;
-              }
-            } catch (refreshError) {
-              // Se o refresh falhar, retorna o erro original
-              handler.next(error);
-              return;
-            }
-          } catch (e) {
-            // Se houver algum erro, retorna o erro original
+    _dio.interceptors.add(InterceptorsWrapper(onRequest: (options, handler) {
+      // Não adiciona Authorization em requisições de refreshToken
+      if (_accessToken != null && !options.path.contains('/refreshToken')) {
+        options.headers['Authorization'] = 'Bearer $_accessToken';
+      }
+      handler.next(options);
+    }, onError: (error, handler) async {
+      // Se receber 403 (token expirado), tenta fazer refresh
+      if (error.response?.statusCode == 403 && _refreshTokenCallback != null) {
+        print('Token expirado');
+        try {
+          // Evita loop infinito: não faz refresh em requisições de refresh
+          if (error.requestOptions.path == '/api/auth/refreshToken') {
+            await _onLogoutCallback?.call(); // 👈 DESLOGA
             handler.next(error);
             return;
           }
-        }
 
-        // Para outros erros, passa adiante normalmente
-        handler.next(error);
-      },
-    ));
+          // Busca o refreshToken usando o callback
+          final refreshToken = await _refreshTokenCallback?.call();
+
+          if (refreshToken == null || refreshToken.isEmpty) {
+            await _onLogoutCallback?.call(); // 👈 DESLOGA
+            handler.next(error);
+            return;
+          }
+
+          // Tenta fazer refresh do token
+          try {
+            final refreshResponse = await _dio.post(
+              '/api/auth/refreshToken',
+              data: {'refreshToken': refreshToken},
+            );
+
+            final newAccessToken =
+                refreshResponse.data['accessToken'] as String?;
+
+            if (newAccessToken != null && newAccessToken.isNotEmpty) {
+              // Atualiza o token
+              _accessToken = newAccessToken;
+
+              await _onTokenRefreshedCallback?.call(newAccessToken);
+
+              // Atualiza a requisição original
+              error.requestOptions.headers['Authorization'] =
+                  'Bearer $newAccessToken';
+
+              final opts = Options(
+                method: error.requestOptions.method,
+                headers: error.requestOptions.headers,
+              );
+
+              final cloneReq = await _dio.request<dynamic>(
+                error.requestOptions.path,
+                options: opts,
+                data: error.requestOptions.data,
+                queryParameters: error.requestOptions.queryParameters,
+              );
+
+              handler.resolve(cloneReq);
+              return;
+            } else {
+              await _onLogoutCallback?.call(); // 👈 DESLOGA
+              handler.next(error);
+              return;
+            }
+          } catch (refreshError) {
+            await _onLogoutCallback?.call(); // 👈 DESLOGA
+            handler.next(error);
+            return;
+          }
+        } catch (e) {
+          await _onLogoutCallback?.call(); // 👈 DESLOGA
+          handler.next(error);
+          return;
+        }
+      }
+
+      handler.next(error);
+    }));
 
     // Interceptor de log (opcional, pode remover em produção)
     _dio.interceptors.add(LogInterceptor(
@@ -107,10 +120,10 @@ class ApiService {
 
   final Dio _dio;
   String? _accessToken;
-  
+
   // Callback para buscar o refreshToken
   Future<String?> Function()? _refreshTokenCallback;
-  
+
   // Callback para notificar quando o token foi atualizado
   Future<void> Function(String newToken)? _onTokenRefreshedCallback;
 
@@ -124,7 +137,8 @@ class ApiService {
   }
 
   // Configura callback para notificar atualização do token
-  void setOnTokenRefreshedCallback(Future<void> Function(String newToken) callback) {
+  void setOnTokenRefreshedCallback(
+      Future<void> Function(String newToken) callback) {
     _onTokenRefreshedCallback = callback;
   }
 
@@ -189,7 +203,8 @@ class ApiService {
     }
   }
 
-  Future<Response> delete(String endpoint, {Map<String, dynamic>? params}) async {
+  Future<Response> delete(String endpoint,
+      {Map<String, dynamic>? params}) async {
     try {
       final response = await _dio.delete(endpoint, queryParameters: params);
       return response;
@@ -232,7 +247,8 @@ class ApiException implements Exception {
 
         if (statusCode != null) {
           if (statusCode >= 400 && statusCode < 500) {
-            msg = 'Erro de requisição ($statusCode): ${data?['message'] ?? 'verifique os dados enviados.'}';
+            msg =
+                'Erro de requisição ($statusCode): ${data?['message'] ?? 'verifique os dados enviados.'}';
           } else if (statusCode >= 500) {
             msg = 'Erro interno do servidor ($statusCode).';
           }
@@ -248,7 +264,8 @@ class ApiException implements Exception {
       case DioExceptionType.unknown:
       default:
         return ApiException(
-          message: 'Erro de conexão: ${error.message ?? 'verifique se o servidor está ativo.'}',
+          message:
+              'Erro de conexão: ${error.message ?? 'verifique se o servidor está ativo.'}',
         );
     }
   }

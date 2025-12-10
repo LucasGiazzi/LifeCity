@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'core/state/auth_state.dart';
 import 'views/entrypoint/entrypoint_ui.dart';
-import 'views/auth/intro_login_page.dart';
+import 'views/onboarding/onboarding_page.dart';
 
 class Wrapper extends StatelessWidget {
   const Wrapper({super.key});
@@ -14,6 +14,6 @@ class Wrapper extends StatelessWidget {
     if (authState.isAuthenticated) {
       return const EntryPointUI();
     }
-    return const IntroLoginPage();
+    return const OnboardingPage();
   }
 }
