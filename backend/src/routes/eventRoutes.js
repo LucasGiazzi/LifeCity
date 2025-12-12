@@ -9,6 +9,7 @@ router.get('/', eventController.getAll);
 
 // Rotas que exigem autenticação
 router.post('/create', authenticateToken, eventController.create);
+router.delete('/:id', authenticateToken, eventController.delete);
 
 module.exports = router;
 

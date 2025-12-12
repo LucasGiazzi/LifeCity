@@ -7,6 +7,7 @@ class ComplaintModel {
   final double? latitude;
   final double? longitude;
   final DateTime createdAt;
+  final String? createdBy;
   final String? createdByName;
   final String? createdByEmail;
 
@@ -19,6 +20,7 @@ class ComplaintModel {
     this.latitude,
     this.longitude,
     required this.createdAt,
+    this.createdBy,
     this.createdByName,
     this.createdByEmail,
   });
@@ -37,6 +39,7 @@ class ComplaintModel {
           ? double.tryParse(json['longitude'].toString()) 
           : null,
       createdAt: DateTime.parse(json['created_at'] as String),
+      createdBy: json['created_by']?.toString(),
       createdByName: json['created_by_name'] as String?,
       createdByEmail: json['created_by_email'] as String?,
     );
@@ -52,6 +55,7 @@ class ComplaintModel {
       'latitude': latitude,
       'longitude': longitude,
       'created_at': createdAt.toIso8601String(),
+      'created_by': createdBy,
       'created_by_name': createdByName,
       'created_by_email': createdByEmail,
     };

@@ -30,7 +30,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'eGrocery',
+      title: 'LifeCity',
       theme: AppTheme.defaultTheme,
       home: const Wrapper(), // Define o Wrapper como a tela inicial
       onGenerateRoute: RouteGenerator.onGenerate,

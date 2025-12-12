@@ -2,6 +2,7 @@ import 'package:animations/animations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:geolocator/geolocator.dart';
 
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_defaults.dart';
@@ -12,11 +13,14 @@ import '../../core/services/event_service.dart';
 import '../../core/services/complaint_service.dart';
 import '../../core/state/filter_controller.dart';
 import '../../core/state/filter_scope.dart';
+import 'package:provider/provider.dart';
+import '../../core/state/auth_state.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 import '../menu/menu_page.dart';
 import '../cart/cart_page.dart';
-import '../save/save_page.dart';
 import '../profile/profile_page.dart';
+import '../my_items/my_items_page.dart';
 import 'components/app_navigation_bar.dart';
 
 enum MapViewType { events, complaints }
@@ -68,7 +72,7 @@ class _EntryPointUIState extends State<EntryPointUI> {
     ), // 0 - mapa
     const MenuPage(), // 1 - filtro
     const CartPage(isHomePage: true),
-    const SavePage(isHomePage: false),
+    const MyItemsPage(), // 3 - meus eventos e reclamações
     const ProfilePage(),
   ];
 
@@ -360,13 +364,14 @@ class _MapBody extends StatefulWidget {
 
 class _MapBodyState extends State<_MapBody> {
   final mapController = MapController();
-  final LatLng _center = const LatLng(-22.9099, -47.0626);
+  LatLng _center = const LatLng(-22.9099, -47.0626); // Centro padrão (Campinas)
   final EventService _eventService = EventService();
   final ComplaintService _complaintService = ComplaintService();
 
   List<EventModel> _events = [];
   List<ComplaintModel> _complaints = [];
   bool _isLoading = true;
+  bool _isGettingLocation = false;
   MapViewType _currentViewType = MapViewType.events;
 
   @override
@@ -462,6 +467,103 @@ class _MapBodyState extends State<_MapBody> {
     _loadEvents();
   }
 
+  Future<void> _getCurrentLocation() async {
+    setState(() {
+      _isGettingLocation = true;
+    });
+
+    try {
+      // Verificar permissões
+      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Serviços de localização estão desabilitados.'),
+              backgroundColor: Colors.orange,
+            ),
+          );
+        }
+        setState(() {
+          _isGettingLocation = false;
+        });
+        return;
+      }
+
+      LocationPermission permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+        if (permission == LocationPermission.denied) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Permissão de localização negada.'),
+                backgroundColor: Colors.orange,
+              ),
+            );
+          }
+          setState(() {
+            _isGettingLocation = false;
+          });
+          return;
+        }
+      }
+
+      if (permission == LocationPermission.deniedForever) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Permissão de localização negada permanentemente. Ative nas configurações.'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+        setState(() {
+          _isGettingLocation = false;
+        });
+        return;
+      }
+
+      // Obter localização atual
+      Position position = await Geolocator.getCurrentPosition(
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.high,
+        ),
+      );
+
+      if (mounted) {
+        setState(() {
+          _center = LatLng(position.latitude, position.longitude);
+          _isGettingLocation = false;
+        });
+
+        // Mover o mapa para a localização atual
+        mapController.move(_center, 15);
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Localização atualizada!'),
+            backgroundColor: Colors.green,
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
+    } catch (e) {
+      setState(() {
+        _isGettingLocation = false;
+      });
+      debugPrint('Erro ao obter localização: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Erro ao obter localização: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final filterController = FilterScope.of(context);
@@ -494,7 +596,12 @@ class _MapBodyState extends State<_MapBody> {
             // Reclamações com filtros
             final visible = filters.isEmpty
                 ? _complaints
-                : _complaints.where((c) => c.type != null && filters.contains(c.type!)).toList();
+                : _complaints.where((c) {
+                    if (c.type == null) return false;
+                    // Normalizar o tipo para lowercase para comparar com as chaves do filtro
+                    final normalizedType = c.type!.toLowerCase();
+                    return filters.contains(normalizedType);
+                  }).toList();
             
             markers = visible.map((c) {
               return Marker(
@@ -589,78 +696,11 @@ class _MapBodyState extends State<_MapBody> {
     showModalBottomSheet(
       context: context,
       showDragHandle: true,
+      isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (_) => Padding(
-        padding: const EdgeInsets.all(AppDefaults.padding),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              e.description,
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
-            ),
-            const SizedBox(height: 8),
-            if (e.category != null) ...[
-              _TypePill(type: e.categoryType),
-              const SizedBox(height: 8),
-            ],
-            if (e.address != null) ...[
-              Row(
-                children: [
-                  const Icon(Icons.location_on, size: 16),
-                  const SizedBox(width: 4),
-                  Expanded(
-                    child: Text(
-                      e.address!,
-                      style: const TextStyle(fontSize: 14),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-            ],
-            Row(
-              children: [
-                const Icon(Icons.access_time, size: 16),
-                const SizedBox(width: 4),
-                Text(
-                  _formatDateTime(e.startDate),
-                  style: const TextStyle(fontSize: 14),
-                ),
-              ],
-            ),
-            if (e.endDate != null) ...[
-              const SizedBox(height: 4),
-              Row(
-                children: [
-                  const Icon(Icons.event_busy, size: 16),
-                  const SizedBox(width: 4),
-                  Text(
-                    'Até ${_formatDateTime(e.endDate!)}',
-                    style: const TextStyle(fontSize: 14),
-                  ),
-                ],
-              ),
-            ],
-            if (e.createdByName != null) ...[
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  const Icon(Icons.person, size: 16),
-                  const SizedBox(width: 4),
-                  Text(
-                    'Criado por: ${e.createdByName}',
-                    style: const TextStyle(fontSize: 12, color: Colors.grey),
-                  ),
-                ],
-              ),
-            ],
-          ],
-        ),
-      ),
+      builder: (_) => _EventDetailSheet(event: e),
     );
   }
 
@@ -668,82 +708,12 @@ class _MapBodyState extends State<_MapBody> {
     showModalBottomSheet(
       context: context,
       showDragHandle: true,
+      isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (_) => Padding(
-        padding: const EdgeInsets.all(AppDefaults.padding),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              c.description,
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
-            ),
-            const SizedBox(height: 8),
-            if (c.type != null) ...[
-              _ComplaintTypePill(type: c.type!),
-              const SizedBox(height: 8),
-            ],
-            if (c.address != null) ...[
-              Row(
-                children: [
-                  const Icon(Icons.location_on, size: 16),
-                  const SizedBox(width: 4),
-                  Expanded(
-                    child: Text(
-                      c.address!,
-                      style: const TextStyle(fontSize: 14),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-            ],
-            Row(
-              children: [
-                const Icon(Icons.calendar_today, size: 16),
-                const SizedBox(width: 4),
-                Text(
-                  _formatDate(c.occurrenceDate),
-                  style: const TextStyle(fontSize: 14),
-                ),
-              ],
-            ),
-            if (c.createdByName != null) ...[
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  const Icon(Icons.person, size: 16),
-                  const SizedBox(width: 4),
-                  Text(
-                    'Criado por: ${c.createdByName}',
-                    style: const TextStyle(fontSize: 12, color: Colors.grey),
-                  ),
-                ],
-              ),
-            ],
-          ],
-        ),
-      ),
+      builder: (_) => _ComplaintDetailSheet(complaint: c),
     );
-  }
-
-  String _formatDateTime(DateTime dateTime) {
-    final day = dateTime.day.toString().padLeft(2, '0');
-    final month = dateTime.month.toString().padLeft(2, '0');
-    final year = dateTime.year;
-    final hour = dateTime.hour.toString().padLeft(2, '0');
-    final minute = dateTime.minute.toString().padLeft(2, '0');
-    return '$day/$month/$year às $hour:$minute';
-  }
-
-  String _formatDate(DateTime date) {
-    final day = date.day.toString().padLeft(2, '0');
-    final month = date.month.toString().padLeft(2, '0');
-    final year = date.year;
-    return '$day/$month/$year';
   }
 }
 
@@ -788,25 +758,39 @@ class _ComplaintPin extends StatelessWidget {
   final String? type;
   const _ComplaintPin({this.type});
 
+  // Usar as mesmas categorias definidas em _FilterButtons para garantir consistência
+  static const List<Map<String, dynamic>> _complaintCategories = [
+    {'key': 'infraestrutura', 'icon': Icons.construction, 'color': Colors.orange},
+    {'key': 'seguranca', 'icon': Icons.security, 'color': Colors.red},
+    {'key': 'limpeza', 'icon': Icons.cleaning_services, 'color': Colors.teal},
+    {'key': 'transito', 'icon': Icons.traffic, 'color': Colors.amber},
+    {'key': 'outros', 'icon': Icons.report_problem, 'color': Colors.grey},
+  ];
+
   @override
   Widget build(BuildContext context) {
-    final Color pinColor = switch (type?.toLowerCase()) {
-      'infraestrutura' => Colors.orange,
-      'seguranca' => Colors.red,
-      'limpeza' => Colors.teal,
-      'transito' => Colors.amber,
-      'outros' => Colors.grey,
-      _ => Colors.red.shade700,
-    };
+    if (type == null) {
+      return Container(
+        decoration: BoxDecoration(
+          color: Colors.red.shade700,
+          shape: BoxShape.circle,
+          boxShadow: const [BoxShadow(blurRadius: 6, color: Colors.black26)],
+        ),
+        child: const Center(
+          child: Icon(Icons.warning, color: Colors.white, size: 20),
+        ),
+      );
+    }
 
-    final IconData pinIcon = switch (type?.toLowerCase()) {
-      'infraestrutura' => Icons.construction,
-      'seguranca' => Icons.security,
-      'limpeza' => Icons.cleaning_services,
-      'transito' => Icons.traffic,
-      'outros' => Icons.report_problem,
-      _ => Icons.warning,
-    };
+    // Buscar a categoria correspondente
+    final normalizedType = type!.toLowerCase();
+    final category = _complaintCategories.firstWhere(
+      (cat) => cat['key'] == normalizedType,
+      orElse: () => {'icon': Icons.warning, 'color': Colors.red.shade700},
+    );
+
+    final Color pinColor = category['color'] as Color;
+    final IconData pinIcon = category['icon'] as IconData;
 
     return Container(
       decoration: BoxDecoration(
@@ -871,5 +855,395 @@ class _ComplaintTypePill extends StatelessWidget {
       avatar: Icon(icon, size: 16),
       label: Text(label),
     );
+  }
+}
+
+/* ====================== COMPLAINT DETAIL SHEET ====================== */
+
+class _ComplaintDetailSheet extends StatefulWidget {
+  final ComplaintModel complaint;
+
+  const _ComplaintDetailSheet({required this.complaint});
+
+  @override
+  State<_ComplaintDetailSheet> createState() => _ComplaintDetailSheetState();
+}
+
+class _ComplaintDetailSheetState extends State<_ComplaintDetailSheet> {
+  final ComplaintService _complaintService = ComplaintService();
+  List<Map<String, dynamic>> _photos = [];
+  bool _isLoadingPhotos = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadPhotos();
+  }
+
+  Future<void> _loadPhotos() async {
+    setState(() {
+      _isLoadingPhotos = true;
+    });
+
+    try {
+      final photos = await _complaintService.getPhotos(widget.complaint.id);
+      if (mounted) {
+        setState(() {
+          _photos = photos;
+          _isLoadingPhotos = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoadingPhotos = false;
+        });
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final authState = Provider.of<AuthState>(context, listen: false);
+    final currentUser = authState.currentUser;
+    final isOwner = currentUser != null && 
+                    widget.complaint.createdBy != null &&
+                    currentUser['id']?.toString() == widget.complaint.createdBy;
+
+    return Padding(
+      padding: const EdgeInsets.all(AppDefaults.padding),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            widget.complaint.description,
+            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+          ),
+          const SizedBox(height: 8),
+          if (widget.complaint.type != null) ...[
+            _ComplaintTypePill(type: widget.complaint.type!),
+            const SizedBox(height: 8),
+          ],
+          if (widget.complaint.address != null) ...[
+            Row(
+              children: [
+                const Icon(Icons.location_on, size: 16),
+                const SizedBox(width: 4),
+                Expanded(
+                  child: Text(
+                    widget.complaint.address!,
+                    style: const TextStyle(fontSize: 14),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+          ],
+          Row(
+            children: [
+              const Icon(Icons.calendar_today, size: 16),
+              const SizedBox(width: 4),
+              Text(
+                _formatDate(widget.complaint.occurrenceDate),
+                style: const TextStyle(fontSize: 14),
+              ),
+            ],
+          ),
+          if (widget.complaint.createdByName != null) ...[
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                const Icon(Icons.person, size: 16),
+                const SizedBox(width: 4),
+                Text(
+                  'Criado por: ${widget.complaint.createdByName}',
+                  style: const TextStyle(fontSize: 12, color: Colors.grey),
+                ),
+              ],
+            ),
+          ],
+          // Galeria de fotos
+          if (_isLoadingPhotos)
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 16),
+              child: Center(child: CircularProgressIndicator()),
+            )
+          else if (_photos.isNotEmpty) ...[
+            const SizedBox(height: 16),
+            const Text(
+              'Fotos',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+            ),
+            const SizedBox(height: 8),
+            SizedBox(
+              height: 120,
+              child: ListView.builder(
+                scrollDirection: Axis.horizontal,
+                itemCount: _photos.length,
+                itemBuilder: (context, index) {
+                  final photo = _photos[index];
+                  final url = photo['url'] as String?;
+                  if (url == null) return const SizedBox.shrink();
+                  
+                  return Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: CachedNetworkImage(
+                        imageUrl: url,
+                        width: 120,
+                        height: 120,
+                        fit: BoxFit.cover,
+                        placeholder: (context, url) => Container(
+                          width: 120,
+                          height: 120,
+                          color: Colors.grey[300],
+                          child: const Center(child: CircularProgressIndicator()),
+                        ),
+                        errorWidget: (context, url, error) => Container(
+                          width: 120,
+                          height: 120,
+                          color: Colors.grey[300],
+                          child: const Icon(Icons.error),
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
+          // Botão de exclusão (apenas para dono)
+          if (isOwner) ...[
+            const SizedBox(height: 16),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: () => _showDeleteConfirmation(context),
+                icon: const Icon(Icons.delete),
+                label: const Text('Excluir Reclamação'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.red,
+                  foregroundColor: Colors.white,
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  void _showDeleteConfirmation(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Confirmar Exclusão'),
+        content: const Text('Tem certeza que deseja excluir esta reclamação? Esta ação não pode ser desfeita.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancelar'),
+          ),
+          TextButton(
+            onPressed: () async {
+              Navigator.pop(context); // Fecha o diálogo
+              final success = await _complaintService.deleteComplaint(widget.complaint.id);
+              if (mounted) {
+                if (success) {
+                  Navigator.pop(context); // Fecha o bottom sheet
+                  // Recarregar dados no mapa
+                  if (context.mounted) {
+                    final mapBodyState = context.findAncestorStateOfType<_MapBodyState>();
+                    mapBodyState?.reloadData(MapViewType.complaints);
+                  }
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Reclamação excluída com sucesso'),
+                      backgroundColor: Colors.green,
+                    ),
+                  );
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Erro ao excluir reclamação'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
+              }
+            },
+            child: const Text('Excluir', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _formatDate(DateTime date) {
+    final day = date.day.toString().padLeft(2, '0');
+    final month = date.month.toString().padLeft(2, '0');
+    final year = date.year;
+    return '$day/$month/$year';
+  }
+}
+
+/* ====================== EVENT DETAIL SHEET ====================== */
+
+class _EventDetailSheet extends StatelessWidget {
+  final EventModel event;
+
+  const _EventDetailSheet({required this.event});
+
+  @override
+  Widget build(BuildContext context) {
+    final authState = Provider.of<AuthState>(context, listen: false);
+    final currentUser = authState.currentUser;
+    final isOwner = currentUser != null && 
+                    event.createdBy != null &&
+                    currentUser['id']?.toString() == event.createdBy;
+
+    return Padding(
+      padding: const EdgeInsets.all(AppDefaults.padding),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            event.description,
+            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+          ),
+          const SizedBox(height: 8),
+          if (event.category != null) ...[
+            _TypePill(type: event.categoryType),
+            const SizedBox(height: 8),
+          ],
+          if (event.address != null) ...[
+            Row(
+              children: [
+                const Icon(Icons.location_on, size: 16),
+                const SizedBox(width: 4),
+                Expanded(
+                  child: Text(
+                    event.address!,
+                    style: const TextStyle(fontSize: 14),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+          ],
+          Row(
+            children: [
+              const Icon(Icons.access_time, size: 16),
+              const SizedBox(width: 4),
+              Text(
+                _formatDateTime(event.startDate),
+                style: const TextStyle(fontSize: 14),
+              ),
+            ],
+          ),
+          if (event.endDate != null) ...[
+            const SizedBox(height: 4),
+            Row(
+              children: [
+                const Icon(Icons.event_busy, size: 16),
+                const SizedBox(width: 4),
+                Text(
+                  'Até ${_formatDateTime(event.endDate!)}',
+                  style: const TextStyle(fontSize: 14),
+                ),
+              ],
+            ),
+          ],
+          if (event.createdByName != null) ...[
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                const Icon(Icons.person, size: 16),
+                const SizedBox(width: 4),
+                Text(
+                  'Criado por: ${event.createdByName}',
+                  style: const TextStyle(fontSize: 12, color: Colors.grey),
+                ),
+              ],
+            ),
+          ],
+          // Botão de exclusão (apenas para dono)
+          if (isOwner) ...[
+            const SizedBox(height: 16),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: () => _showDeleteConfirmation(context),
+                icon: const Icon(Icons.delete),
+                label: const Text('Excluir Evento'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.red,
+                  foregroundColor: Colors.white,
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  void _showDeleteConfirmation(BuildContext context) {
+    final eventService = EventService();
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Confirmar Exclusão'),
+        content: const Text('Tem certeza que deseja excluir este evento? Esta ação não pode ser desfeita.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancelar'),
+          ),
+          TextButton(
+            onPressed: () async {
+              Navigator.pop(context); // Fecha o diálogo
+              final success = await eventService.deleteEvent(event.id);
+              if (context.mounted) {
+                if (success) {
+                  Navigator.pop(context); // Fecha o bottom sheet
+                  // Recarregar dados no mapa
+                  if (context.mounted) {
+                    final mapBodyState = context.findAncestorStateOfType<_MapBodyState>();
+                    mapBodyState?.reloadData(MapViewType.events);
+                  }
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Evento excluído com sucesso'),
+                      backgroundColor: Colors.green,
+                    ),
+                  );
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Erro ao excluir evento'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
+              }
+            },
+            child: const Text('Excluir', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _formatDateTime(DateTime dateTime) {
+    final day = dateTime.day.toString().padLeft(2, '0');
+    final month = dateTime.month.toString().padLeft(2, '0');
+    final year = dateTime.year;
+    final hour = dateTime.hour.toString().padLeft(2, '0');
+    final minute = dateTime.minute.toString().padLeft(2, '0');
+    return '$day/$month/$year às $hour:$minute';
   }
 }

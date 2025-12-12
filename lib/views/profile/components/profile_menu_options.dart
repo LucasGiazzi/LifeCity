@@ -28,7 +28,7 @@ class ProfileMenuOptions extends StatelessWidget {
           ),
           const Divider(thickness: 0.1),
           ProfileListTile(
-            title: 'Publicações',
+            title: 'Notificações',
             icon: AppIcons.profileNotification,
             onTap: () => Navigator.pushNamed(context, AppRoutes.notifications),
           ),

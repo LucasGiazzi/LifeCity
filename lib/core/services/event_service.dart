@@ -41,5 +41,15 @@ class EventService {
       return [];
     }
   }
+
+  Future<bool> deleteEvent(String eventId) async {
+    try {
+      await _api.delete('/api/events/$eventId');
+      return true;
+    } on ApiException catch (e) {
+      print('Erro ao excluir evento: ${e.message}');
+      return false;
+    }
+  }
 }
 

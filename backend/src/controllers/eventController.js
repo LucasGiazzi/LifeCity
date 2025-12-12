@@ -60,6 +60,7 @@ exports.getAll = async (req, res) => {
                 e.latitude,
                 e.longitude,
                 e.created_at,
+                e.created_by,
                 u.name as created_by_name,
                 u.email as created_by_email
             FROM events e
@@ -73,6 +74,42 @@ exports.getAll = async (req, res) => {
     } catch (error) {
         console.error('Erro ao buscar eventos:', error);
         res.status(500).json({ message: 'Erro ao buscar eventos.' });
+    }
+};
+
+exports.delete = async (req, res) => {
+    const { id } = req.params;
+    const userId = req.user.id;
+
+    try {
+        const pool = await supabasePool.getPgPool();
+
+        // Verificar se o evento existe e se o usuário é o dono
+        const eventResult = await pool.query(
+            'SELECT id, created_by FROM events WHERE id = $1',
+            [id]
+        );
+
+        if (eventResult.rows.length === 0) {
+            return res.status(404).json({ message: 'Evento não encontrado.' });
+        }
+
+        const event = eventResult.rows[0];
+
+        // Verificar se o usuário é o dono
+        if (event.created_by !== userId) {
+            return res.status(403).json({ message: 'Você não tem permissão para excluir este evento.' });
+        }
+
+        // Deletar o evento do banco
+        await pool.query('DELETE FROM events WHERE id = $1', [id]);
+
+        res.status(200).json({
+            message: 'Evento excluído com sucesso'
+        });
+    } catch (error) {
+        console.error('Erro ao excluir evento:', error);
+        res.status(500).json({ message: 'Erro ao excluir evento.' });
     }
 };
 

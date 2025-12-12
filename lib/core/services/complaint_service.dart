@@ -1,3 +1,5 @@
+import 'dart:io';
+import 'package:dio/dio.dart';
 import 'api_service.dart';
 
 class ComplaintService {
@@ -10,9 +12,10 @@ class ComplaintService {
     String? type,
     double? latitude,
     double? longitude,
+    List<File>? photos,
   }) async {
     try {
-      final response = await _api.post('/api/complaints/create', {
+      FormData formData = FormData.fromMap({
         'description': description,
         'occurrence_date': occurrenceDate,
         'address': address,
@@ -20,6 +23,25 @@ class ComplaintService {
         if (latitude != null) 'latitude': latitude,
         if (longitude != null) 'longitude': longitude,
       });
+
+      // Adicionar fotos se houver
+      if (photos != null && photos.isNotEmpty) {
+        formData.files.addAll(
+          photos.asMap().entries.map((entry) {
+            final index = entry.key;
+            final photo = entry.value;
+            return MapEntry(
+              'photos',
+              MultipartFile.fromFileSync(
+                photo.path,
+                filename: 'photo_$index.jpg',
+              ),
+            );
+          }),
+        );
+      }
+
+      final response = await _api.postMultipart('/api/complaints/create', formData);
       return response.data;
     } on ApiException catch (e) {
       print('Erro ao criar reclamação: ${e.message}');
@@ -37,6 +59,29 @@ class ComplaintService {
     } on ApiException catch (e) {
       print('Erro ao buscar reclamações: ${e.message}');
       return [];
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> getPhotos(String complaintId) async {
+    try {
+      final response = await _api.get('/api/complaints/$complaintId/photos');
+      if (response.data != null && response.data['photos'] != null) {
+        return List<Map<String, dynamic>>.from(response.data['photos']);
+      }
+      return [];
+    } on ApiException catch (e) {
+      print('Erro ao buscar fotos da reclamação: ${e.message}');
+      return [];
+    }
+  }
+
+  Future<bool> deleteComplaint(String complaintId) async {
+    try {
+      await _api.delete('/api/complaints/$complaintId');
+      return true;
+    } on ApiException catch (e) {
+      print('Erro ao excluir reclamação: ${e.message}');
+      return false;
     }
   }
 }

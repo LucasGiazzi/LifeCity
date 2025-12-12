@@ -56,4 +56,5 @@ class AppIcons {
   static const contactMap = 'assets/icons/contact_map.svg';
 
   static const cardAdd = 'assets/icons/card_add.svg';
+  static const userGroup = 'assets/icons/community.svg';
 }

@@ -58,7 +58,7 @@ async function uploadToSupabase({ bucket, path, file }) {
 
     const { data, error } = await supabase
         .storage
-        .from(bucket)                 // APENAS o nome do bucket (ex.: 'AEGEA')
+        .from(bucket)                
         .upload(normalizedPath, file.buffer, {
             contentType: file.mimetype || 'application/octet-stream',
             upsert: false
@@ -80,10 +80,78 @@ async function signedUrl(bucket, path, expires = 3600, transform) {
     return data.signedUrl;
 };
 
+async function listBlobs(bucket, folderPath, expires = 3600) {
+    const supabase = await getSupabaseClient();
+
+    // normaliza caminho tipo "BUG_REPORTS/123"
+    const normalizedFolder = String(folderPath).replace(/^\/+/, '').replace(/\\/g, '/');
+
+    const { data, error } = await supabase.storage
+        .from(bucket)
+        .list(normalizedFolder, {
+            limit: 1000,
+            offset: 0,
+            sortBy: { column: 'name', order: 'asc' }
+        });
+
+    if (error) {
+        console.error('Erro ao listar arquivos do Supabase:', error);
+        return [];
+    }
+
+    if (!data || !data.length) return [];
+
+    // gera signed URL para cada arquivo
+    const result = await Promise.all(
+        data.map(async (file) => {
+            const fullPath = `${normalizedFolder}/${file.name}`;
+            const url = await signedUrl(bucket, fullPath, expires);
+            return {
+                name: file.name,
+                path: fullPath,
+                url
+            };
+        })
+    );
+
+    return result;
+}
+
+async function removeFolder(bucket, folderPath) {
+    const supabase = await getSupabaseClient();
+    const normalizedFolder = String(folderPath).replace(/^\/+/, '').replace(/\\/g, '/');
+    console.log(`normalizedFolder: ${normalizedFolder}`);
+
+    const { data, error } = await supabase.storage
+        .from(bucket)
+        .list(normalizedFolder, { limit: 1000 });
+    console.log(`data: ${JSON.stringify(data)}`);
+    if (error) {
+        console.error("Erro ao listar pasta para remoção:", error);
+        return false;
+    }
+
+    const paths = data.map(file => `${normalizedFolder}/${file.name}`);
+    console.log(`paths: ${JSON.stringify(paths)}`);
+
+    const { error: removeError } = await supabase.storage
+        .from(bucket)
+        .remove(paths);
+
+    if (removeError) {
+        console.error("Erro ao remover arquivos do Supabase:", removeError);
+        return false;
+    }
+
+    return true;
+}
+
 module.exports = {
     getSupabaseClient,
     uploadToSupabase,
     signedUrl,
     uploadPublicFile,
-    deletePublicFile
+    deletePublicFile,
+    listBlobs,
+    removeFolder
 }

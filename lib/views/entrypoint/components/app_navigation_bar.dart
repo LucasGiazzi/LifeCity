@@ -28,17 +28,19 @@ class AppBottomNavigationBar extends StatelessWidget {
             isActive: currentIndex == 0,
             onTap: () => onNavTap(0),
           ),
+          
           BottomAppBarItem(
-            name: 'Filtro',
-            iconLocation: AppIcons.menu,
+            name: 'Amigos',
+            iconLocation: AppIcons.userGroup,
+            
             isActive: currentIndex == 1,
             onTap: () => onNavTap(1),
           ),
+          
           const Padding(
             padding: EdgeInsets.all(AppDefaults.padding * 2),
             child: SizedBox(width: AppDefaults.margin),
           ),
-          /* <---- We have to leave this 3rd index (2) for the cart item -----> */
 
           BottomAppBarItem(
             name: 'Eventos',

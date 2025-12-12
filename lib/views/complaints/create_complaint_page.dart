@@ -1,9 +1,11 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:http/http.dart' as http;
 import 'package:geolocator/geolocator.dart';
+import 'package:image_picker/image_picker.dart';
 import '../../core/components/app_back_button.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_defaults.dart';
@@ -30,6 +32,10 @@ class _CreateComplaintPageState extends State<CreateComplaintPage> {
   String? _selectedType;
   double? _latitude;
   double? _longitude;
+  
+  // Fotos
+  List<File> _selectedImages = [];
+  final ImagePicker _picker = ImagePicker();
   
   // Autocomplete
   final FocusNode _addressFocusNode = FocusNode();
@@ -425,6 +431,58 @@ class _CreateComplaintPageState extends State<CreateComplaintPage> {
     }
   }
 
+  Future<void> _pickImage() async {
+    try {
+      final XFile? image = await _picker.pickImage(
+        source: ImageSource.gallery,
+        maxWidth: 800,
+        maxHeight: 800,
+        imageQuality: 85,
+      );
+
+      if (image != null) {
+        setState(() {
+          _selectedImages.add(File(image.path));
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erro ao selecionar imagem: $e')),
+        );
+      }
+    }
+  }
+
+  Future<void> _pickImageFromCamera() async {
+    try {
+      final XFile? image = await _picker.pickImage(
+        source: ImageSource.camera,
+        maxWidth: 800,
+        maxHeight: 800,
+        imageQuality: 85,
+      );
+
+      if (image != null) {
+        setState(() {
+          _selectedImages.add(File(image.path));
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erro ao capturar imagem: $e')),
+        );
+      }
+    }
+  }
+
+  void _removeImage(int index) {
+    setState(() {
+      _selectedImages.removeAt(index);
+    });
+  }
+
   Future<void> _onSubmit() async {
     if (_formKey.currentState?.validate() ?? false) {
       // Validação de data
@@ -456,6 +514,7 @@ class _CreateComplaintPageState extends State<CreateComplaintPage> {
           type: _selectedType,
           latitude: _latitude,
           longitude: _longitude,
+          photos: _selectedImages.isNotEmpty ? _selectedImages : null,
         );
 
         setState(() {
@@ -663,6 +722,105 @@ class _CreateComplaintPageState extends State<CreateComplaintPage> {
                       style: const TextStyle(fontSize: 12, color: Colors.green),
                     ),
                   ),
+                const SizedBox(height: AppDefaults.padding * 2),
+
+                /* <---- Fotos (Opcional) -----> */
+                const Text("Fotos (Opcional)"),
+                const SizedBox(height: 8),
+                // Galeria de fotos selecionadas
+                if (_selectedImages.isNotEmpty)
+                  SizedBox(
+                    height: 100,
+                    child: ListView.builder(
+                      scrollDirection: Axis.horizontal,
+                      itemCount: _selectedImages.length,
+                      itemBuilder: (context, index) {
+                        return Padding(
+                          padding: const EdgeInsets.only(right: 8),
+                          child: Stack(
+                            children: [
+                              Container(
+                                width: 100,
+                                height: 100,
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(color: Colors.grey[300]!),
+                                ),
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(8),
+                                  child: Image.file(
+                                    _selectedImages[index],
+                                    fit: BoxFit.cover,
+                                  ),
+                                ),
+                              ),
+                              Positioned(
+                                top: 4,
+                                right: 4,
+                                child: GestureDetector(
+                                  onTap: () => _removeImage(index),
+                                  child: Container(
+                                    padding: const EdgeInsets.all(4),
+                                    decoration: const BoxDecoration(
+                                      color: Colors.red,
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: const Icon(
+                                      Icons.close,
+                                      color: Colors.white,
+                                      size: 16,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                const SizedBox(height: 8),
+                // Botão para adicionar fotos
+                Row(
+                  children: [
+                    ElevatedButton.icon(
+                      onPressed: () {
+                        showModalBottomSheet(
+                          context: context,
+                          builder: (context) => SafeArea(
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                ListTile(
+                                  leading: const Icon(Icons.photo_library),
+                                  title: const Text('Galeria'),
+                                  onTap: () {
+                                    Navigator.pop(context);
+                                    _pickImage();
+                                  },
+                                ),
+                                ListTile(
+                                  leading: const Icon(Icons.camera_alt),
+                                  title: const Text('Câmera'),
+                                  onTap: () {
+                                    Navigator.pop(context);
+                                    _pickImageFromCamera();
+                                  },
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
+                      icon: const Icon(Icons.add_photo_alternate),
+                      label: const Text('Adicionar Foto'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primary,
+                        foregroundColor: Colors.white,
+                      ),
+                    ),
+                  ],
+                ),
                 const SizedBox(height: AppDefaults.padding * 2),
 
                 /* <---- Data de Ocorrência -----> */
