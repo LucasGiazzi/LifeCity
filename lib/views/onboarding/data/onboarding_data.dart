@@ -14,8 +14,8 @@ class OnboardingData {
     ),
     OnboardingModel(
       imageUrl: 'assets/images/onboarding3.PNG',
-      headline: 'Conheça sua\ncidade',
-      description: 'Eventos, festas, esportes e cultura. Tudo o que rola na sua região, no mapa.',
+      headline: 'Juntos pela\ncidade',
+      description: 'Veja o que outros moradores estão reportando e ajude a prefeitura a priorizar o que mais importa.',
     ),
   ];
 }

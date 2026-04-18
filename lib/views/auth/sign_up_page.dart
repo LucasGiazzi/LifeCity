@@ -83,12 +83,28 @@ class SignUpPage extends StatelessWidget {
                     topRight: Radius.circular(28),
                   ),
                 ),
-                child: SingleChildScrollView(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: screen.width * 0.06,
-                    vertical: screen.height * 0.03,
+                child: Theme(
+                  data: ThemeData.light().copyWith(
+                    colorScheme: ThemeData.light().colorScheme.copyWith(primary: const Color(0xFF00C896)),
+                    inputDecorationTheme: InputDecorationTheme(
+                      fillColor: const Color(0xFFF5F5F5),
+                      filled: true,
+                      floatingLabelBehavior: FloatingLabelBehavior.never,
+                      hintStyle: const TextStyle(color: Color(0xFF9E9E9E), fontSize: 14),
+                      border: OutlineInputBorder(borderSide: BorderSide.none, borderRadius: BorderRadius.circular(12)),
+                      enabledBorder: OutlineInputBorder(borderSide: BorderSide.none, borderRadius: BorderRadius.circular(12)),
+                      focusedBorder: OutlineInputBorder(borderSide: const BorderSide(color: Color(0xFF00C896), width: 1.5), borderRadius: BorderRadius.circular(12)),
+                      suffixIconColor: const Color(0xFF9E9E9E),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                    ),
                   ),
-                  child: const SignUpForm(),
+                  child: SingleChildScrollView(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: screen.width * 0.06,
+                      vertical: screen.height * 0.03,
+                    ),
+                    child: const SignUpForm(),
+                  ),
                 ),
               ),
             ),

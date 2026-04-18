@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../core/routes/app_routes.dart';
+import '../../../core/state/auth_state.dart';
 import '../../../core/state/theme_provider.dart';
 
 class SettingsPage extends StatelessWidget {
@@ -88,6 +89,28 @@ class SettingsPage extends StatelessWidget {
               ),
             ],
           ),
+
+          const SizedBox(height: 20),
+
+          // ── Sair ──
+          _SettingsCard(
+            cardBg: cardBg,
+            children: [
+              _NavTile(
+                icon: Icons.logout_rounded,
+                label: 'Sair',
+                textColor: Colors.red,
+                onTap: () async {
+                  final auth = Provider.of<AuthState>(context, listen: false);
+                  final nav = Navigator.of(context);
+                  await auth.logout();
+                  nav.pushNamedAndRemoveUntil(AppRoutes.onboarding, (route) => false);
+                },
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 20),
         ],
       ),
     );

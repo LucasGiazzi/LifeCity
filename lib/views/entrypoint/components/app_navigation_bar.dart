@@ -50,16 +50,10 @@ class AppBottomNavigationBar extends StatelessWidget {
               const SizedBox(width: 56),
 
               BottomAppBarItem(
-                name: 'Eventos',
-                iconLocation: AppIcons.save,
-                isActive: currentIndex == 2,
-                onTap: () => onNavTap(2),
-              ),
-              BottomAppBarItem(
                 name: 'Perfil',
                 iconLocation: AppIcons.profile,
-                isActive: currentIndex == 3,
-                onTap: () => onNavTap(3),
+                isActive: currentIndex == 2,
+                onTap: () => onNavTap(2),
               ),
             ],
           ),

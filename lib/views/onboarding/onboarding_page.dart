@@ -67,25 +67,6 @@ class _OnboardingPageState extends State<OnboardingPage> {
           SafeArea(
             child: Column(
               children: [
-                // Botão "Pular" no topo
-                Align(
-                  alignment: Alignment.topRight,
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                    child: TextButton(
-                      onPressed: _goToLogin,
-                      child: Text(
-                        'Pular',
-                        style: GoogleFonts.poppins(
-                          color: Colors.white54,
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-
                 // PageView de slides
                 Expanded(
                   child: PageView.builder(
