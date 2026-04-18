@@ -113,7 +113,7 @@ class NotificationTile extends StatelessWidget {
                 title,
                 style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                       fontWeight: FontWeight.bold,
-                      color: Colors.black,
+                      color: Theme.of(context).textTheme.bodyLarge?.color,
                     ),
               ),
               subtitle: Column(

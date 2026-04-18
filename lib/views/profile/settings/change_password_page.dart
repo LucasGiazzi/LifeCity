@@ -16,7 +16,6 @@ class ChangePasswordPage extends StatelessWidget {
           'Change Password Page',
         ),
       ),
-      backgroundColor: AppColors.cardColor,
       body: Center(
         child: SingleChildScrollView(
           child: Container(
@@ -26,7 +25,7 @@ class ChangePasswordPage extends StatelessWidget {
               vertical: AppDefaults.padding * 2,
             ),
             decoration: BoxDecoration(
-              color: AppColors.scaffoldBackground,
+              color: Theme.of(context).cardColor,
               borderRadius: AppDefaults.borderRadius,
             ),
             child: Column(

@@ -15,7 +15,6 @@ class ContactUsPage extends StatelessWidget {
         leading: const AppBackButton(),
         title: const Text('Contact Us'),
       ),
-      backgroundColor: AppColors.cardColor,
       body: Container(
         margin: const EdgeInsets.all(AppDefaults.padding),
         padding: const EdgeInsets.symmetric(
@@ -23,7 +22,7 @@ class ContactUsPage extends StatelessWidget {
           vertical: AppDefaults.padding * 2,
         ),
         decoration: BoxDecoration(
-          color: AppColors.scaffoldBackground,
+          color: Theme.of(context).cardColor,
           borderRadius: AppDefaults.borderRadius,
         ),
         child: Column(
@@ -34,7 +33,7 @@ class ContactUsPage extends StatelessWidget {
               child: Text(
                 'Contact Us',
                 style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      color: Colors.black,
+                      color: Theme.of(context).textTheme.bodyLarge?.color,
                       fontWeight: FontWeight.bold,
                     ),
               ),
@@ -53,14 +52,14 @@ class ContactUsPage extends StatelessWidget {
                     Text(
                       '+8801710000000',
                       style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                            color: Colors.black,
+                            color: Theme.of(context).textTheme.bodyLarge?.color,
                           ),
                     ),
                     const SizedBox(height: AppDefaults.padding / 2),
                     Text(
                       '+8801710000000',
                       style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                            color: Colors.black,
+                            color: Theme.of(context).textTheme.bodyLarge?.color,
                           ),
                     ),
                   ],
@@ -75,7 +74,7 @@ class ContactUsPage extends StatelessWidget {
                 Text(
                   'jonarban45@gmail.com',
                   style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                        color: Colors.black,
+                        color: Theme.of(context).textTheme.bodyLarge?.color,
                       ),
                 ),
               ],
@@ -89,7 +88,7 @@ class ContactUsPage extends StatelessWidget {
                 Text(
                   '26/C Mohammadpur\nDhaka, Bangladesh',
                   style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                        color: Colors.black,
+                        color: Theme.of(context).textTheme.bodyLarge?.color,
                       ),
                 ),
               ],

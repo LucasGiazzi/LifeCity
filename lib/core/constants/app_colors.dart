@@ -1,19 +1,23 @@
 import 'package:flutter/material.dart';
 
 class AppColors {
-  /* <----------- Colors ------------> */
-  /// Primary Color of this App
-  static const Color primary = Color(0xFF00AD48);
+  // Verde Moderno — primário vibrante
+  static const Color primary = Color(0xFF00C896);
+  static const Color primaryDark = Color(0xFF009E76);
 
-  // Others Color
+  // Dark navy — contraste e fundos escuros
+  static const Color dark = Color(0xFF1A1A2E);
+  static const Color darkSurface = Color(0xFF16213E);
+
+  // Fundos e superfícies claras
   static const Color scaffoldBackground = Color(0xFFFFFFFF);
+  static const Color scaffoldWithBoxBackground = Color(0xFFF7FFFE);
+  static const Color cardColor = Color(0xFFF0FDF9);
+  static const Color coloredBackground = Color(0xFFE6FBF5);
 
-  /// used for page with box background
-  static const Color scaffoldWithBoxBackground = Color(0xFFF7F7F7);
-  static const Color cardColor = Color(0xFFF2F2F2);
-  static const Color coloredBackground = Color(0xFFE4F8EA);
-  static const Color placeholder = Color(0xFF8B8B97);
-  static const Color textInputBackground = Color(0xFFF7F7F7);
-  static const Color separator = Color(0xFFFAFAFA);
+  // Texto e UI
+  static const Color placeholder = Color(0xFF8B9BB4);
+  static const Color textInputBackground = Color(0xFFF7F8FA);
+  static const Color separator = Color(0xFFF0F0F0);
   static const Color gray = Color(0xFFE1E1E1);
 }

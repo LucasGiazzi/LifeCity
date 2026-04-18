@@ -18,7 +18,6 @@ class LanguageSettingsPage extends StatelessWidget {
           'Language Settings',
         ),
       ),
-      backgroundColor: AppColors.cardColor,
       body: SingleChildScrollView(
         child: Container(
           margin: const EdgeInsets.all(AppDefaults.padding),
@@ -27,7 +26,7 @@ class LanguageSettingsPage extends StatelessWidget {
             vertical: AppDefaults.padding * 2,
           ),
           decoration: BoxDecoration(
-            color: AppColors.scaffoldBackground,
+            color: Theme.of(context).cardColor,
             borderRadius: AppDefaults.borderRadius,
           ),
           child: const Column(

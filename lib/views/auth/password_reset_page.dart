@@ -10,11 +10,9 @@ class PasswordResetPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.scaffoldWithBoxBackground,
       appBar: AppBar(
         leading: const AppBackButton(),
         title: const Text('New Password'),
-        backgroundColor: AppColors.scaffoldBackground,
       ),
       body: Center(
         child: SingleChildScrollView(
@@ -27,7 +25,7 @@ class PasswordResetPage extends StatelessWidget {
                   vertical: AppDefaults.padding * 3,
                 ),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: Theme.of(context).cardColor,
                   borderRadius: AppDefaults.borderRadius,
                 ),
                 child: Column(

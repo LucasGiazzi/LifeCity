@@ -15,7 +15,6 @@ class ChangePhoneNumberPage extends StatelessWidget {
           'Change Phone Number Page',
         ),
       ),
-      backgroundColor: AppColors.cardColor,
       body: Center(
         child: SingleChildScrollView(
           child: Container(
@@ -25,7 +24,7 @@ class ChangePhoneNumberPage extends StatelessWidget {
               vertical: AppDefaults.padding * 2,
             ),
             decoration: BoxDecoration(
-              color: AppColors.scaffoldBackground,
+              color: Theme.of(context).cardColor,
               borderRadius: AppDefaults.borderRadius,
             ),
             child: Column(

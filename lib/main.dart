@@ -1,11 +1,29 @@
 import 'package:flutter/material.dart';
-
-import 'core/routes/app_routes.dart';
+import 'package:provider/provider.dart';
 import 'core/routes/on_generate_route.dart';
+import 'core/state/auth_state.dart';
+import 'core/state/theme_provider.dart';
 import 'core/themes/app_themes.dart';
+import 'wrapper.dart';
 
-void main() {
-  runApp(const MyApp());
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  final authState = AuthState();
+  await authState.initialize();
+
+  final themeProvider = ThemeProvider();
+  await themeProvider.initialize();
+
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider.value(value: authState),
+        ChangeNotifierProvider.value(value: themeProvider),
+      ],
+      child: const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -13,11 +31,15 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = context.watch<ThemeProvider>();
+
     return MaterialApp(
-      title: 'eGrocery',
+      title: 'LifeCity',
       theme: AppTheme.defaultTheme,
+      darkTheme: AppTheme.darkTheme,
+      themeMode: themeProvider.mode,
+      home: const Wrapper(),
       onGenerateRoute: RouteGenerator.onGenerate,
-      initialRoute: AppRoutes.onboarding,
     );
   }
 }

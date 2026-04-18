@@ -15,44 +15,55 @@ class AppBottomNavigationBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BottomAppBar(
-      shape: const CircularNotchedRectangle(),
-      notchMargin: AppDefaults.margin,
-      color: AppColors.scaffoldBackground,
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          BottomAppBarItem(
-            name: 'Home',
-            iconLocation: AppIcons.home,
-            isActive: currentIndex == 0,
-            onTap: () => onNavTap(0),
-          ),
-          BottomAppBarItem(
-            name: 'Menu',
-            iconLocation: AppIcons.menu,
-            isActive: currentIndex == 1,
-            onTap: () => onNavTap(1),
-          ),
-          const Padding(
-            padding: EdgeInsets.all(AppDefaults.padding * 2),
-            child: SizedBox(width: AppDefaults.margin),
-          ),
-          /* <---- We have to leave this 3rd index (2) for the cart item -----> */
-
-          BottomAppBarItem(
-            name: 'Save',
-            iconLocation: AppIcons.save,
-            isActive: currentIndex == 3,
-            onTap: () => onNavTap(3),
-          ),
-          BottomAppBarItem(
-            name: 'Profile',
-            iconLocation: AppIcons.profile,
-            isActive: currentIndex == 4,
-            onTap: () => onNavTap(4),
+    return Container(
+      decoration: BoxDecoration(
+        color: Theme.of(context).scaffoldBackgroundColor,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.08),
+            blurRadius: 20,
+            offset: const Offset(0, -4),
           ),
         ],
+      ),
+      child: SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              BottomAppBarItem(
+                name: 'Mapa',
+                iconLocation: AppIcons.home,
+                isActive: currentIndex == 0,
+                onTap: () => onNavTap(0),
+              ),
+              BottomAppBarItem(
+                name: 'Amigos',
+                iconLocation: AppIcons.userGroup,
+                isActive: currentIndex == 1,
+                onTap: () => onNavTap(1),
+              ),
+
+              // Espaço para o FAB
+              const SizedBox(width: 56),
+
+              BottomAppBarItem(
+                name: 'Eventos',
+                iconLocation: AppIcons.save,
+                isActive: currentIndex == 2,
+                onTap: () => onNavTap(2),
+              ),
+              BottomAppBarItem(
+                name: 'Perfil',
+                iconLocation: AppIcons.profile,
+                isActive: currentIndex == 3,
+                onTap: () => onNavTap(3),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

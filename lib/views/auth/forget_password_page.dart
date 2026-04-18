@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
 import '../../core/components/app_back_button.dart';
-import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_defaults.dart';
 import '../../core/routes/app_routes.dart';
 
@@ -11,11 +10,9 @@ class ForgetPasswordPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.scaffoldWithBoxBackground,
       appBar: AppBar(
         leading: const AppBackButton(),
         title: const Text('Esqueceu a senha?'),
-        backgroundColor: AppColors.scaffoldBackground,
       ),
       body: Center(
         child: SingleChildScrollView(
@@ -28,7 +25,7 @@ class ForgetPasswordPage extends StatelessWidget {
                   vertical: AppDefaults.padding * 3,
                 ),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: Theme.of(context).cardColor,
                   borderRadius: AppDefaults.borderRadius,
                 ),
                 child: Column(

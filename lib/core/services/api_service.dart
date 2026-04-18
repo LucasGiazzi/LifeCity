@@ -1,28 +1,148 @@
 import 'package:dio/dio.dart';
 
 class ApiService {
-  final Dio _dio;
+  static final ApiService _instance = ApiService._internal();
 
-  ApiService()
+  factory ApiService() {
+    return _instance;
+  }
+
+    // Callback para logout (limpar tokens e voltar para onboarding)
+  Future<void> Function()? _onLogoutCallback;
+
+  void setOnLogoutCallback(Future<void> Function() callback) {
+    _onLogoutCallback = callback;
+  }
+
+  ApiService._internal()
       : _dio = Dio(
           BaseOptions(
-            baseUrl: 'http://127.0.0.1:3000', // seu backend local
-            connectTimeout: const Duration(seconds: 10),
-            receiveTimeout: const Duration(seconds: 10),
+            baseUrl: 'http://10.0.2.2:3000', // seu backend local
+            connectTimeout: const Duration(seconds: 5),
+            receiveTimeout: const Duration(seconds: 5),
             headers: {
               'Content-Type': 'application/json',
             },
           ),
         ) {
-    // Interceptor de log (opcional, pode remover em produção)
-    _dio.interceptors.add(LogInterceptor(
-      request: true,
-      requestBody: true,
-      responseBody: true,
-      responseHeader: false,
-      error: true,
-      requestHeader: false,
-    ));
+    // Interceptor para adicionar token de autenticação
+    _dio.interceptors.add(InterceptorsWrapper(onRequest: (options, handler) {
+      // Não adiciona Authorization em requisições de refreshToken
+      if (_accessToken != null && !options.path.contains('/refreshToken')) {
+        options.headers['Authorization'] = 'Bearer $_accessToken';
+      }
+      handler.next(options);
+    }, onError: (error, handler) async {
+      // Se receber 403 (token expirado), tenta fazer refresh
+      if (error.response?.statusCode == 403 && _refreshTokenCallback != null) {
+        print('Token expirado');
+        try {
+          // Evita loop infinito: não faz refresh em requisições de refresh
+          if (error.requestOptions.path == '/api/auth/refreshToken') {
+            await _onLogoutCallback?.call(); // 👈 DESLOGA
+            handler.next(error);
+            return;
+          }
+
+          // Busca o refreshToken usando o callback
+          final refreshToken = await _refreshTokenCallback?.call();
+
+          if (refreshToken == null || refreshToken.isEmpty) {
+            await _onLogoutCallback?.call(); // 👈 DESLOGA
+            handler.next(error);
+            return;
+          }
+
+          // Tenta fazer refresh do token
+          try {
+            final refreshResponse = await _dio.post(
+              '/api/auth/refreshToken',
+              data: {'refreshToken': refreshToken},
+            );
+
+            final newAccessToken =
+                refreshResponse.data['accessToken'] as String?;
+
+            if (newAccessToken != null && newAccessToken.isNotEmpty) {
+              // Atualiza o token
+              _accessToken = newAccessToken;
+
+              await _onTokenRefreshedCallback?.call(newAccessToken);
+
+              // Atualiza a requisição original
+              error.requestOptions.headers['Authorization'] =
+                  'Bearer $newAccessToken';
+
+              final opts = Options(
+                method: error.requestOptions.method,
+                headers: error.requestOptions.headers,
+              );
+
+              final cloneReq = await _dio.request<dynamic>(
+                error.requestOptions.path,
+                options: opts,
+                data: error.requestOptions.data,
+                queryParameters: error.requestOptions.queryParameters,
+              );
+
+              handler.resolve(cloneReq);
+              return;
+            } else {
+              await _onLogoutCallback?.call(); // 👈 DESLOGA
+              handler.next(error);
+              return;
+            }
+          } catch (refreshError) {
+            await _onLogoutCallback?.call(); // 👈 DESLOGA
+            handler.next(error);
+            return;
+          }
+        } catch (e) {
+          await _onLogoutCallback?.call(); // 👈 DESLOGA
+          handler.next(error);
+          return;
+        }
+      }
+
+      handler.next(error);
+    }));
+
+    // Log apenas em debug
+    assert(() {
+      _dio.interceptors.add(LogInterceptor(
+        request: false,
+        requestBody: false,
+        responseBody: false,
+        responseHeader: false,
+        error: true,
+        requestHeader: false,
+      ));
+      return true;
+    }());
+  }
+
+  final Dio _dio;
+  String? _accessToken;
+
+  // Callback para buscar o refreshToken
+  Future<String?> Function()? _refreshTokenCallback;
+
+  // Callback para notificar quando o token foi atualizado
+  Future<void> Function(String newToken)? _onTokenRefreshedCallback;
+
+  void setAccessToken(String? token) {
+    _accessToken = token;
+  }
+
+  // Configura callback para buscar refreshToken
+  void setRefreshTokenCallback(Future<String?> Function() callback) {
+    _refreshTokenCallback = callback;
+  }
+
+  // Configura callback para notificar atualização do token
+  void setOnTokenRefreshedCallback(
+      Future<void> Function(String newToken) callback) {
+    _onTokenRefreshedCallback = callback;
   }
 
   // -----------------------------
@@ -56,7 +176,38 @@ class ApiService {
     }
   }
 
-  Future<Response> delete(String endpoint, {Map<String, dynamic>? params}) async {
+  Future<Response> postMultipart(String endpoint, FormData formData) async {
+    try {
+      final response = await _dio.post(
+        endpoint,
+        data: formData,
+        options: Options(
+          contentType: 'multipart/form-data',
+        ),
+      );
+      return response;
+    } on DioException catch (e) {
+      throw ApiException.fromDioError(e);
+    }
+  }
+
+  Future<Response> putMultipart(String endpoint, FormData formData) async {
+    try {
+      final response = await _dio.put(
+        endpoint,
+        data: formData,
+        options: Options(
+          contentType: 'multipart/form-data',
+        ),
+      );
+      return response;
+    } on DioException catch (e) {
+      throw ApiException.fromDioError(e);
+    }
+  }
+
+  Future<Response> delete(String endpoint,
+      {Map<String, dynamic>? params}) async {
     try {
       final response = await _dio.delete(endpoint, queryParameters: params);
       return response;
@@ -99,7 +250,8 @@ class ApiException implements Exception {
 
         if (statusCode != null) {
           if (statusCode >= 400 && statusCode < 500) {
-            msg = 'Erro de requisição ($statusCode): ${data?['message'] ?? 'verifique os dados enviados.'}';
+            msg =
+                'Erro de requisição ($statusCode): ${data?['message'] ?? 'verifique os dados enviados.'}';
           } else if (statusCode >= 500) {
             msg = 'Erro interno do servidor ($statusCode).';
           }
@@ -115,7 +267,8 @@ class ApiException implements Exception {
       case DioExceptionType.unknown:
       default:
         return ApiException(
-          message: 'Erro de conexão: ${error.message ?? 'verifique se o servidor está ativo.'}',
+          message:
+              'Erro de conexão: ${error.message ?? 'verifique se o servidor está ativo.'}',
         );
     }
   }

@@ -17,7 +17,6 @@ class NotificationSettingsPage extends StatelessWidget {
           'Change Notificaiton Settings',
         ),
       ),
-      backgroundColor: AppColors.cardColor,
       body: Container(
         margin: const EdgeInsets.all(AppDefaults.padding),
         padding: const EdgeInsets.symmetric(
@@ -25,7 +24,7 @@ class NotificationSettingsPage extends StatelessWidget {
           vertical: AppDefaults.padding * 2,
         ),
         decoration: BoxDecoration(
-          color: AppColors.scaffoldBackground,
+          color: Theme.of(context).cardColor,
           borderRadius: AppDefaults.borderRadius,
         ),
         child: SizedBox(
