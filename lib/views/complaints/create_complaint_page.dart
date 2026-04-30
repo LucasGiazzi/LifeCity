@@ -485,6 +485,14 @@ class _CreateComplaintPageState extends State<CreateComplaintPage> {
 
   Future<void> _onSubmit() async {
     if (_formKey.currentState?.validate() ?? false) {
+      // Validação de tipo
+      if (_selectedType == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Por favor, selecione o tipo da reclamação')),
+        );
+        return;
+      }
+
       // Validação de data
       if (_dateController.text.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -599,8 +607,8 @@ class _CreateComplaintPageState extends State<CreateComplaintPage> {
                 ),
                 const SizedBox(height: AppDefaults.padding),
 
-                /* <---- Tipo (Opcional) -----> */
-                const Text("Tipo (Opcional)"),
+                /* <---- Tipo -----> */
+                const Text("Tipo"),
                 const SizedBox(height: 8),
                 Wrap(
                   spacing: 8,

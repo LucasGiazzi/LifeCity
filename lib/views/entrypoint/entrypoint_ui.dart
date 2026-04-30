@@ -1,6 +1,8 @@
+import 'dart:async';
 import 'package:animations/animations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -232,8 +234,10 @@ class _MapBody extends StatefulWidget {
 class _MapBodyState extends State<_MapBody> {
   final mapController = MapController();
   LatLng _center = const LatLng(-22.9099, -47.0626);
-  final ComplaintService _complaintService = ComplaintService();
+  LatLng? _userLocation;
+  StreamSubscription<Position>? _positionStream;
 
+  final ComplaintService _complaintService = ComplaintService();
   List<ComplaintModel> _complaints = [];
   bool _isLoading = true;
 
@@ -241,6 +245,47 @@ class _MapBodyState extends State<_MapBody> {
   void initState() {
     super.initState();
     _loadComplaints();
+    _startLocationTracking();
+  }
+
+  @override
+  void dispose() {
+    _positionStream?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _startLocationTracking() async {
+    LocationPermission permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) return;
+    }
+    if (permission == LocationPermission.deniedForever) return;
+
+    try {
+      final position = await Geolocator.getCurrentPosition(
+        locationSettings: const LocationSettings(accuracy: LocationAccuracy.high),
+      );
+      if (mounted) {
+        final loc = LatLng(position.latitude, position.longitude);
+        setState(() {
+          _userLocation = loc;
+          _center = loc;
+        });
+        mapController.move(loc, 15);
+      }
+    } catch (_) {}
+
+    _positionStream = Geolocator.getPositionStream(
+      locationSettings: const LocationSettings(
+        accuracy: LocationAccuracy.high,
+        distanceFilter: 10,
+      ),
+    ).listen((position) {
+      if (mounted) {
+        setState(() => _userLocation = LatLng(position.latitude, position.longitude));
+      }
+    });
   }
 
   Future<void> _loadComplaints() async {
@@ -305,10 +350,34 @@ class _MapBodyState extends State<_MapBody> {
                 ),
                 children: [
                   TileLayer(
-                    urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                    urlTemplate: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png',
+                    subdomains: const ['a', 'b', 'c', 'd'],
                     userAgentPackageName: 'com.lifecity.app',
+                    maxZoom: 19,
                   ),
+                  // Círculo de precisão
+                  if (_userLocation != null)
+                    CircleLayer(circles: [
+                      CircleMarker(
+                        point: _userLocation!,
+                        radius: 40,
+                        useRadiusInMeter: true,
+                        color: const Color(0x222196F3),
+                        borderColor: const Color(0x552196F3),
+                        borderStrokeWidth: 1,
+                      ),
+                    ]),
                   if (!_isLoading && markers.isNotEmpty) MarkerLayer(markers: markers),
+                  // Ponto do usuário sempre por cima das reclamações
+                  if (_userLocation != null)
+                    MarkerLayer(markers: [
+                      Marker(
+                        point: _userLocation!,
+                        width: 22,
+                        height: 22,
+                        child: const _UserLocationDot(),
+                      ),
+                    ]),
                   if (_isLoading) const Center(child: CircularProgressIndicator()),
                 ],
               ),
@@ -317,7 +386,10 @@ class _MapBodyState extends State<_MapBody> {
                 right: 16,
                 child: FloatingActionButton.small(
                   heroTag: 'my_location',
-                  onPressed: () => mapController.move(_center, 15),
+                  onPressed: () {
+                    final target = _userLocation ?? _center;
+                    mapController.move(target, 16);
+                  },
                   backgroundColor: Theme.of(context).cardColor,
                   child: Icon(Icons.my_location, color: Theme.of(context).textTheme.bodyLarge?.color),
                 ),
@@ -367,6 +439,28 @@ class _ComplaintPin extends StatelessWidget {
         boxShadow: const [BoxShadow(blurRadius: 6, color: Colors.black26)],
       ),
       child: Center(child: Icon(category['icon'] as IconData, color: Colors.white, size: 20)),
+    );
+  }
+}
+
+class _UserLocationDot extends StatelessWidget {
+  const _UserLocationDot();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: const Color(0xFF2196F3),
+        shape: BoxShape.circle,
+        border: Border.all(color: Colors.white, width: 2.5),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF2196F3).withValues(alpha: 0.4),
+            blurRadius: 8,
+            spreadRadius: 2,
+          ),
+        ],
+      ),
     );
   }
 }

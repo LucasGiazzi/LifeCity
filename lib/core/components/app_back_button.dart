@@ -11,8 +11,14 @@ class AppBackButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final iconColor = Theme.of(context).appBarTheme.iconTheme?.color
+        ?? Theme.of(context).iconTheme.color
+        ?? Colors.black;
     return IconButton(
-      icon: SvgPicture.asset(AppIcons.arrowBackward),
+      icon: SvgPicture.asset(
+        AppIcons.arrowBackward,
+        colorFilter: ColorFilter.mode(iconColor, BlendMode.srcIn),
+      ),
       onPressed: () => Navigator.pop(context),
     );
   }

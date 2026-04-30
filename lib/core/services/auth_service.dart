@@ -93,6 +93,22 @@ class AuthService {
     }
   }
 
+  Future<bool> changePassword({
+    required String currentPassword,
+    required String newPassword,
+  }) async {
+    try {
+      await _api.put('/api/auth/changePassword', {
+        'currentPassword': currentPassword,
+        'newPassword': newPassword,
+      });
+      return true;
+    } on ApiException catch (e) {
+      print('Erro changePassword: ${e.message}');
+      return false;
+    }
+  }
+
   Future<void> signOut(String refreshToken) async {
     try {
       if (refreshToken.isNotEmpty) {

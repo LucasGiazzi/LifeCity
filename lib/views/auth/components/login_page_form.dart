@@ -19,6 +19,13 @@ class _LoginPageFormState extends State<LoginPageForm> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _isPasswordObscured = true;
+  bool _keepLoggedIn = true;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _keepLoggedIn = Provider.of<AuthState>(context, listen: false).keepLoggedIn;
+  }
 
   @override
   void dispose() {
@@ -96,21 +103,59 @@ class _LoginPageFormState extends State<LoginPageForm> {
                 ),
               ),
 
-              // Esqueceu a senha
-              Align(
-                alignment: Alignment.centerRight,
-                child: TextButton(
-                  onPressed: () =>
-                      Navigator.pushNamed(context, AppRoutes.forgotPassword),
-                  child: Text(
-                    'Esqueceu a senha?',
-                    style: GoogleFonts.poppins(
-                      color: AppColors.primary,
-                      fontSize: 13,
-                      fontWeight: FontWeight.w500,
+              // Esqueceu a senha + Manter logado
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    children: [
+                      SizedBox(
+                        width: 24,
+                        height: 24,
+                        child: Checkbox(
+                          value: _keepLoggedIn,
+                          activeColor: AppColors.primary,
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(4)),
+                          onChanged: (val) {
+                            final v = val ?? true;
+                            setState(() => _keepLoggedIn = v);
+                            Provider.of<AuthState>(context, listen: false)
+                                .setKeepLoggedIn(v);
+                          },
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      GestureDetector(
+                        onTap: () {
+                          final v = !_keepLoggedIn;
+                          setState(() => _keepLoggedIn = v);
+                          Provider.of<AuthState>(context, listen: false)
+                              .setKeepLoggedIn(v);
+                        },
+                        child: Text(
+                          'Manter logado',
+                          style: GoogleFonts.poppins(
+                            fontSize: 13,
+                            color: const Color(0xFF1A1A2E),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  TextButton(
+                    onPressed: () =>
+                        Navigator.pushNamed(context, AppRoutes.forgotPassword),
+                    child: Text(
+                      'Esqueceu a senha?',
+                      style: GoogleFonts.poppins(
+                        color: AppColors.primary,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
                   ),
-                ),
+                ],
               ),
 
               // Erro

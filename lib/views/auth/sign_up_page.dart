@@ -21,9 +21,11 @@ class SignUpPage extends StatelessWidget {
             SafeArea(
               bottom: false,
               child: Padding(
-                padding: EdgeInsets.symmetric(
-                  horizontal: screen.width * 0.06,
-                  vertical: screen.height * 0.015,
+                padding: EdgeInsets.only(
+                  left: screen.width * 0.06,
+                  right: screen.width * 0.06,
+                  top: screen.height * 0.015,
+                  bottom: screen.height * 0.015,
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,

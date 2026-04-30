@@ -104,7 +104,7 @@ class SettingsPage extends StatelessWidget {
                   final auth = Provider.of<AuthState>(context, listen: false);
                   final nav = Navigator.of(context);
                   await auth.logout();
-                  nav.pushNamedAndRemoveUntil(AppRoutes.onboarding, (route) => false);
+                  nav.pushNamedAndRemoveUntil(AppRoutes.login, (route) => false);
                 },
               ),
             ],

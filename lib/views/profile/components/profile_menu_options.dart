@@ -43,10 +43,10 @@ class ProfileMenuOptions extends StatelessWidget {
             title: 'Sair',
             icon: AppIcons.profileLogout,
             onTap: () async {
+              final nav = Navigator.of(context);
               await Provider.of<AuthState>(context, listen: false).logout();
-              // Limpar a pilha de navegação e ir para o onboarding
-              Navigator.of(context).pushNamedAndRemoveUntil(
-                AppRoutes.onboarding,
+              nav.pushNamedAndRemoveUntil(
+                AppRoutes.login,
                 (route) => false,
               );
             },

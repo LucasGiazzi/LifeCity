@@ -7,7 +7,14 @@
       "Bash(flutter run *)",
       "Bash(git commit -m ' *)",
       "Bash(python -)",
-      "Bash(grep -v \"^$\")"
+      "Bash(grep -v \"^$\")",
+      "Bash(grep -E \"\\\\.\\(dart|kt\\)$\")",
+      "Bash(xargs wc *)",
+      "Bash(mkdir -p \"c:/LifeCity/assets/google_fonts\")",
+      "Bash(curl -L -o \"Poppins-Regular.ttf\" \"https://github.com/google/fonts/raw/main/ofl/poppins/Poppins-Regular.ttf\")",
+      "Bash(curl -L -o \"Poppins-Medium.ttf\" \"https://github.com/google/fonts/raw/main/ofl/poppins/Poppins-Medium.ttf\")",
+      "Bash(curl -L -o \"Poppins-SemiBold.ttf\" \"https://github.com/google/fonts/raw/main/ofl/poppins/Poppins-SemiBold.ttf\")",
+      "Bash(curl -L -o \"Poppins-Bold.ttf\" \"https://github.com/google/fonts/raw/main/ofl/poppins/Poppins-Bold.ttf\")"
     ]
   }
 }

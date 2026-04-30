@@ -15,10 +15,16 @@ class AuthState extends ChangeNotifier {
 
   String? _accessToken;
   String? get accessToken => _accessToken;
-  
+
   String? _refreshToken;
   Map<String, dynamic>? _currentUser;
   Map<String, dynamic>? get currentUser => _currentUser;
+
+  bool _keepLoggedIn = true;
+  bool get keepLoggedIn => _keepLoggedIn;
+
+  bool _hasSeenOnboarding = false;
+  bool get hasSeenOnboarding => _hasSeenOnboarding;
 
   bool get isAuthenticated => _accessToken != null && _accessToken!.isNotEmpty;
 
@@ -111,6 +117,26 @@ class AuthState extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> setKeepLoggedIn(bool value) async {
+    _keepLoggedIn = value;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('keepLoggedIn', value);
+    if (!value) {
+      await prefs.remove('accessToken');
+      await prefs.remove('refreshToken');
+    } else if (_accessToken != null) {
+      await _saveTokens();
+    }
+    notifyListeners();
+  }
+
+  Future<void> markOnboardingAsSeen() async {
+    _hasSeenOnboarding = true;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('hasSeenOnboarding', true);
+    notifyListeners();
+  }
+
   // Inicializar estado de autenticação ao iniciar o app
   Future<void> initialize() async {
     await _loadTokens();
@@ -183,6 +209,7 @@ class AuthState extends ChangeNotifier {
   }
 
   Future<void> _saveTokens() async {
+    if (!_keepLoggedIn) return;
     final prefs = await SharedPreferences.getInstance();
     if (_accessToken != null) {
       await prefs.setString('accessToken', _accessToken!);
@@ -194,6 +221,8 @@ class AuthState extends ChangeNotifier {
 
   Future<void> _loadTokens() async {
     final prefs = await SharedPreferences.getInstance();
+    _keepLoggedIn = prefs.getBool('keepLoggedIn') ?? true;
+    _hasSeenOnboarding = prefs.getBool('hasSeenOnboarding') ?? false;
     _accessToken = prefs.getString('accessToken');
     _refreshToken = prefs.getString('refreshToken');
   }

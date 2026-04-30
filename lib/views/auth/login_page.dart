@@ -22,32 +22,35 @@ class LoginPage extends StatelessWidget {
             SafeArea(
               bottom: false,
               child: Padding(
-                padding: EdgeInsets.symmetric(
-                  horizontal: screen.width * 0.06,
-                  vertical: screen.height * 0.015,
+                padding: EdgeInsets.only(
+                  left: screen.width * 0.06,
+                  right: screen.width * 0.06,
+                  top: screen.height * 0.015,
+                  bottom: screen.height * 0.015,
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    GestureDetector(
-                      onTap: () => Navigator.pop(context),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(Icons.arrow_back_ios_new_rounded,
-                              color: Colors.white70, size: 16),
-                          const SizedBox(width: 4),
-                          Text(
-                            'Voltar',
-                            style: GoogleFonts.poppins(
-                              color: Colors.white70,
-                              fontSize: 14,
-                              fontWeight: FontWeight.w500,
+                    if (Navigator.canPop(context))
+                      GestureDetector(
+                        onTap: () => Navigator.pop(context),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(Icons.arrow_back_ios_new_rounded,
+                                color: Colors.white70, size: 16),
+                            const SizedBox(width: 4),
+                            Text(
+                              'Voltar',
+                              style: GoogleFonts.poppins(
+                                color: Colors.white70,
+                                fontSize: 14,
+                                fontWeight: FontWeight.w500,
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
-                    ),
                     SizedBox(height: screen.height * 0.02),
 
                     // Logo / ícone do app

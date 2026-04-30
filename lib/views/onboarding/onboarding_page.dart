@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 
 import '../../core/constants/app_colors.dart';
 import '../../core/routes/app_routes.dart';
+import '../../core/state/auth_state.dart';
 import 'data/onboarding_data.dart';
 import 'data/onboarding_model.dart';
 
@@ -41,8 +43,11 @@ class _OnboardingPageState extends State<OnboardingPage> {
     }
   }
 
-  void _goToLogin() {
-    Navigator.pushReplacementNamed(context, AppRoutes.introLogin);
+  Future<void> _goToLogin() async {
+    await Provider.of<AuthState>(context, listen: false).markOnboardingAsSeen();
+    if (mounted) {
+      Navigator.pushReplacementNamed(context, AppRoutes.introLogin);
+    }
   }
 
   @override
