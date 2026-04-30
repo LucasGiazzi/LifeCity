@@ -1,0 +1,134 @@
+% ============================================================
+% SEÇÃO 3 – ESPECIFICAÇÃO DOS CASOS DE USO
+% ============================================================
+
+\section{ESPECIFICAÇÃO DOS CASOS DE USO}
+
+\subsection{Login e visualização do mapa}
+
+\begin{longtable}{|p{4cm}|p{10cm}|}
+  \hline
+  \textbf{Nome} & Login e visualização do mapa \\
+  \hline
+  \textbf{Descrição} & Usuário com conta cadastrada consegue iniciar sessão no sistema e visualizar no mapa os eventos, ocorrências ou informações atualizadas sobre o que está acontecendo na cidade. \\
+  \hline
+  \textbf{Ator} & Usuário do aplicativo \\
+  \hline
+  \textbf{Pré-condições} &
+    \begin{itemize}
+      \item Usuário precisa possuir conta cadastrada.
+      \item Sistema deve estar conectado à internet para carregar informações do mapa.
+    \end{itemize} \\
+  \hline
+  \textbf{Pós-condições} &
+    \begin{itemize}
+      \item Usuário consegue acessar o aplicativo.
+      \item Usuário visualiza o mapa com os eventos/ocorrências ativas na cidade.
+    \end{itemize} \\
+  \hline
+  \textbf{Requisitos funcionais} & RF002 — Login do usuário \newline RF007 — Exibição de mapa interativo \newline RF008 — Filtrar por categoria \\
+  \hline
+  \textbf{Fluxo básico} &
+    \begin{enumerate}
+      \item Sistema abre a tela de iniciar sessão com campos a serem preenchidos.
+      \item Usuário preenche corretamente os campos de login.
+      \item Usuário aperta o botão para iniciar sessão.
+      \item Sistema verifica se os dados são válidos.
+      \item Sistema inicia a sessão, retornando tokens JWT (access + refresh).
+      \item Sistema redireciona o usuário para a tela principal com o mapa da cidade.
+      \item Sistema carrega e exibe no mapa os eventos e ocorrências.
+      \item Usuário visualiza no mapa o que está acontecendo na cidade.
+    \end{enumerate} \\
+  \hline
+  \textbf{Fluxo alternativo} & \textbf{FA01 — Dados inválidos no login} \newline
+    Sistema exibe mensagem de erro referente aos dados inválidos e permite nova tentativa. \\
+  \hline
+\end{longtable}
+
+\subsection{Usuário busca e encontra o evento que deseja participar}
+
+\begin{longtable}{|p{4cm}|p{10cm}|}
+  \hline
+  \textbf{Nome} & Busca de evento próximo no mapa \\
+  \hline
+  \textbf{Descrição} & Usuário autenticado acessa o mapa, filtra eventos próximos e visualiza as informações detalhadas de um evento para avaliar sua participação. \\
+  \hline
+  \textbf{Ator} & Usuário do aplicativo \\
+  \hline
+  \textbf{Pré-condições} &
+    \begin{itemize}
+      \item Usuário precisa estar logado no aplicativo.
+      \item Sistema deve ter acesso à base de eventos cadastrados.
+      \item Sistema deve estar conectado à internet.
+    \end{itemize} \\
+  \hline
+  \textbf{Pós-condições} &
+    \begin{itemize}
+      \item Usuário visualiza no mapa os eventos próximos.
+      \item Usuário consegue visualizar os detalhes de um evento para decidir se participa.
+    \end{itemize} \\
+  \hline
+  \textbf{Requisitos funcionais} & RF007 — Visualizar mapa \newline RF008 — Filtrar por categoria \newline RF005 — Registrar evento \\
+  \hline
+  \textbf{Fluxo básico} &
+    \begin{enumerate}
+      \item Usuário seleciona a aba ``Eventos'' no mapa.
+      \item Sistema exibe no mapa marcadores representando os eventos cadastrados.
+      \item Usuário pode filtrar por categoria (Festas, Esportes, Educação, etc.).
+      \item Usuário toca em um marcador de evento no mapa.
+      \item Sistema abre card com as informações do evento (nome, endereço, horário, categoria, descrição).
+      \item Usuário visualiza os detalhes e avalia se deseja participar.
+    \end{enumerate} \\
+  \hline
+  \textbf{Fluxo alternativo} & \textbf{FA01 — Nenhum evento encontrado} \newline
+    Sistema exibe o mapa sem marcadores. \newline\newline
+    \textbf{FA02 — Falha de conexão} \newline
+    Sistema exibe mensagem de erro de rede. \\
+  \hline
+\end{longtable}
+
+\subsection{Usuário denuncia problema em sua rua}
+
+\begin{longtable}{|p{4cm}|p{10cm}|}
+  \hline
+  \textbf{Nome} & Denúncia feita no sistema \\
+  \hline
+  \textbf{Descrição} & Usuário acessa o aplicativo, registra uma denúncia informando a existência de um problema em sua rua e envia a localização e dados relevantes para que o órgão responsável possa avaliar e tomar providências. \\
+  \hline
+  \textbf{Ator} & Usuário \\
+  \hline
+  \textbf{Pré-condições} &
+    \begin{itemize}
+      \item Usuário precisa estar logado no aplicativo.
+      \item Usuário precisa estar em área com acesso à internet.
+      \item Sistema deve ter acesso ao serviço de localização (GPS) ou permitir seleção manual.
+    \end{itemize} \\
+  \hline
+  \textbf{Pós-condições} &
+    \begin{itemize}
+      \item Denúncia é registrada no sistema e exibida no mapa.
+      \item Usuário recebe confirmação de envio.
+    \end{itemize} \\
+  \hline
+  \textbf{Requisitos funcionais} & RF003 — Registrar reclamação \newline RF007 — Visualizar mapa \\
+  \hline
+  \textbf{Fluxo básico} &
+    \begin{enumerate}
+      \item Usuário acessa o aplicativo e toca no botão ``+'' para criar publicação.
+      \item Sistema abre a tela de registro de reclamação.
+      \item Usuário seleciona o tipo de problema (Infraestrutura, Segurança, Limpeza, Trânsito, Outros).
+      \item Usuário informa o endereço ou usa GPS automático.
+      \item Usuário preenche a descrição do problema.
+      \item Usuário adiciona foto (opcional).
+      \item Usuário informa a data de ocorrência.
+      \item Usuário pressiona ``Criar Reclamação''.
+      \item Sistema valida e registra a denúncia no banco de dados.
+      \item Sistema retorna feedback positivo ao usuário.
+    \end{enumerate} \\
+  \hline
+  \textbf{Fluxo alternativo} & \textbf{FA01 — Falha ao obter localização via GPS} \newline
+    Sistema oferece opção para o usuário informar o endereço manualmente. \newline\newline
+    \textbf{FA02 — Campos obrigatórios incompletos} \newline
+    Sistema exibe mensagem de erro e mantém o formulário para preenchimento. \\
+  \hline
+\end{longtable}

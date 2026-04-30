@@ -1,0 +1,34 @@
+% ============================================================
+% SEÇÃO 6 – MODELO ENTIDADE RELACIONAMENTO (MER)
+% ============================================================
+
+\section{MODELO ENTIDADE RELACIONAMENTO (MER)}
+
+O modelo entidade-relacionamento do LifeCity é composto por três entidades
+principais: \textbf{users}, \textbf{complaints} (reclamações) e \textbf{events}
+(eventos). Tanto reclamações quanto eventos possuem chave estrangeira
+referenciando o usuário que os criou (\texttt{created\_by}).
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth]{images/mer.png}
+  \caption{Modelo Entidade-Relacionamento do LifeCity}
+\end{figure}
+
+\paragraph{Entidade users}
+Armazena os dados cadastrais dos usuários: \texttt{id}, \texttt{name},
+\texttt{email}, \texttt{password}, \texttt{salt}, \texttt{cpf},
+\texttt{birth\_date}, \texttt{phone}, \texttt{created\_at},
+\texttt{photo\_url}, \texttt{photo\_path}.
+
+\paragraph{Entidade complaints}
+Armazena as reclamações registradas: \texttt{id}, \texttt{description},
+\texttt{occurrence\_date}, \texttt{category}, \texttt{addr},
+\texttt{latitude}, \texttt{longitude}, \texttt{created\_by} (FK $\to$ users),
+\texttt{created\_at}.
+
+\paragraph{Entidade events}
+Armazena os eventos cadastrados: \texttt{id}, \texttt{description},
+\texttt{category}, \texttt{start\_date}, \texttt{end\_date},
+\texttt{created\_by} (FK $\to$ users), \texttt{created\_at}, \texttt{addr},
+\texttt{latitude}, \texttt{longitude}.

@@ -1,0 +1,126 @@
+% ============================================================
+% SEÇÃO 5 – DOCUMENTAÇÃO DE ITERAÇÃO
+% ============================================================
+
+\section{DOCUMENTAÇÃO DE ITERAÇÃO}
+
+\subsection{Histórias do usuário — Semestre 1}
+
+\subsubsection{Usuário busca evento}
+
+\begin{longtable}{|p{2cm}|p{9cm}|p{2.5cm}|}
+  \hline
+  \textbf{ID} & \textbf{Descrição} & \textbf{Situação} \\
+  \hline
+  \endfirsthead
+  \hline
+  \textbf{ID} & \textbf{Descrição} & \textbf{Situação} \\
+  \hline
+  \endhead
+  USB01 & Como usuário, quero acessar o aplicativo, para visualizar o mapa e buscar eventos próximos. & Completo \\
+  \hline
+  USB02 & Como usuário, quero buscar eventos próximos à minha localização, para descobrir o que está acontecendo na minha região. & Completo \\
+  \hline
+  USB03 & Como usuário, quero visualizar os eventos exibidos no mapa, para escolher qual deles me interessa. & Completo \\
+  \hline
+  USB04 & Como usuário, quero selecionar um evento no mapa, para ver suas informações detalhadas. & Completo \\
+  \hline
+  USB05 & Como usuário, quero visualizar informações completas sobre o evento (nome, descrição, horário, endereço e categoria), para decidir se quero participar. & Completo \\
+  \hline
+  USB06 & Como usuário, quero visualizar fotos ou imagens relacionadas ao evento, para entender melhor a atividade antes de participar. & Completo \\
+  \hline
+\end{longtable}
+
+\subsubsection{Relato de problema no bairro}
+
+\begin{longtable}{|p{2cm}|p{9cm}|p{2.5cm}|}
+  \hline
+  \textbf{ID} & \textbf{Descrição} & \textbf{Situação} \\
+  \hline
+  \endfirsthead
+  \hline
+  \textbf{ID} & \textbf{Descrição} & \textbf{Situação} \\
+  \hline
+  \endhead
+  RPB01 & Como usuário, quero relatar um problema no meu bairro, para que as autoridades responsáveis possam tomar providências. & Completo \\
+  \hline
+  RPB02 & Como usuário, quero enviar a localização do problema (automaticamente via GPS ou manualmente), para que o órgão responsável saiba exatamente onde agir. & Completo \\
+  \hline
+  RPB03 & Como usuário, quero adicionar uma descrição explicando o problema encontrado, para que ele seja compreendido corretamente. & Completo \\
+  \hline
+  RPB04 & Como usuário, quero anexar uma foto do problema, para facilitar a verificação e priorização da solução. & Completo \\
+  \hline
+  RPB05 & Como usuário, quero receber uma confirmação de que meu relato foi enviado, para ter certeza de que o caso será analisado. & Completo \\
+  \hline
+  RPB06 & Como usuário, quero acompanhar o status do meu relato, para saber se o problema está sendo resolvido. & Completo \\
+  \hline
+\end{longtable}
+
+% ──────────────────────────────────────────────────────────────
+\subsection{Histórias do usuário — Semestre 2}
+% ──────────────────────────────────────────────────────────────
+
+O segundo semestre de desenvolvimento foi focado na consolidação do backend
+próprio com autenticação JWT, no redesign visual completo do aplicativo e na
+adição de novas funcionalidades de usabilidade e configuração.
+
+\subsubsection{Autenticação com backend próprio}
+
+\begin{longtable}{|p{2cm}|p{9cm}|p{2.5cm}|}
+  \hline
+  \textbf{ID} & \textbf{Descrição} & \textbf{Situação} \\
+  \hline
+  \endfirsthead
+  \hline
+  \textbf{ID} & \textbf{Descrição} & \textbf{Situação} \\
+  \hline
+  \endhead
+  AUTH01 & Como usuário, quero que minha sessão seja mantida automaticamente após o login, sem precisar entrar novamente ao reabrir o aplicativo. & Completo \\
+  \hline
+  AUTH02 & Como usuário, quero que minha sessão seja renovada automaticamente em segundo plano quando o token expirar, para não ser interrompido durante o uso. & Completo \\
+  \hline
+  AUTH03 & Como usuário, quero poder alterar minha senha pelo aplicativo, para manter minha conta segura. & Completo \\
+  \hline
+  AUTH04 & Como usuário, quero poder alterar meu número de telefone pelo aplicativo, para manter meus dados atualizados. & Completo \\
+  \hline
+\end{longtable}
+
+\subsubsection{Redesign visual e experiência do usuário}
+
+\begin{longtable}{|p{2cm}|p{9cm}|p{2.5cm}|}
+  \hline
+  \textbf{ID} & \textbf{Descrição} & \textbf{Situação} \\
+  \hline
+  \endfirsthead
+  \hline
+  \textbf{ID} & \textbf{Descrição} & \textbf{Situação} \\
+  \hline
+  \endhead
+  UX01 & Como usuário, quero uma interface com modo escuro para usar o aplicativo de forma mais confortável à noite. & Completo \\
+  \hline
+  UX02 & Como usuário, quero poder alternar entre modo claro e modo escuro nas configurações do aplicativo. & Completo \\
+  \hline
+  UX03 & Como usuário, quero ver o mascote do LifeCity na tela de splash e onboarding, para uma experiência de entrada mais agradável. & Completo \\
+  \hline
+  UX04 & Como usuário, quero uma tela de configurações organizada, com opções de aparência, conta e notificações separadas por seções. & Completo \\
+  \hline
+\end{longtable}
+
+\subsubsection{Gerenciamento de perfil e conta}
+
+\begin{longtable}{|p{2cm}|p{9cm}|p{2.5cm}|}
+  \hline
+  \textbf{ID} & \textbf{Descrição} & \textbf{Situação} \\
+  \hline
+  \endfirsthead
+  \hline
+  \textbf{ID} & \textbf{Descrição} & \textbf{Situação} \\
+  \hline
+  \endhead
+  PROF01 & Como usuário, quero editar meu perfil (nome, foto, CPF, data de nascimento) diretamente pelo aplicativo. & Completo \\
+  \hline
+  PROF02 & Como usuário, quero visualizar meus eventos e reclamações cadastrados em uma tela separada (``Meus itens''). & Completo \\
+  \hline
+  PROF03 & Como usuário, quero poder excluir minhas próprias reclamações e eventos. & Completo \\
+  \hline
+\end{longtable}

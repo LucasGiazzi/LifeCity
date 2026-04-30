@@ -1,0 +1,162 @@
+% ============================================================
+% SEÇÃO 9 – CASOS DE TESTE
+% ============================================================
+
+\section{CASOS DE TESTE}
+
+\subsection*{Caso de teste \#1 – Cadastro do usuário}
+
+\textbf{Propósito:} Verificar se o usuário consegue criar uma conta no LifeCity
+informando dados válidos e se o sistema apresenta mensagens adequadas em
+casos de erro.
+
+\textbf{Pré-condições:}
+\begin{itemize}
+  \item Aplicativo instalado e com acesso à internet.
+  \item Usuário ainda não autenticado.
+\end{itemize}
+
+\textbf{Saída aguardada:}
+\begin{itemize}
+  \item Cadastro realizado com sucesso e redirecionamento para tela de login;
+  \item Em caso de erro, exibir mensagem explicando o problema e não concluir o cadastro.
+\end{itemize}
+
+\begin{longtable}{|c|p{1.5cm}|p{2cm}|p{2.5cm}|p{2cm}|p{2cm}|p{2.5cm}|}
+  \hline
+  \textbf{\#} & \textbf{Nome} & \textbf{CPF} & \textbf{E-mail} & \textbf{Telefone} & \textbf{Senha} & \textbf{Saída esperada} \\
+  \hline
+  \endfirsthead
+  \hline
+  \textbf{\#} & \textbf{Nome} & \textbf{CPF} & \textbf{E-mail} & \textbf{Telefone} & \textbf{Senha} & \textbf{Saída esperada} \\
+  \hline
+  \endhead
+  1 & Ana Silva & 123.456.789-09 & ana@email.com & (19) 99999-0000 & Senha@123 & Cadastro realizado com sucesso. \\
+  \hline
+  2 & (vazio) & 123.456.789-09 & ana@email.com & (19) 99999-0000 & Senha@123 & ``Preencha o campo Nome.'' \\
+  \hline
+  3 & João & 123.456.789-0 & joao@email.com & (19) 98888-0000 & Senha@123 & ``CPF inválido.'' \\
+  \hline
+  4 & João & 123.456.789-09 & joao@ & (19) 98888-0000 & Senha@123 & ``E-mail inválido.'' \\
+  \hline
+  5 & João & 123.456.789-09 & joao@email.com & 9888-000 & Senha@123 & ``Telefone inválido.'' \\
+  \hline
+  6 & João & 123.456.789-09 & joao@email.com & (19) 98888-0000 & 123 & ``Senha deve atender aos requisitos mínimos.'' \\
+  \hline
+  7 & João & 123.456.789-09 & joao@email.com & (19) 98888-0000 & Senha@123 / SenhaErrada & ``As senhas informadas não conferem.'' \\
+  \hline
+  8 & João & (vazio) & (vazio) & (vazio) & (vazio) & Mensagens de campos obrigatórios para CPF, E-mail, Telefone e Senha. \\
+  \hline
+\end{longtable}
+
+\subsection*{Caso de teste \#2 – Login e visualização do mapa}
+
+\textbf{Propósito:} Validar se o usuário consegue autenticar-se no sistema e
+visualizar o mapa com eventos/ocorrências da cidade.
+
+\textbf{Pré-condições:}
+\begin{itemize}
+  \item Usuário já cadastrado no sistema.
+  \item Aplicativo com acesso à internet.
+\end{itemize}
+
+\begin{longtable}{|c|p{4cm}|p{2.5cm}|p{5.5cm}|}
+  \hline
+  \textbf{\#} & \textbf{E-mail} & \textbf{Senha} & \textbf{Saída esperada} \\
+  \hline
+  \endfirsthead
+  \hline
+  \textbf{\#} & \textbf{E-mail} & \textbf{Senha} & \textbf{Saída esperada} \\
+  \hline
+  \endhead
+  1 & ana@email.com & Senha@123 & Login realizado; usuário redirecionado para tela principal com mapa carregado. \\
+  \hline
+  2 & naoexiste@email.com & Senha@123 & ``Usuário não encontrado ou credenciais inválidas.'' \\
+  \hline
+  3 & (vazio) & Senha@123 & ``Campo de e-mail obrigatório.'' \\
+  \hline
+  4 & ana@email.com & (vazio) & ``Campo de senha obrigatório.'' \\
+  \hline
+  5 & ana@email.com & senhaErrada & ``Usuário não encontrado ou credenciais inválidas''; não realiza login. \\
+  \hline
+\end{longtable}
+
+\subsection*{Caso de teste \#3 – Registro de reclamação/evento}
+
+\textbf{Propósito:} Verificar se o usuário consegue publicar reclamações e
+eventos e se o sistema exibe mensagens adequadas para campos inválidos.
+
+\begin{longtable}{|c|p{2cm}|p{3cm}|p{2cm}|p{2cm}|p{3.5cm}|}
+  \hline
+  \textbf{\#} & \textbf{Tipo} & \textbf{Descrição} & \textbf{Categ.} & \textbf{Local.} & \textbf{Saída esperada} \\
+  \hline
+  \endfirsthead
+  \hline
+  \textbf{\#} & \textbf{Tipo} & \textbf{Descrição} & \textbf{Categ.} & \textbf{Local.} & \textbf{Saída esperada} \\
+  \hline
+  \endhead
+  1 & Reclamação & Buraco na Rua X & Infraestrutura & GPS ok & Reclamação registrada com sucesso e exibida no mapa. \\
+  \hline
+  2 & Evento & Feira comunitária & Evento & Praça Y & Evento registrado com sucesso e exibido no mapa. \\
+  \hline
+  3 & Reclamação & (vazio) & Limpeza & GPS ok & ``Preencha a descrição da publicação.''; não registra. \\
+  \hline
+  4 & Evento & Aulão de esportes & Esportes & GPS ok & ``Informe data e horário do evento.''; não registra. \\
+  \hline
+  5 & Reclamação & Luz queimada & Infraestrutura & GPS negado & Sistema oferece campo de endereço manual. \\
+  \hline
+\end{longtable}
+
+\subsection*{Caso de teste \#4 – Filtrar publicações por categoria}
+
+\textbf{Propósito:} Verificar se o usuário consegue aplicar filtros de categoria
+no mapa e se o sistema exibe apenas as publicações compatíveis com a
+categoria selecionada.
+
+\begin{longtable}{|c|p{3cm}|p{4cm}|p{4.5cm}|}
+  \hline
+  \textbf{\#} & \textbf{Categoria selecionada} & \textbf{Situação na base} & \textbf{Saída esperada} \\
+  \hline
+  \endfirsthead
+  \hline
+  \textbf{\#} & \textbf{Categoria selecionada} & \textbf{Situação na base} & \textbf{Saída esperada} \\
+  \hline
+  \endhead
+  1 & Infraestrutura & Publicações de Infraestrutura e Limpeza & Exibir apenas publicações de Infraestrutura no mapa. \\
+  \hline
+  2 & Segurança & Publicações de Segurança e Esportes & Exibir apenas publicações de Segurança no mapa. \\
+  \hline
+  3 & Limpeza & Nenhuma publicação de Limpeza & Mapa sem marcadores. \\
+  \hline
+  4 & Esportes & Publicações de todas as categorias & Exibir apenas publicações de Esportes. \\
+  \hline
+  5 & (Todas / sem filtro) & Publicações de diferentes categorias & Exibir todas as publicações no mapa sem filtragem. \\
+  \hline
+\end{longtable}
+
+\subsection*{Caso de teste \#5 – Alternância de tema (modo claro/escuro)}
+
+\textbf{Propósito:} Verificar se o usuário consegue alternar entre modo claro
+e modo escuro pelas configurações e se o tema é aplicado em toda a interface.
+
+\textbf{Pré-condições:}
+\begin{itemize}
+  \item Usuário logado no aplicativo.
+\end{itemize}
+
+\begin{longtable}{|c|p{4cm}|p{4cm}|p{4cm}|}
+  \hline
+  \textbf{\#} & \textbf{Ação} & \textbf{Estado inicial} & \textbf{Saída esperada} \\
+  \hline
+  \endfirsthead
+  \hline
+  \textbf{\#} & \textbf{Ação} & \textbf{Estado inicial} & \textbf{Saída esperada} \\
+  \hline
+  \endhead
+  1 & Ativar modo escuro nas configurações & Modo claro ativo & Interface muda para modo escuro em todas as telas. \\
+  \hline
+  2 & Ativar modo claro nas configurações & Modo escuro ativo & Interface muda para modo claro em todas as telas. \\
+  \hline
+  3 & Fechar e reabrir o aplicativo & Modo escuro salvo & Aplicativo reabre mantendo o modo escuro. \\
+  \hline
+\end{longtable}

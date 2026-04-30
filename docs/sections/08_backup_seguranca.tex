@@ -1,0 +1,55 @@
+% ============================================================
+% SEÇÃO 8 – PROCEDIMENTOS DE BACKUP, SEGURANÇA E CONTINGÊNCIA
+% ============================================================
+
+\section{PROCEDIMENTOS DE BACKUP, SEGURANÇA E CONTINGÊNCIA}
+
+O aplicativo será disponibilizado ao público por meio das plataformas oficiais de
+distribuição de aplicativos móveis, Apple App Store (iOS) e Google Play Store
+(Android). Ambas as lojas utilizam processos próprios e padronizados de validação,
+auditoria e controle de qualidade, garantindo que o aplicativo seja distribuído com
+segurança e que somente versões oficialmente assinadas estejam disponíveis para
+os usuários.
+
+O backend da aplicação utiliza como provedor de banco de dados e armazenamento
+o \textbf{Supabase}, que opera sobre infraestrutura de alto desempenho com
+disponibilidade global, replicação automática e mecanismos integrados de segurança
+e contingência. O Supabase é executado sobre plataformas \textit{cloud}
+amplamente certificadas e mantém políticas próprias de continuidade, incluindo:
+
+\begin{itemize}
+  \item Backups automáticos e criptografados, com retenção configurável;
+  \item Redundância em múltiplas zonas de disponibilidade;
+  \item Monitoramento contínuo da saúde dos serviços;
+  \item Escalabilidade vertical e horizontal sob demanda;
+  \item Conformidade com padrões reconhecidos internacionalmente, como SOC 2,
+        GDPR e ISO/IEC 27001.
+\end{itemize}
+
+A segurança e integridade dos dados dos usuários são garantidas por camadas de
+proteção:
+
+\begin{itemize}
+  \item Autenticação segura via JWT com tokens de acesso (curta duração) e
+        refresh tokens (longa duração), implementados no backend Node.js;
+  \item Renovação automática de sessão: ao receber resposta 403, o aplicativo
+        solicita novo access token sem interromper o uso;
+  \item Invalidação de refresh token no logout, impedindo reutilização;
+  \item Criptografia em trânsito (TLS 1.2+);
+  \item Criptografia em repouso (AES-256) no Supabase;
+  \item Senhas armazenadas com hash + salt no banco de dados;
+  \item Políticas de acesso granular (Row-Level Security) no banco PostgreSQL;
+  \item Auditorias e logs transacionais.
+\end{itemize}
+
+O plano de contingência está estruturado com base nos mecanismos nativos das
+plataformas utilizadas:
+
+\begin{itemize}
+  \item Em caso de falhas no banco de dados, o Supabase executa failover
+        automático e recuperação a partir de backups diários criptografados;
+  \item O aplicativo é projetado para exibir mensagens de manutenção quando
+        não for possível estabelecer conexão com o backend;
+  \item Em caso de perda ou corrupção de dados, a restauração é realizada por
+        meio dos backups automáticos e versionados do Supabase.
+\end{itemize}
