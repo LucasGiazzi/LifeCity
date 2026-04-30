@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="assets/images/capivas-na-city.png" width="120" alt="LifeCity mascote"/>
+  <img src="assets/images/onboarding3.PNG" width="120" alt="LifeCity mascote"/>
 
   # LifeCity
 
