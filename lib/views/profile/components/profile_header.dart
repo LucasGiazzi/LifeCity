@@ -4,7 +4,6 @@ import 'package:provider/provider.dart';
 import '../../../core/components/network_image.dart';
 import '../../../core/constants/constants.dart';
 import '../../../core/state/auth_state.dart';
-import 'profile_header_options.dart';
 
 class ProfileHeader extends StatelessWidget {
   const ProfileHeader({
@@ -31,7 +30,6 @@ class ProfileHeader extends StatelessWidget {
                   ),
             ),
             const _UserData(),
-            const ProfileHeaderOptions()
           ],
         ),
       ],

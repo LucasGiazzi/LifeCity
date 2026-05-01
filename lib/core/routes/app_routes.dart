@@ -26,9 +26,6 @@ class AppRoutes {
   static const changePassword = '/changePassword';
   static const changePhoneNumber = '/changePhoneNumber';
 
-  /* <---- Complaints -----> */
-  static const createComplaint = '/createComplaint';
-
   /* <---- Drawer Page -----> */
   static const drawerPage = '/drawerPage';
   static const aboutUs = '/aboutUs';

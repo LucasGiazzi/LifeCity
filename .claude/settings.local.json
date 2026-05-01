@@ -14,7 +14,16 @@
       "Bash(curl -L -o \"Poppins-Regular.ttf\" \"https://github.com/google/fonts/raw/main/ofl/poppins/Poppins-Regular.ttf\")",
       "Bash(curl -L -o \"Poppins-Medium.ttf\" \"https://github.com/google/fonts/raw/main/ofl/poppins/Poppins-Medium.ttf\")",
       "Bash(curl -L -o \"Poppins-SemiBold.ttf\" \"https://github.com/google/fonts/raw/main/ofl/poppins/Poppins-SemiBold.ttf\")",
-      "Bash(curl -L -o \"Poppins-Bold.ttf\" \"https://github.com/google/fonts/raw/main/ofl/poppins/Poppins-Bold.ttf\")"
+      "Bash(curl -L -o \"Poppins-Bold.ttf\" \"https://github.com/google/fonts/raw/main/ofl/poppins/Poppins-Bold.ttf\")",
+      "Bash(git log *)",
+      "Bash(git add *)",
+      "Bash(git fetch *)",
+      "Bash(git merge *)",
+      "Bash(git checkout *)",
+      "Bash(node src/server.js)",
+      "Bash(curl -s http://localhost:3000/)",
+      "Bash(kill %1)",
+      "PowerShell(Get-NetTCPConnection -LocalPort 3000 -State Listen | Select-Object -ExpandProperty OwningProcess | ForEach-Object { Stop-Process -Id $_ -Force; \"Processo $_ encerrado\" })"
     ]
   }
 }

@@ -17,7 +17,7 @@ class ApiService {
   ApiService._internal()
       : _dio = Dio(
           BaseOptions(
-            baseUrl: 'http://10.0.1.104:3000',
+            baseUrl: 'http://192.168.15.7:3000',
             connectTimeout: const Duration(seconds: 5),
             receiveTimeout: const Duration(seconds: 5),
             headers: {
@@ -178,13 +178,7 @@ class ApiService {
 
   Future<Response> postMultipart(String endpoint, FormData formData) async {
     try {
-      final response = await _dio.post(
-        endpoint,
-        data: formData,
-        options: Options(
-          contentType: 'multipart/form-data',
-        ),
-      );
+      final response = await _dio.post(endpoint, data: formData);
       return response;
     } on DioException catch (e) {
       throw ApiException.fromDioError(e);
@@ -193,13 +187,7 @@ class ApiService {
 
   Future<Response> putMultipart(String endpoint, FormData formData) async {
     try {
-      final response = await _dio.put(
-        endpoint,
-        data: formData,
-        options: Options(
-          contentType: 'multipart/form-data',
-        ),
-      );
+      final response = await _dio.put(endpoint, data: formData);
       return response;
     } on DioException catch (e) {
       throw ApiException.fromDioError(e);

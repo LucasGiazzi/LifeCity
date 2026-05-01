@@ -6,7 +6,7 @@ CREATE TABLE IF NOT EXISTS complaints (
     address TEXT,
     latitude DECIMAL(10, 8),
     longitude DECIMAL(11, 8),
-    type VARCHAR(50),
+    category VARCHAR(50),
     created_by INTEGER REFERENCES users(id),
     created_at TIMESTAMP DEFAULT NOW()
 );
