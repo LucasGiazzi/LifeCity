@@ -14,7 +14,7 @@ class SettingsPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    final cardBg = isDark ? const Color(0xFF1A1A2E) : Colors.white;
+    final cardBg = isDark ? AppColors.dark : Colors.white;
     final textColor = isDark ? Colors.white : AppColors.dark;
     final subtitleColor = isDark ? const Color(0xFF8B9BB4) : AppColors.placeholder;
 

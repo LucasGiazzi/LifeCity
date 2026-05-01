@@ -5,9 +5,9 @@ class AppColors {
   static const Color primary = Color(0xFF00C896);
   static const Color primaryDark = Color(0xFF009E76);
 
-  // Dark navy — contraste e fundos escuros
-  static const Color dark = Color(0xFF1A1A2E);
-  static const Color darkSurface = Color(0xFF16213E);
+  // Dark green — contraste e fundos escuros
+  static const Color dark = Color(0xFF0D2818);
+  static const Color darkSurface = Color(0xFF172E1F);
 
   // Fundos e superfícies claras
   static const Color scaffoldBackground = Color(0xFFFFFFFF);

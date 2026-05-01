@@ -17,6 +17,7 @@ class ProfileListTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final iconColor = Theme.of(context).iconTheme.color ?? Colors.black;
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -26,17 +27,17 @@ class ProfileListTile extends StatelessWidget {
           padding: const EdgeInsets.all(8.0),
           child: Row(
             children: [
-              SvgPicture.asset(icon),
+              SvgPicture.asset(
+                icon,
+                colorFilter: ColorFilter.mode(iconColor, BlendMode.srcIn),
+              ),
               const SizedBox(width: 16),
               Text(
                 title,
-                style: Theme.of(context)
-                    .textTheme
-                    .bodyLarge
-                    ?.copyWith(color: Theme.of(context).textTheme.bodyLarge?.color),
+                style: Theme.of(context).textTheme.bodyLarge,
               ),
               const Spacer(),
-              SvgPicture.asset(AppIcons.right),
+              Icon(Icons.arrow_forward_ios_rounded, size: 14, color: iconColor.withValues(alpha: 0.5)),
             ],
           ),
         ),

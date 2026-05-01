@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../../core/constants/app_colors.dart';
 import 'components/sign_up_form.dart';
 
 class SignUpPage extends StatelessWidget {
@@ -14,7 +15,7 @@ class SignUpPage extends StatelessWidget {
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle.light,
       child: Scaffold(
-        backgroundColor: const Color(0xFF1A1A2E),
+        backgroundColor: AppColors.dark,
         body: Column(
           children: [
             // ── Header compacto ──

@@ -15,7 +15,7 @@ class LoginPage extends StatelessWidget {
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle.light,
       child: Scaffold(
-        backgroundColor: const Color(0xFF1A1A2E),
+        backgroundColor: AppColors.dark,
         body: Column(
           children: [
             // ── Header dark ──

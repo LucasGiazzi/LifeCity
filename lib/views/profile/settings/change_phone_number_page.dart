@@ -65,7 +65,7 @@ class _ChangePhoneNumberPageState extends State<ChangePhoneNumberPage> {
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle.light,
       child: Scaffold(
-        backgroundColor: const Color(0xFF1A1A2E),
+        backgroundColor: AppColors.dark,
         body: Column(
           children: [
             // ── Header dark ──
@@ -201,7 +201,7 @@ class _ChangePhoneNumberPageState extends State<ChangePhoneNumberPage> {
                               _PhoneInputFormatter(),
                             ],
                             style: GoogleFonts.poppins(
-                                fontSize: 15, color: const Color(0xFF1A1A2E)),
+                                fontSize: 15, color: AppColors.dark),
                             decoration: const InputDecoration(
                               hintText: '(XX) XXXXX-XXXX',
                               prefixIcon: Icon(Icons.phone_outlined,
@@ -230,7 +230,7 @@ class _ChangePhoneNumberPageState extends State<ChangePhoneNumberPage> {
                               _PhoneInputFormatter(),
                             ],
                             style: GoogleFonts.poppins(
-                                fontSize: 15, color: const Color(0xFF1A1A2E)),
+                                fontSize: 15, color: AppColors.dark),
                             decoration: const InputDecoration(
                               hintText: '(XX) XXXXX-XXXX',
                               prefixIcon: Icon(Icons.phone_callback_outlined,
@@ -325,7 +325,7 @@ class _FieldLabel extends StatelessWidget {
       style: GoogleFonts.poppins(
         fontSize: 13,
         fontWeight: FontWeight.w600,
-        color: const Color(0xFF1A1A2E),
+        color: AppColors.dark,
       ),
     );
   }

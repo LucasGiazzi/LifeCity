@@ -227,7 +227,7 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle.light,
       child: Scaffold(
-        backgroundColor: const Color(0xFF1A1A2E),
+        backgroundColor: AppColors.dark,
         body: Column(
           children: [
             // ── Header dark ──
@@ -398,7 +398,7 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
                             controller: _nameController,
                             textInputAction: TextInputAction.next,
                             style: GoogleFonts.poppins(
-                                fontSize: 15, color: const Color(0xFF1A1A2E)),
+                                fontSize: 15, color: AppColors.dark),
                             decoration: const InputDecoration(
                               hintText: 'Seu nome completo',
                               prefixIcon: Icon(Icons.person_outline_rounded,
@@ -421,7 +421,7 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
                               _PhoneFormatter(),
                             ],
                             style: GoogleFonts.poppins(
-                                fontSize: 15, color: const Color(0xFF1A1A2E)),
+                                fontSize: 15, color: AppColors.dark),
                             decoration: const InputDecoration(
                               hintText: '(XX) XXXXX-XXXX',
                               prefixIcon: Icon(Icons.phone_outlined,
@@ -441,7 +441,7 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
                               _CpfFormatter(),
                             ],
                             style: GoogleFonts.poppins(
-                                fontSize: 15, color: const Color(0xFF1A1A2E)),
+                                fontSize: 15, color: AppColors.dark),
                             decoration: const InputDecoration(
                               hintText: '000.000.000-00',
                               prefixIcon: Icon(Icons.badge_outlined,
@@ -457,7 +457,7 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
                             readOnly: true,
                             onTap: _selectBirthDate,
                             style: GoogleFonts.poppins(
-                                fontSize: 15, color: const Color(0xFF1A1A2E)),
+                                fontSize: 15, color: AppColors.dark),
                             decoration: const InputDecoration(
                               hintText: 'dd/mm/aaaa',
                               prefixIcon: Icon(Icons.cake_outlined,
@@ -547,7 +547,7 @@ class _FieldLabel extends StatelessWidget {
       style: GoogleFonts.poppins(
         fontSize: 13,
         fontWeight: FontWeight.w600,
-        color: const Color(0xFF1A1A2E),
+        color: AppColors.dark,
       ),
     );
   }

@@ -71,7 +71,7 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle.light,
       child: Scaffold(
-        backgroundColor: const Color(0xFF1A1A2E),
+        backgroundColor: AppColors.dark,
         body: Column(
           children: [
             // ── Header dark ──
@@ -205,7 +205,7 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
                             textInputAction: TextInputAction.next,
                             style: GoogleFonts.poppins(
                                 fontSize: 15,
-                                color: const Color(0xFF1A1A2E)),
+                                color: AppColors.dark),
                             decoration: InputDecoration(
                               hintText: 'Digite sua senha atual',
                               prefixIcon: const Icon(Icons.lock_outline_rounded,
@@ -233,7 +233,7 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
                             textInputAction: TextInputAction.next,
                             style: GoogleFonts.poppins(
                                 fontSize: 15,
-                                color: const Color(0xFF1A1A2E)),
+                                color: AppColors.dark),
                             decoration: InputDecoration(
                               hintText: 'Mínimo 8 caracteres',
                               prefixIcon: const Icon(
@@ -270,7 +270,7 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
                             onFieldSubmitted: (_) => _submit(),
                             style: GoogleFonts.poppins(
                                 fontSize: 15,
-                                color: const Color(0xFF1A1A2E)),
+                                color: AppColors.dark),
                             decoration: InputDecoration(
                               hintText: 'Repita a nova senha',
                               prefixIcon: const Icon(Icons.check_circle_outline,
@@ -373,7 +373,7 @@ class _FieldLabel extends StatelessWidget {
       style: GoogleFonts.poppins(
         fontSize: 13,
         fontWeight: FontWeight.w600,
-        color: const Color(0xFF1A1A2E),
+        color: AppColors.dark,
       ),
     );
   }

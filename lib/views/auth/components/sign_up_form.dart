@@ -268,7 +268,7 @@ class _Field extends StatelessWidget {
       inputFormatters: formatters.cast(),
       validator: validator,
       textInputAction: action,
-      style: GoogleFonts.poppins(fontSize: 15, color: const Color(0xFF1A1A2E)),
+      style: GoogleFonts.poppins(fontSize: 15, color: AppColors.dark),
       decoration: InputDecoration(
         hintText: hint,
         prefixIcon: Icon(icon, color: AppColors.placeholder, size: 20),
@@ -304,7 +304,7 @@ class _PasswordField extends StatelessWidget {
       validator: validator,
       textInputAction: action,
       onFieldSubmitted: onSubmitted,
-      style: GoogleFonts.poppins(fontSize: 15, color: const Color(0xFF1A1A2E)),
+      style: GoogleFonts.poppins(fontSize: 15, color: AppColors.dark),
       decoration: InputDecoration(
         hintText: hint,
         prefixIcon: const Icon(Icons.lock_outline_rounded, color: AppColors.placeholder, size: 20),

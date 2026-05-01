@@ -68,7 +68,7 @@ class _LoginPageFormState extends State<LoginPageForm> {
                 keyboardType: TextInputType.emailAddress,
                 validator: Validators.email.call,
                 textInputAction: TextInputAction.next,
-                style: GoogleFonts.poppins(fontSize: 15, color: const Color(0xFF1A1A2E)),
+                style: GoogleFonts.poppins(fontSize: 15, color: AppColors.dark),
                 decoration: InputDecoration(
                   hintText: 'E-mail',
                   prefixIcon: const Icon(Icons.email_outlined,
@@ -84,7 +84,7 @@ class _LoginPageFormState extends State<LoginPageForm> {
                 textInputAction: TextInputAction.done,
                 onFieldSubmitted: (_) => onLogin(),
                 obscureText: _isPasswordObscured,
-                style: GoogleFonts.poppins(fontSize: 15, color: const Color(0xFF1A1A2E)),
+                style: GoogleFonts.poppins(fontSize: 15, color: AppColors.dark),
                 decoration: InputDecoration(
                   hintText: 'Senha',
                   prefixIcon: const Icon(Icons.lock_outline_rounded,
@@ -137,7 +137,7 @@ class _LoginPageFormState extends State<LoginPageForm> {
                           'Manter logado',
                           style: GoogleFonts.poppins(
                             fontSize: 13,
-                            color: const Color(0xFF1A1A2E),
+                            color: AppColors.dark,
                           ),
                         ),
                       ),

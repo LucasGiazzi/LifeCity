@@ -28,6 +28,7 @@ dependencies:
   intl: ^0.19.0
   http: ^1.2.0
   connectivity_plus: ^7.1.1
+  flutter_dotenv: ^5.2.1
 
 dev_dependencies:
   flutter_test:
@@ -37,7 +38,7 @@ dev_dependencies:
   flutter_native_splash: ^2.2.3+1
 
 flutter_native_splash:
-  color: "#1A1A2E"
+  color: "#0D2818"
   image: "assets/images/capivas-na-city.png"
   android: true
   ios: true
@@ -58,6 +59,7 @@ flutter_launcher_icons:
 flutter:
   uses-material-design: true
   assets:
+    - .env
     - assets/images/
     - assets/icons/
     - assets/google_fonts/

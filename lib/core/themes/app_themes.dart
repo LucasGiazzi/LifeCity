@@ -126,11 +126,11 @@ class AppTheme {
     return ThemeData(
       colorSchemeSeed: AppColors.primary,
       textTheme: poppinsDark,
-      scaffoldBackgroundColor: const Color(0xFF0F0F1A),
+      scaffoldBackgroundColor: const Color(0xFF060E09),
       brightness: Brightness.dark,
       appBarTheme: AppBarTheme(
         elevation: 0,
-        backgroundColor: const Color(0xFF1A1A2E),
+        backgroundColor: AppColors.dark,
         iconTheme: const IconThemeData(color: Colors.white),
         titleTextStyle: GoogleFonts.poppins(
           color: Colors.white,
@@ -138,7 +138,7 @@ class AppTheme {
           fontSize: 18,
         ),
       ),
-      cardColor: const Color(0xFF1A1A2E),
+      cardColor: AppColors.dark,
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.primary,
@@ -184,7 +184,7 @@ class AppTheme {
   }
 
   static InputDecorationTheme get _darkInputTheme => InputDecorationTheme(
-    fillColor: const Color(0xFF16213E),
+    fillColor: AppColors.darkSurface,
     filled: true,
     floatingLabelBehavior: FloatingLabelBehavior.never,
     hintStyle: GoogleFonts.poppins(color: const Color(0xFF8B9BB4), fontSize: 14),

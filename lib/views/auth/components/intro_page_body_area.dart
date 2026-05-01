@@ -12,7 +12,7 @@ class IntroPageBodyArea extends StatelessWidget {
     return Container(
       decoration: const BoxDecoration(
         gradient: LinearGradient(
-          colors: [Color(0xFF1A1A2E), Color(0xFF0F2D20)],
+          colors: [AppColors.dark, Color(0xFF0F2D20)],
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
         ),
