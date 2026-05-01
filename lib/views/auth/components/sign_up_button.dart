@@ -2,12 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 
 import '../../../core/constants/constants.dart';
-import '../../../core/routes/app_routes.dart';
 
 class SignUpButton extends StatelessWidget {
-  const SignUpButton({
-    super.key,
-  });
+  const SignUpButton({super.key, this.onPressed});
+
+  final void Function()? onPressed;
 
   @override
   Widget build(BuildContext context) {
@@ -23,9 +22,7 @@ class SignUpButton extends StatelessWidget {
           ),
           const Spacer(),
           ElevatedButton(
-            onPressed: () {
-              Navigator.pushNamed(context, AppRoutes.numberVerification);
-            },
+            onPressed: onPressed,
             style: ElevatedButton.styleFrom(elevation: 1),
             child: SvgPicture.asset(
               AppIcons.arrowForward,

@@ -41,26 +41,20 @@ class AuthState extends ChangeNotifier {
       _accessToken = userCredential['accessToken'] as String;
       _refreshToken = userCredential['refreshToken'] as String?;
       _currentUser = userCredential['user'] as Map<String, dynamic>?;
-      
-      // Atualizar token no ApiService para uso em requisições futuras
+
       _apiService.setAccessToken(_accessToken);
-      
-      // Configurar callbacks para refresh automático de token
+
       _apiService.setRefreshTokenCallback(() async => _refreshToken);
       _apiService.setOnTokenRefreshedCallback((newToken) async {
         _accessToken = newToken;
         _saveTokens();
-        // Recarregar dados do usuário após refresh do token
         await loadUserData();
         notifyListeners();
       });
-      
-      // Salvar tokens no armazenamento
+
       await _saveTokens();
-      
-      // Carregar dados completos do usuário do backend
       await loadUserData();
-      
+
       notifyListeners();
       return true;
     } else {
@@ -90,22 +84,6 @@ class AuthState extends ChangeNotifier {
       return false;
     }
   }
-  
-  /* Future<bool> loginWithGoogle() async {
-    setLoading(true);
-    setErrorMessage(null);
-
-    final userCredential = await _authService.signInWithGoogle();
-
-    setLoading(false);
-
-    if (userCredential != null) {
-      return true;
-    } else {
-      setErrorMessage('Falha ao fazer login com o Google.');
-      return false;
-    }
-  } */
 
   Future<void> logout() async {
     await _authService.signOut(_refreshToken ?? '');
@@ -137,30 +115,24 @@ class AuthState extends ChangeNotifier {
     notifyListeners();
   }
 
-  // Inicializar estado de autenticação ao iniciar o app
   Future<void> initialize() async {
     await _loadTokens();
-    // Atualizar token no ApiService se existir
     if (_accessToken != null) {
       _apiService.setAccessToken(_accessToken);
-      // Carregar dados do usuário
       await loadUserData();
     }
-    
-    // Configurar callbacks para refresh automático de token
+
     _apiService.setRefreshTokenCallback(() async => _refreshToken);
     _apiService.setOnTokenRefreshedCallback((newToken) async {
       _accessToken = newToken;
       _saveTokens();
-      // Recarregar dados do usuário após refresh do token
       await loadUserData();
       notifyListeners();
     });
-    
+
     notifyListeners();
   }
 
-  // Carregar dados do usuário do backend
   Future<void> loadUserData() async {
     if (_accessToken == null) return;
 
@@ -171,7 +143,6 @@ class AuthState extends ChangeNotifier {
     }
   }
 
-  // Atualizar dados do usuário
   Future<bool> updateUser({
     String? name,
     String? cpf,

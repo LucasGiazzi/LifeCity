@@ -13,7 +13,7 @@ class NotificationPage extends StatelessWidget {
       appBar: AppBar(
         leading: const AppBackButton(),
         title: const Text(
-          'Notification',
+          'Notificações',
         ),
       ),
       body: ListView(
@@ -21,57 +21,15 @@ class NotificationPage extends StatelessWidget {
         children: const [
           NotificationTile(
             imageLink: 'https://i.imgur.com/e3z9DmE.png',
-            title: 'Gifts Offer',
-            subtitle: 'Hot Deal Buy one get free on Offfer Hery...',
-            time: 'Now',
+            title: 'Reclamação atendida',
+            subtitle: 'Reclamação atendida! Clique para ver mais detalhes.',
+            time: 'Agora',
           ),
           NotificationTile(
-            imageLink: 'https://i.imgur.com/gKa8Vfe.png',
-            title: 'Coupon Offer',
-            subtitle: 'Hot Deal Buy one get free on Offfer Hery...',
-            time: '10 Minutes Ago',
-          ),
-          NotificationTile(
-            imageLink: 'https://i.imgur.com/8jgs2mH.png',
-            title: 'Congratulations',
-            subtitle: 'You get your order...',
-            time: '15 Minutes Ago',
-          ),
-          NotificationTile(
-            imageLink: 'https://i.imgur.com/vHZFf4w.png',
-            title: 'Your Order Cancelled',
-            subtitle: 'Hot Deal Buy one get free on Offfer Hery...',
-            time: '15 Minutes Ago',
-          ),
-          NotificationTile(
-            imageLink: 'https://i.imgur.com/dbZiWGW.png',
-            title: 'Great Winter Discounts',
-            subtitle: 'Hot Deal Buy one get free on Offfer Hery...',
-            time: '15 Minutes Ago',
-          ),
-          NotificationTile(
-            imageLink: 'https://i.imgur.com/le6UYuV.png',
-            title: '20% off vegetables',
-            subtitle: 'Hot Deal Buy one get free on Offfer Hery...',
-            time: '15 Minutes Ago',
-          ),
-          NotificationTile(
-            imageLink: 'https://i.imgur.com/dbZiWGW.png',
-            title: 'Great Winter Discounts',
-            subtitle: 'Hot Deal Buy one get free on Offfer Hery...',
-            time: '15 Minutes Ago',
-          ),
-          NotificationTile(
-            imageLink: 'https://i.imgur.com/le6UYuV.png',
-            title: '20% off vegetables',
-            subtitle: 'Hot Deal Buy one get free on Offfer Hery...',
-            time: '15 Minutes Ago',
-          ),
-          NotificationTile(
-            imageLink: 'https://i.imgur.com/8jgs2mH.png',
-            title: 'Congratulations',
-            subtitle: 'You get your order...',
-            time: '15 Minutes Ago',
+            imageLink: 'https://i.imgur.com/e3z9DmE.png',
+            title: 'Em desenvolvimento',
+            subtitle: 'As notificações serão exibidas aqui em tempo real.',
+            time: 'Agora',
           ),
         ],
       ),

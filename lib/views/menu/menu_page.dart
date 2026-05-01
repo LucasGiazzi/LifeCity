@@ -29,7 +29,7 @@ class MenuPage extends StatelessWidget {
         children: [
           const SizedBox(height: 32),
           Text(
-            'Escolha a Categoria',
+            'Amigos',
             style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                   color: Colors.black,
                   fontWeight: FontWeight.bold,
@@ -37,37 +37,22 @@ class MenuPage extends StatelessWidget {
           ),
           const SizedBox(height: 12),
 
-          // Botões auxiliares
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Row(
-              children: [
-                const SizedBox(width: 8),
-                TextButton(
-                  onPressed: () => filters.clear(),
-                  child: const Text('Limpar'),
-                ),
-              ],
-            ),
-          ),
-
           const SizedBox(height: 8),
 
           // Grid de categorias
-          Expanded(
-            child: GridView.count(
-              crossAxisCount: 3,
-              children: [
-                for (final c in _items)
-                  _SelectableTile(
-                    label: c.label,
-                    asset: c.asset,
-                    selected: filters.isSelected(c.key),
-                    primary: c.primary,
-                    onTap: () => filters.toggle(c.key),
-                  ),
-              ],
-            ),
+          Text(
+            'Em desenvolvimento',
+            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                  color: Colors.black,
+                ),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            'Em breve você poderá ver os amigos que estão próximos de você e interagir com eles.',
+            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                  color: Colors.black,
+                ),
+            textAlign: TextAlign.center,
           ),
         ],
       ),

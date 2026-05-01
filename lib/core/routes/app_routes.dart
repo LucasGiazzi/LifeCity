@@ -13,6 +13,8 @@ class AppRoutes {
 
   /* <---- ENTRYPOINT -----> */
   static const entryPoint = '/entry_point';
+  static const createEvent = '/create_event';
+  static const createComplaint = '/create_complaint';
 
   /* <---- Profile & Settings -----> */
   static const profile = 'profile';

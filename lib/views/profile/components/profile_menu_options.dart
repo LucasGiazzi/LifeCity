@@ -19,7 +19,7 @@ class ProfileMenuOptions extends StatelessWidget {
         borderRadius: AppDefaults.borderRadius,
       ),
       child: Column(
-        mainAxisSize: MainAxisSize.min, // ✅ evita overflow interno
+        mainAxisSize: MainAxisSize.min,
         children: [
           ProfileListTile(
             title: 'Editar Perfil',

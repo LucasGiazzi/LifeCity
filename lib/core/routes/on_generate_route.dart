@@ -14,6 +14,7 @@ import '../../views/drawer/faq_page.dart';
 import '../../views/drawer/help_page.dart';
 import '../../views/drawer/terms_and_conditions_page.dart';
 import '../../views/entrypoint/entrypoint_ui.dart';
+import '../../views/events/create_event_page.dart';
 import '../../views/complaints/create_complaint_page.dart';
 import '../../views/onboarding/onboarding_page.dart';
 import '../../views/profile/notification_page.dart';
@@ -39,6 +40,9 @@ class RouteGenerator {
 
       case AppRoutes.entryPoint:
         return CupertinoPageRoute(builder: (_) => const EntryPointUI());
+
+      case AppRoutes.createEvent:
+        return CupertinoPageRoute(builder: (_) => const CreateEventPage());
 
       case AppRoutes.createComplaint:
         return CupertinoPageRoute(builder: (_) => const CreateComplaintPage());

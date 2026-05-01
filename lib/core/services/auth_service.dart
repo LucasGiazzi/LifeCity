@@ -1,6 +1,4 @@
 import 'package:dio/dio.dart';
-import 'package:flutter/material.dart';
-import 'package:LifeCity/core/routes/app_routes.dart';
 import 'api_service.dart';
 
 class AuthService {
