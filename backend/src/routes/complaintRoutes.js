@@ -29,6 +29,9 @@ router.get('/', complaintController.getAll);
 // Rota autenticada: interações do usuário logado
 router.get('/me/interactions', authenticateToken, complaintController.getMyInteractions);
 
+// Rota autenticada: interações de outro usuário (perfil de amigo)
+router.get('/users/:userId/interactions', authenticateToken, complaintController.getUserInteractions);
+
 // Rota pública para buscar fotos de uma reclamação
 router.get('/:id/photos', complaintController.getPhotos);
 

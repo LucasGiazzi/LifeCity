@@ -208,6 +208,51 @@ exports.getMyInteractions = async (req, res) => {
     }
 };
 
+exports.getUserInteractions = async (req, res) => {
+    const { userId } = req.params;
+    try {
+        const pool = await supabasePool.getPgPool();
+
+        const likesResult = await pool.query(`
+            SELECT
+                'like' AS type,
+                cl.created_at,
+                c.id   AS complaint_id,
+                c.description,
+                c.address,
+                c.category AS complaint_type,
+                NULL::text AS comment_text
+            FROM complaint_likes cl
+            JOIN complaints c ON cl.complaint_id = c.id
+            WHERE cl.user_id = $1
+        `, [userId]);
+
+        const commentsResult = await pool.query(`
+            SELECT
+                'comment' AS type,
+                cm.created_at,
+                c.id   AS complaint_id,
+                c.description,
+                c.address,
+                c.category AS complaint_type,
+                cm.text AS comment_text
+            FROM comments cm
+            JOIN complaints c ON cm.complaint_id = c.id
+            WHERE cm.user_id = $1
+        `, [userId]);
+
+        const interactions = [
+            ...likesResult.rows,
+            ...commentsResult.rows,
+        ].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
+        res.status(200).json({ interactions });
+    } catch (error) {
+        console.error('Erro ao buscar interações do usuário:', error);
+        res.status(500).json({ message: 'Erro ao buscar interações.' });
+    }
+};
+
 exports.delete = async (req, res) => {
     const { id } = req.params;
     const userId = req.user.id;

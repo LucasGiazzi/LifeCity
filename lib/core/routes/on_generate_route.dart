@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 
 import '../../views/auth/forget_password_page.dart';
+import '../../views/profile/friend_profile_page.dart';
 import '../../views/auth/login_loading_page.dart';
 import '../../views/auth/intro_login_page.dart';
 import '../../views/auth/login_or_signup_page.dart';
@@ -35,6 +36,16 @@ class RouteGenerator {
     switch (route) {
       case AppRoutes.loginLoading:
         return CupertinoPageRoute(builder: (_) => const LoginLoadingPage());
+
+      case AppRoutes.friendProfile:
+        final args = settings.arguments as Map<String, dynamic>;
+        return CupertinoPageRoute(
+          builder: (_) => FriendProfilePage(
+            userId: args['userId'] as String,
+            userName: args['userName'] as String,
+            photoUrl: args['photoUrl'] as String?,
+          ),
+        );
 
       case AppRoutes.introLogin:
         return CupertinoPageRoute(builder: (_) => const IntroLoginPage());

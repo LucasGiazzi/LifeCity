@@ -366,6 +366,13 @@ class _DiscoverList extends StatelessWidget {
 
           return ListTile(
             contentPadding: const EdgeInsets.symmetric(vertical: 4, horizontal: 4),
+            onTap: label == 'Amigo'
+                ? () => Navigator.pushNamed(
+                      context,
+                      AppRoutes.friendProfile,
+                      arguments: {'userId': id, 'userName': name, 'photoUrl': photo},
+                    )
+                : null,
             leading: _UserAvatar(photoUrl: photo, name: name),
             title: Text(name, style: GoogleFonts.poppins(fontWeight: FontWeight.w500)),
             subtitle: label != null
@@ -554,12 +561,19 @@ class _FriendsList extends StatelessWidget {
         separatorBuilder: (_, __) => const Divider(height: 1),
         itemBuilder: (context, i) {
           final f = friends[i];
+          final id = f['id']?.toString() ?? '';
           final name = f['name'] as String? ?? 'Utilizador';
           final photo = f['photo_url'] as String?;
           return ListTile(
             contentPadding: const EdgeInsets.symmetric(vertical: 4, horizontal: 4),
+            onTap: id.isEmpty ? null : () => Navigator.pushNamed(
+              context,
+              AppRoutes.friendProfile,
+              arguments: {'userId': id, 'userName': name, 'photoUrl': photo},
+            ),
             leading: _UserAvatar(photoUrl: photo, name: name),
             title: Text(name, style: GoogleFonts.poppins(fontWeight: FontWeight.w500)),
+            trailing: const Icon(Icons.chevron_right_rounded, color: AppColors.placeholder, size: 20),
           );
         },
       ),

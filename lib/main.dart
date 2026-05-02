@@ -7,7 +7,7 @@ import 'core/routes/on_generate_route.dart';
 import 'core/state/auth_state.dart';
 import 'core/state/theme_provider.dart';
 import 'core/themes/app_themes.dart';
-import 'wrapper.dart';
+import 'views/wrapper.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();

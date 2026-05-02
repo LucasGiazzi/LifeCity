@@ -154,6 +154,19 @@ class ComplaintService {
     }
   }
 
+  Future<List<Map<String, dynamic>>> getFriendInteractions(String userId) async {
+    try {
+      final response = await _api.get('/api/complaints/users/$userId/interactions');
+      if (response.data != null && response.data['interactions'] != null) {
+        return List<Map<String, dynamic>>.from(response.data['interactions']);
+      }
+      return [];
+    } on ApiException catch (e) {
+      print('Erro ao buscar interações do amigo: ${e.message}');
+      return [];
+    }
+  }
+
   Future<List<Map<String, dynamic>>> getMyInteractions() async {
     try {
       final response = await _api.get('/api/complaints/me/interactions');
