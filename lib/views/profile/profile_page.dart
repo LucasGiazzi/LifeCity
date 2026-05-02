@@ -7,6 +7,7 @@ import '../../core/models/complaint_model.dart';
 import '../../core/routes/app_routes.dart';
 import '../../core/services/complaint_service.dart';
 import '../../core/state/auth_state.dart';
+import '../complaints/complaint_sheet.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -20,19 +21,36 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
   final ComplaintService _complaintService = ComplaintService();
 
   List<ComplaintModel> _myComplaints = [];
+  List<Map<String, dynamic>> _myInteractions = [];
   bool _isLoading = true;
+  bool _isLoadingInteractions = false;
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
     _loadMyComplaints();
+    _tabController.addListener(() {
+      if (_tabController.index == 1 && _myInteractions.isEmpty && !_isLoadingInteractions) {
+        _loadMyInteractions();
+      }
+    });
   }
 
   @override
   void dispose() {
     _tabController.dispose();
     super.dispose();
+  }
+
+  Future<void> _loadMyInteractions() async {
+    setState(() => _isLoadingInteractions = true);
+    try {
+      final data = await _complaintService.getMyInteractions();
+      if (mounted) setState(() { _myInteractions = data; _isLoadingInteractions = false; });
+    } catch (_) {
+      if (mounted) setState(() => _isLoadingInteractions = false);
+    }
   }
 
   Future<void> _loadMyComplaints() async {
@@ -122,6 +140,12 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
             title: c.description,
             subtitle: c.address,
             date: _formatDate(c.occurrenceDate),
+            onTap: () => showComplaintSheet(
+              context,
+              c,
+              onDeleted: _loadMyComplaints,
+              onEdited: _loadMyComplaints,
+            ),
             onDelete: () => _deleteComplaint(c),
           );
         },
@@ -130,64 +154,22 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
   }
 
   Widget _buildInteractionsList() {
-    // Mock de interações — será substituído por dados reais quando o backend tiver likes/comentários
-    final mockInteractions = [
-      _MockInteraction(
-        type: _InteractionType.like,
-        complaintTitle: 'Buraco na Rua das Flores próximo ao número 42',
-        date: DateTime.now().subtract(const Duration(days: 1)),
-        address: 'Rua das Flores, 42 - Centro',
+    if (_isLoadingInteractions) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    if (_myInteractions.isEmpty) {
+      return _EmptyState(
+        icon: Icons.favorite_border_rounded,
+        message: 'Você ainda não curtiu\nnem comentou nenhuma reclamação',
+      );
+    }
+    return RefreshIndicator(
+      onRefresh: _loadMyInteractions,
+      child: ListView.builder(
+        padding: const EdgeInsets.all(16),
+        itemCount: _myInteractions.length,
+        itemBuilder: (context, i) => _InteractionCard(data: _myInteractions[i]),
       ),
-      _MockInteraction(
-        type: _InteractionType.comment,
-        complaintTitle: 'Iluminação pública apagada há semanas na Av. Brasil',
-        date: DateTime.now().subtract(const Duration(days: 3)),
-        address: 'Av. Brasil, 500 - Jardim América',
-        comment: 'Já registrei isso com a prefeitura, mas sem resposta ainda.',
-      ),
-      _MockInteraction(
-        type: _InteractionType.like,
-        complaintTitle: 'Lixo acumulado no parque municipal',
-        date: DateTime.now().subtract(const Duration(days: 5)),
-        address: 'Parque Municipal - Vila Nova',
-      ),
-    ];
-
-    return Column(
-      children: [
-        // Banner informativo
-        Container(
-          margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-          decoration: BoxDecoration(
-            color: AppColors.primary.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
-          ),
-          child: Row(
-            children: [
-              const Icon(Icons.info_outline_rounded, color: AppColors.primary, size: 18),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Text(
-                  'Sistema de interações em breve! Abaixo uma prévia.',
-                  style: GoogleFonts.poppins(fontSize: 12, color: AppColors.primary, fontWeight: FontWeight.w500),
-                ),
-              ),
-            ],
-          ),
-        ),
-        Expanded(
-          child: ListView.builder(
-            padding: const EdgeInsets.all(16),
-            itemCount: mockInteractions.length,
-            itemBuilder: (context, i) {
-              final interaction = mockInteractions[i];
-              return _InteractionCard(interaction: interaction);
-            },
-          ),
-        ),
-      ],
     );
   }
 
@@ -205,8 +187,9 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
   Future<bool?> _confirmDelete() => showDialog<bool>(
         context: context,
         builder: (ctx) => AlertDialog(
-          title: const Text('Confirmar exclusão'),
-          content: const Text('Esta ação não pode ser desfeita.'),
+          backgroundColor: Colors.white,
+          title: const Text('Confirmar exclusão', style: TextStyle(color: Colors.black87)),
+          content: const Text('Esta ação não pode ser desfeita.', style: TextStyle(color: Colors.black54)),
           actions: [
             TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancelar')),
             TextButton(
@@ -283,6 +266,7 @@ class _ActivityCard extends StatelessWidget {
   final String title;
   final String? subtitle;
   final String date;
+  final VoidCallback? onTap;
   final VoidCallback onDelete;
 
   const _ActivityCard({
@@ -291,6 +275,7 @@ class _ActivityCard extends StatelessWidget {
     required this.title,
     this.subtitle,
     required this.date,
+    this.onTap,
     required this.onDelete,
   });
 
@@ -299,74 +284,64 @@ class _ActivityCard extends StatelessWidget {
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-      child: Padding(
-        padding: const EdgeInsets.all(14),
-        child: Row(
-          children: [
-            Container(
-              width: 42,
-              height: 42,
-              decoration: BoxDecoration(
-                color: iconColor.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(12),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(14),
+        child: Padding(
+          padding: const EdgeInsets.all(14),
+          child: Row(
+            children: [
+              Container(
+                width: 42,
+                height: 42,
+                decoration: BoxDecoration(
+                  color: iconColor.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(icon, color: iconColor, size: 22),
               ),
-              child: Icon(icon, color: iconColor, size: 22),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(title, style: GoogleFonts.poppins(fontWeight: FontWeight.w600, fontSize: 14), maxLines: 2, overflow: TextOverflow.ellipsis),
-                  if (subtitle != null) ...[
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(title, style: GoogleFonts.poppins(fontWeight: FontWeight.w600, fontSize: 14), maxLines: 2, overflow: TextOverflow.ellipsis),
+                    if (subtitle != null) ...[
+                      const SizedBox(height: 2),
+                      Text(subtitle!, style: GoogleFonts.poppins(fontSize: 12, color: AppColors.placeholder), maxLines: 1, overflow: TextOverflow.ellipsis),
+                    ],
                     const SizedBox(height: 2),
-                    Text(subtitle!, style: GoogleFonts.poppins(fontSize: 12, color: AppColors.placeholder), maxLines: 1, overflow: TextOverflow.ellipsis),
+                    Text(date, style: GoogleFonts.poppins(fontSize: 11, color: AppColors.placeholder)),
                   ],
-                  const SizedBox(height: 2),
-                  Text(date, style: GoogleFonts.poppins(fontSize: 11, color: AppColors.placeholder)),
-                ],
+                ),
               ),
-            ),
-            IconButton(
-              icon: const Icon(Icons.delete_outline_rounded, color: Colors.red, size: 20),
-              onPressed: onDelete,
-            ),
-          ],
+              IconButton(
+                icon: const Icon(Icons.delete_outline_rounded, color: Colors.red, size: 20),
+                onPressed: onDelete,
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 }
 
-// ─── Interações (mock) ────────────────────────────────────────────
-
-enum _InteractionType { like, comment }
-
-class _MockInteraction {
-  final _InteractionType type;
-  final String complaintTitle;
-  final DateTime date;
-  final String address;
-  final String? comment;
-
-  const _MockInteraction({
-    required this.type,
-    required this.complaintTitle,
-    required this.date,
-    required this.address,
-    this.comment,
-  });
-}
+// ─── Interações (dados reais) ─────────────────────────────────────
 
 class _InteractionCard extends StatelessWidget {
-  final _MockInteraction interaction;
-  const _InteractionCard({required this.interaction});
+  final Map<String, dynamic> data;
+  const _InteractionCard({required this.data});
 
   @override
   Widget build(BuildContext context) {
-    final isLike = interaction.type == _InteractionType.like;
+    final isLike = data['type'] == 'like';
     final iconColor = isLike ? Colors.red : AppColors.primary;
     final icon = isLike ? Icons.favorite_rounded : Icons.chat_bubble_rounded;
+    final title = data['description'] as String? ?? '';
+    final address = data['address'] as String?;
+    final commentText = data['comment_text'] as String?;
+    final createdAt = data['created_at'] as String?;
 
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
@@ -396,10 +371,11 @@ class _InteractionCard extends StatelessWidget {
                         isLike ? 'Você curtiu uma reclamação' : 'Você comentou em uma reclamação',
                         style: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.w600, color: iconColor),
                       ),
-                      Text(
-                        _formatDate(interaction.date),
-                        style: GoogleFonts.poppins(fontSize: 11, color: AppColors.placeholder),
-                      ),
+                      if (createdAt != null)
+                        Text(
+                          _formatDate(createdAt),
+                          style: GoogleFonts.poppins(fontSize: 11, color: AppColors.placeholder),
+                        ),
                     ],
                   ),
                 ),
@@ -407,27 +383,29 @@ class _InteractionCard extends StatelessWidget {
             ),
             const SizedBox(height: 10),
             Text(
-              interaction.complaintTitle,
+              title,
               style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.w500),
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
             ),
-            const SizedBox(height: 2),
-            Row(
-              children: [
-                const Icon(Icons.location_on_outlined, size: 13, color: AppColors.placeholder),
-                const SizedBox(width: 2),
-                Expanded(
-                  child: Text(
-                    interaction.address,
-                    style: GoogleFonts.poppins(fontSize: 11, color: AppColors.placeholder),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+            if (address != null) ...[
+              const SizedBox(height: 2),
+              Row(
+                children: [
+                  const Icon(Icons.location_on_outlined, size: 13, color: AppColors.placeholder),
+                  const SizedBox(width: 2),
+                  Expanded(
+                    child: Text(
+                      address,
+                      style: GoogleFonts.poppins(fontSize: 11, color: AppColors.placeholder),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
-                ),
-              ],
-            ),
-            if (interaction.comment != null) ...[
+                ],
+              ),
+            ],
+            if (commentText != null && commentText.isNotEmpty) ...[
               const SizedBox(height: 8),
               Container(
                 padding: const EdgeInsets.all(10),
@@ -436,7 +414,7 @@ class _InteractionCard extends StatelessWidget {
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
-                  '"${interaction.comment}"',
+                  '"$commentText"',
                   style: GoogleFonts.poppins(fontSize: 12, fontStyle: FontStyle.italic, color: AppColors.placeholder),
                 ),
               ),
@@ -447,11 +425,16 @@ class _InteractionCard extends StatelessWidget {
     );
   }
 
-  String _formatDate(DateTime dt) {
-    final diff = DateTime.now().difference(dt).inDays;
-    if (diff == 0) return 'Hoje';
-    if (diff == 1) return 'Ontem';
-    return 'Há $diff dias';
+  String _formatDate(String iso) {
+    try {
+      final dt = DateTime.parse(iso).toLocal();
+      final diff = DateTime.now().difference(dt).inDays;
+      if (diff == 0) return 'Hoje';
+      if (diff == 1) return 'Ontem';
+      return 'Há $diff dias';
+    } catch (_) {
+      return '';
+    }
   }
 }
 

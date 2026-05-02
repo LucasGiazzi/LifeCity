@@ -10,6 +10,7 @@ class ComplaintModel {
   final String? createdBy;
   final String? createdByName;
   final String? createdByEmail;
+  final int likesCount;
 
   ComplaintModel({
     required this.id,
@@ -23,6 +24,7 @@ class ComplaintModel {
     this.createdBy,
     this.createdByName,
     this.createdByEmail,
+    this.likesCount = 0,
   });
 
   factory ComplaintModel.fromJson(Map<String, dynamic> json) {
@@ -42,6 +44,7 @@ class ComplaintModel {
       createdBy: json['created_by']?.toString(),
       createdByName: json['created_by_name'] as String?,
       createdByEmail: json['created_by_email'] as String?,
+      likesCount: (json['likes_count'] as int?) ?? 0,
     );
   }
 

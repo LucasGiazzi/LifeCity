@@ -75,6 +75,98 @@ class ComplaintService {
     }
   }
 
+  Future<Map<String, dynamic>?> getLikeStatus(String complaintId) async {
+    try {
+      final response = await _api.get('/api/complaints/$complaintId/likes');
+      return Map<String, dynamic>.from(response.data);
+    } on ApiException {
+      return null;
+    }
+  }
+
+  Future<Map<String, dynamic>?> toggleLike(String complaintId) async {
+    try {
+      final response =
+          await _api.post('/api/complaints/$complaintId/like', {});
+      return Map<String, dynamic>.from(response.data);
+    } on ApiException {
+      return null;
+    }
+  }
+
+  Future<bool> editComplaint({
+    required String complaintId,
+    required String description,
+    required String occurrenceDate,
+    String? type,
+    String? address,
+  }) async {
+    try {
+      await _api.put('/api/complaints/$complaintId', {
+        'description': description,
+        'occurrence_date': occurrenceDate,
+        if (type != null) 'type': type,
+        if (address != null) 'address': address,
+      });
+      return true;
+    } on ApiException catch (e) {
+      print('Erro ao editar reclamação: ${e.message}');
+      return false;
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> getComments(String complaintId) async {
+    try {
+      final response = await _api.get('/api/complaints/$complaintId/comments');
+      if (response.data != null && response.data['comments'] != null) {
+        return List<Map<String, dynamic>>.from(response.data['comments']);
+      }
+      return [];
+    } on ApiException catch (e) {
+      print('Erro ao buscar comentários: ${e.message}');
+      return [];
+    }
+  }
+
+  Future<Map<String, dynamic>?> addComment(
+      String complaintId, String text) async {
+    try {
+      final response = await _api
+          .post('/api/complaints/$complaintId/comments', {'text': text});
+      if (response.data != null && response.data['comment'] != null) {
+        return Map<String, dynamic>.from(response.data['comment']);
+      }
+      return null;
+    } on ApiException catch (e) {
+      print('Erro ao adicionar comentário: ${e.message}');
+      return null;
+    }
+  }
+
+  Future<Map<String, dynamic>?> toggleCommentLike(String complaintId, String commentId) async {
+    try {
+      final response = await _api.post(
+        '/api/complaints/$complaintId/comments/$commentId/like', {},
+      );
+      return Map<String, dynamic>.from(response.data);
+    } on ApiException {
+      return null;
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> getMyInteractions() async {
+    try {
+      final response = await _api.get('/api/complaints/me/interactions');
+      if (response.data != null && response.data['interactions'] != null) {
+        return List<Map<String, dynamic>>.from(response.data['interactions']);
+      }
+      return [];
+    } on ApiException catch (e) {
+      print('Erro ao buscar interações: ${e.message}');
+      return [];
+    }
+  }
+
   Future<bool> deleteComplaint(String complaintId) async {
     try {
       await _api.delete('/api/complaints/$complaintId');

@@ -117,11 +117,8 @@ class AuthState extends ChangeNotifier {
 
   Future<void> initialize() async {
     await _loadTokens();
-    if (_accessToken != null) {
-      _apiService.setAccessToken(_accessToken);
-      await loadUserData();
-    }
 
+    // Callbacks must be set before loadUserData so token refresh works on startup
     _apiService.setRefreshTokenCallback(() async => _refreshToken);
     _apiService.setOnTokenRefreshedCallback((newToken) async {
       _accessToken = newToken;
@@ -129,6 +126,20 @@ class AuthState extends ChangeNotifier {
       await loadUserData();
       notifyListeners();
     });
+    _apiService.setOnLogoutCallback(() async {
+      await logout();
+    });
+
+    if (_accessToken != null) {
+      _apiService.setAccessToken(_accessToken);
+      await loadUserData();
+      // If user data couldn't be fetched even after refresh attempts, clear session
+      if (_currentUser == null) {
+        await _clearTokens();
+        _accessToken = null;
+        _refreshToken = null;
+      }
+    }
 
     notifyListeners();
   }

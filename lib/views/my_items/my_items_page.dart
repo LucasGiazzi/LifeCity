@@ -290,8 +290,9 @@ class _MyItemsPageState extends State<MyItemsPage> with SingleTickerProviderStat
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Confirmar Exclusão'),
-        content: const Text('Tem certeza que deseja excluir este evento?'),
+        backgroundColor: Colors.white,
+        title: const Text('Confirmar Exclusão', style: TextStyle(color: Colors.black87)),
+        content: const Text('Tem certeza que deseja excluir este evento?', style: TextStyle(color: Colors.black54)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -331,8 +332,9 @@ class _MyItemsPageState extends State<MyItemsPage> with SingleTickerProviderStat
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Confirmar Exclusão'),
-        content: const Text('Tem certeza que deseja excluir esta reclamação?'),
+        backgroundColor: Colors.white,
+        title: const Text('Confirmar Exclusão', style: TextStyle(color: Colors.black87)),
+        content: const Text('Tem certeza que deseja excluir esta reclamação?', style: TextStyle(color: Colors.black54)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),

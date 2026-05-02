@@ -87,7 +87,8 @@ exports.getAll = async (req, res) => {
                 c.created_at,
                 c.created_by,
                 u.name as created_by_name,
-                u.email as created_by_email
+                u.email as created_by_email,
+                (SELECT COUNT(*)::int FROM complaint_likes WHERE complaint_id = c.id) AS likes_count
             FROM complaints c
             LEFT JOIN users u ON c.created_by = u.id
             ORDER BY c.occurrence_date DESC, c.created_at DESC
@@ -123,6 +124,87 @@ exports.getPhotos = async (req, res) => {
     } catch (error) {
         console.error('Erro ao buscar fotos da reclamação:', error);
         res.status(500).json({ message: 'Erro ao buscar fotos da reclamação.' });
+    }
+};
+
+exports.update = async (req, res) => {
+    const { id } = req.params;
+    const userId = req.user.id;
+    const { description, type, address, occurrence_date } = req.body;
+
+    if (!description) {
+        return res.status(400).json({ message: 'A descrição é obrigatória.' });
+    }
+
+    try {
+        const pool = await supabasePool.getPgPool();
+
+        const check = await pool.query(
+            'SELECT id, created_by FROM complaints WHERE id = $1', [id]
+        );
+        if (check.rows.length === 0) {
+            return res.status(404).json({ message: 'Reclamação não encontrada.' });
+        }
+        if (check.rows[0].created_by !== userId) {
+            return res.status(403).json({ message: 'Sem permissão para editar.' });
+        }
+
+        const result = await pool.query(`
+            UPDATE complaints
+            SET description = $1, category = $2, address = $3, occurrence_date = $4
+            WHERE id = $5
+            RETURNING *
+        `, [description, type || null, address || null, occurrence_date, id]);
+
+        res.status(200).json({ complaint: result.rows[0] });
+    } catch (error) {
+        console.error('Erro ao editar reclamação:', error);
+        res.status(500).json({ message: 'Erro ao editar reclamação.' });
+    }
+};
+
+exports.getMyInteractions = async (req, res) => {
+    const userId = req.user.id;
+    try {
+        const pool = await supabasePool.getPgPool();
+
+        const likesResult = await pool.query(`
+            SELECT
+                'like' AS type,
+                cl.created_at,
+                c.id   AS complaint_id,
+                c.description,
+                c.address,
+                c.category AS complaint_type,
+                NULL::text AS comment_text
+            FROM complaint_likes cl
+            JOIN complaints c ON cl.complaint_id = c.id
+            WHERE cl.user_id = $1
+        `, [userId]);
+
+        const commentsResult = await pool.query(`
+            SELECT
+                'comment' AS type,
+                cm.created_at,
+                c.id   AS complaint_id,
+                c.description,
+                c.address,
+                c.category AS complaint_type,
+                cm.text AS comment_text
+            FROM comments cm
+            JOIN complaints c ON cm.complaint_id = c.id
+            WHERE cm.user_id = $1
+        `, [userId]);
+
+        const interactions = [
+            ...likesResult.rows,
+            ...commentsResult.rows,
+        ].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
+        res.status(200).json({ interactions });
+    } catch (error) {
+        console.error('Erro ao buscar interações:', error);
+        res.status(500).json({ message: 'Erro ao buscar interações.' });
     }
 };
 

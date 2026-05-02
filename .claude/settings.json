@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(xargs grep *)",
+      "Bash(head -528 c:/LifeCity/lib/views/entrypoint/entrypoint_ui.dart)",
+      "Bash(cp /tmp/entrypoint_trimmed.dart c:/LifeCity/lib/views/entrypoint/entrypoint_ui.dart)"
+    ]
+  }
+}
