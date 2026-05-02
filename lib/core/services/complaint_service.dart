@@ -180,6 +180,19 @@ class ComplaintService {
     }
   }
 
+  Future<List<Map<String, dynamic>>> getHighlights({String period = 'day'}) async {
+    try {
+      final response = await _api.get('/api/complaints/highlights', params: {'period': period});
+      if (response.data != null && response.data['complaints'] != null) {
+        return List<Map<String, dynamic>>.from(response.data['complaints']);
+      }
+      return [];
+    } on ApiException catch (e) {
+      print('Erro ao buscar destaques: ${e.message}');
+      return [];
+    }
+  }
+
   Future<bool> deleteComplaint(String complaintId) async {
     try {
       await _api.delete('/api/complaints/$complaintId');

@@ -26,6 +26,9 @@ const upload = multer({
 // Rota pública para buscar todas as reclamações
 router.get('/', complaintController.getAll);
 
+// Rota pública: destaques por engajamento
+router.get('/highlights', complaintController.getHighlights);
+
 // Rota autenticada: interações do usuário logado
 router.get('/me/interactions', authenticateToken, complaintController.getMyInteractions);
 

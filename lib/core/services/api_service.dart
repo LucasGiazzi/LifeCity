@@ -18,8 +18,8 @@ class ApiService {
       : _dio = Dio(
           BaseOptions(
             baseUrl: 'https://lifecity.onrender.com',
-            connectTimeout: const Duration(seconds: 5),
-            receiveTimeout: const Duration(seconds: 5),
+            connectTimeout: const Duration(seconds: 30),
+            receiveTimeout: const Duration(seconds: 30),
             headers: {
               'Content-Type': 'application/json',
             },
@@ -238,8 +238,9 @@ class ApiException implements Exception {
 
         if (statusCode != null) {
           if (statusCode >= 400 && statusCode < 500) {
+            final message = (data is Map) ? (data['message'] as String?) : null;
             msg =
-                'Erro de requisição ($statusCode): ${data?['message'] ?? 'verifique os dados enviados.'}';
+                'Erro de requisição ($statusCode): ${message ?? 'verifique os dados enviados.'}';
           } else if (statusCode >= 500) {
             msg = 'Erro interno do servidor ($statusCode).';
           }

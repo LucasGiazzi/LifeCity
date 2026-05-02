@@ -253,6 +253,47 @@ exports.getUserInteractions = async (req, res) => {
     }
 };
 
+exports.getHighlights = async (req, res) => {
+    const period = req.query.period === 'week' ? 'week' : 'day';
+    try {
+        const pool = await supabasePool.getPgPool();
+        const result = await pool.query(`
+            SELECT
+                c.id,
+                c.description,
+                c.occurrence_date,
+                c.category AS type,
+                c.address,
+                c.latitude,
+                c.longitude,
+                c.created_at,
+                c.created_by,
+                u.name AS created_by_name,
+                u.photo_url,
+                COUNT(DISTINCT cl.id) AS likes_count,
+                COUNT(DISTINCT cm.id) AS comments_count,
+                (COUNT(DISTINCT cl.id) + COUNT(DISTINCT cm.id)) AS engagement_score
+            FROM complaints c
+            LEFT JOIN users u ON u.id = c.created_by
+            LEFT JOIN complaint_likes cl
+                ON cl.complaint_id = c.id
+                AND cl.created_at >= NOW() - CASE WHEN $1 = 'week' THEN INTERVAL '7 days' ELSE INTERVAL '1 day' END
+            LEFT JOIN comments cm
+                ON cm.complaint_id = c.id
+                AND cm.created_at >= NOW() - CASE WHEN $1 = 'week' THEN INTERVAL '7 days' ELSE INTERVAL '1 day' END
+            GROUP BY c.id, u.name, u.photo_url
+            HAVING (COUNT(DISTINCT cl.id) + COUNT(DISTINCT cm.id)) > 0
+            ORDER BY engagement_score DESC, c.created_at DESC
+            LIMIT 20
+        `, [period]);
+
+        res.status(200).json({ complaints: result.rows });
+    } catch (error) {
+        console.error('Erro ao buscar destaques:', error);
+        res.status(500).json({ message: 'Erro ao buscar destaques.' });
+    }
+};
+
 exports.delete = async (req, res) => {
     const { id } = req.params;
     const userId = req.user.id;
