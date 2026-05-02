@@ -237,6 +237,50 @@ class _FilterChip extends StatelessWidget {
 
 /* ====================== MAPA ====================== */
 
+enum _MapLayerKind { streets, satellite, terrain, dark }
+
+extension on _MapLayerKind {
+  String get label => switch (this) {
+        _MapLayerKind.streets => 'Ruas',
+        _MapLayerKind.satellite => 'Satélite',
+        _MapLayerKind.terrain => 'Relevo',
+        _MapLayerKind.dark => 'Escuro',
+      };
+
+  IconData get pickerIcon => switch (this) {
+        _MapLayerKind.streets => Icons.map_rounded,
+        _MapLayerKind.satellite => Icons.satellite_alt_rounded,
+        _MapLayerKind.terrain => Icons.terrain_rounded,
+        _MapLayerKind.dark => Icons.dark_mode_rounded,
+      };
+}
+
+({String url, List<String> subdomains, int maxNative}) _tileSpec(_MapLayerKind k) {
+  return switch (k) {
+    _MapLayerKind.streets => (
+        url: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png',
+        subdomains: const ['a', 'b', 'c', 'd'],
+        maxNative: 19,
+      ),
+    _MapLayerKind.satellite => (
+        url:
+            'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+        subdomains: const <String>[],
+        maxNative: 19,
+      ),
+    _MapLayerKind.terrain => (
+        url: 'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',
+        subdomains: const ['a', 'b', 'c'],
+        maxNative: 17,
+      ),
+    _MapLayerKind.dark => (
+        url: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png',
+        subdomains: const ['a', 'b', 'c', 'd'],
+        maxNative: 19,
+      ),
+  };
+}
+
 class _MapBody extends StatefulWidget {
   const _MapBody({super.key});
 
@@ -255,6 +299,7 @@ class _MapBodyState extends State<_MapBody> {
 
   List<ComplaintModel> _complaints = [];
   bool _isLoading = true;
+  _MapLayerKind _mapLayer = _MapLayerKind.streets;
 
   @override
   void initState() {
@@ -329,6 +374,53 @@ class _MapBodyState extends State<_MapBody> {
 
   void reload() => _loadComplaints();
 
+  void _zoomBy(double delta) {
+    final cam = _mapController.camera;
+    final next = (cam.zoom + delta).clamp(2.0, 22.0);
+    _mapController.move(cam.center, next);
+  }
+
+  void _openMapLayerSheet() {
+    showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 8, 20, 4),
+              child: Text(
+                'Camada do mapa',
+                style: GoogleFonts.poppins(
+                  fontSize: 17,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+            for (final kind in _MapLayerKind.values)
+              ListTile(
+                leading: Icon(kind.pickerIcon, color: AppColors.primary),
+                title: Text(kind.label, style: GoogleFonts.poppins(fontSize: 15)),
+                trailing: kind == _mapLayer
+                    ? const Icon(Icons.check_rounded, color: AppColors.primary)
+                    : null,
+                onTap: () {
+                  setState(() => _mapLayer = kind);
+                  Navigator.pop(ctx);
+                },
+              ),
+            const SizedBox(height: 8),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final filterController = FilterScope.of(context);
@@ -354,6 +446,8 @@ class _MapBodyState extends State<_MapBody> {
               ),
             )).toList();
 
+        final tileSpec = _tileSpec(_mapLayer);
+
         return Scaffold(
           body: Stack(
             children: [
@@ -370,11 +464,11 @@ class _MapBodyState extends State<_MapBody> {
                 ),
                 children: [
                   TileLayer(
-                    urlTemplate:
-                        'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png',
-                    subdomains: const ['a', 'b', 'c', 'd'],
+                    key: ValueKey(_mapLayer),
+                    urlTemplate: tileSpec.url,
+                    subdomains: tileSpec.subdomains,
                     userAgentPackageName: 'com.lifecity.app',
-                    maxZoom: 19,
+                    maxNativeZoom: tileSpec.maxNative,
                   ),
                   // Círculo de precisão da localização
                   if (_userLocation != null && _accuracyMeters != null)
@@ -408,15 +502,50 @@ class _MapBodyState extends State<_MapBody> {
                     child: Center(child: CircularProgressIndicator()),
                   ),
                 ),
-              // Botão centralizar na localização do usuário
+              // Camada, localização, zoom +/-
               Positioned(
-                bottom: 90,
+                bottom: 30,
                 right: 16,
-                child: _LocationButton(
-                  onTap: () {
-                    final target = _userLocation ?? _center;
-                    _mapController.move(target, 16);
-                  },
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _RoundMapControlButton(
+                      tooltip: 'Camada do mapa',
+                      onTap: _openMapLayerSheet,
+                      child: Icon(
+                        Icons.layers_rounded,
+                        size: 22,
+                        color: Theme.of(context).iconTheme.color,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    _LocationButton(
+                      onTap: () {
+                        final target = _userLocation ?? _center;
+                        _mapController.move(target, 16);
+                      },
+                    ),
+                    const SizedBox(height: 10),
+                    _RoundMapControlButton(
+                      tooltip: 'Aproximar',
+                      onTap: () => _zoomBy(1),
+                      child: Icon(
+                        Icons.add_rounded,
+                        size: 26,
+                        color: Theme.of(context).iconTheme.color,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    _RoundMapControlButton(
+                      tooltip: 'Afastar',
+                      onTap: () => _zoomBy(-1),
+                      child: Icon(
+                        Icons.remove_rounded,
+                        size: 26,
+                        color: Theme.of(context).iconTheme.color,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
@@ -460,13 +589,20 @@ class _UserDot extends StatelessWidget {
   }
 }
 
-class _LocationButton extends StatelessWidget {
+class _RoundMapControlButton extends StatelessWidget {
   final VoidCallback onTap;
-  const _LocationButton({required this.onTap});
+  final Widget child;
+  final String? tooltip;
+
+  const _RoundMapControlButton({
+    required this.onTap,
+    required this.child,
+    this.tooltip,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Material(
+    final button = Material(
       color: Theme.of(context).cardColor,
       shape: const CircleBorder(),
       elevation: 4,
@@ -474,10 +610,35 @@ class _LocationButton extends StatelessWidget {
       child: InkWell(
         customBorder: const CircleBorder(),
         onTap: onTap,
-        child: const SizedBox(
-          width: 44,
-          height: 44,
-          child: Icon(Icons.my_location_rounded, size: 22),
+        child: SizedBox(width: 44, height: 44, child: Center(child: child)),
+      ),
+    );
+    if (tooltip == null || tooltip!.isEmpty) return button;
+    return Tooltip(message: tooltip!, child: button);
+  }
+}
+
+class _LocationButton extends StatelessWidget {
+  final VoidCallback onTap;
+  const _LocationButton({required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return Tooltip(
+      message: 'Minha localização',
+      child: Material(
+        color: Theme.of(context).cardColor,
+        shape: const CircleBorder(),
+        elevation: 4,
+        shadowColor: Colors.black26,
+        child: InkWell(
+          customBorder: const CircleBorder(),
+          onTap: onTap,
+          child: const SizedBox(
+            width: 44,
+            height: 44,
+            child: Icon(Icons.my_location_rounded, size: 22),
+          ),
         ),
       ),
     );

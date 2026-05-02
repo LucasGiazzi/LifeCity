@@ -11,7 +11,7 @@ import 'wrapper.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await dotenv.load(fileName: '.env');
+  await dotenv.load(fileName: 'backend/.env');
   GoogleFonts.config.allowRuntimeFetching = false;
 
   final authState = AuthState();

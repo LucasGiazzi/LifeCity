@@ -4,7 +4,8 @@
       "Bash(xargs grep *)",
       "Bash(head -528 c:/LifeCity/lib/views/entrypoint/entrypoint_ui.dart)",
       "Bash(cp /tmp/entrypoint_trimmed.dart c:/LifeCity/lib/views/entrypoint/entrypoint_ui.dart)",
-      "Bash(node -e ' *)"
+      "Bash(node -e ' *)",
+      "Bash(git commit -m ' *)"
     ]
   }
 }
