@@ -1,6 +1,7 @@
 const supabasePool = require('../infra/supabasePool');
 const { encryptPassword, generateSalt } = require('../infra/crypto');
 const { uploadPublicFile, deletePublicFile } = require('../infra/supabaseStorageClient');
+const { isValidCpf } = require('../infra/cpfValidator');
 const jwt = require('jsonwebtoken')
 
 exports.login = async (req, res) => {
@@ -96,16 +97,26 @@ exports.register = async (req, res) => {
 
         const pool = await supabasePool.getPgPool();
 
+        if (!isValidCpf(cpf)) {
+            return res.status(400).json({ message: 'CPF inválido.' });
+        }
+
         const user = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
 
         if (user.rows.length > 0) {
             return res.status(400).json({ message: 'Email já está cadastrado.' });
         }
 
+        const existingCpf = await pool.query('SELECT id FROM users WHERE cpf = $1', [cpf.replace(/\D/g, '')]);
+
+        if (existingCpf.rows.length > 0) {
+            return res.status(400).json({ message: 'CPF já está cadastrado.' });
+        }
+
         const salt = generateSalt();
         const hashedPassword = encryptPassword(password, salt);
 
-        await pool.query('INSERT INTO users (email, password, name, cpf, phone, salt) VALUES ($1, $2, $3, $4, $5, $6)', [email, hashedPassword, name, cpf, phone, salt]);
+        await pool.query('INSERT INTO users (email, password, name, cpf, phone, salt) VALUES ($1, $2, $3, $4, $5, $6)', [email, hashedPassword, name, cpf.replace(/\D/g, ''), phone, salt]);
 
         return res.status(200).json({ message: 'Registrado com sucesso' });
     } catch (error) {

@@ -2,6 +2,7 @@ class AppRoutes {
   /// The Initial Page
   static const introLogin = '/intro_login';
   static const onboarding = '/onboarding';
+  static const loginLoading = '/login_loading';
 
   /* <---- Login, Signup -----> */
   static const login = '/login';

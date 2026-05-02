@@ -47,7 +47,7 @@ class _LoginPageFormState extends State<LoginPageForm> {
     if (success && mounted) {
       Navigator.pushNamedAndRemoveUntil(
         context,
-        AppRoutes.entryPoint,
+        AppRoutes.loginLoading,
         (route) => false,
       );
     }

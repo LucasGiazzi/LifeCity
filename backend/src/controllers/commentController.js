@@ -12,7 +12,11 @@ exports.getComments = async (req, res) => {
             const token = authHeader.split(' ')[1];
             const decoded = jwt.verify(token, process.env.JWT_SECRET);
             userId = decoded.userId;
-        } catch (_) {}
+        } catch (err) {
+            if (err.name === 'TokenExpiredError') {
+                return res.status(403).json({ message: 'Token expirado.' });
+            }
+        }
     }
 
     try {

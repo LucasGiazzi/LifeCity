@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 
 import '../../views/auth/forget_password_page.dart';
+import '../../views/auth/login_loading_page.dart';
 import '../../views/auth/intro_login_page.dart';
 import '../../views/auth/login_or_signup_page.dart';
 import '../../views/auth/login_page.dart';
@@ -32,6 +33,9 @@ class RouteGenerator {
     final route = settings.name;
 
     switch (route) {
+      case AppRoutes.loginLoading:
+        return CupertinoPageRoute(builder: (_) => const LoginLoadingPage());
+
       case AppRoutes.introLogin:
         return CupertinoPageRoute(builder: (_) => const IntroLoginPage());
 
