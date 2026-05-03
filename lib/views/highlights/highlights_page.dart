@@ -227,8 +227,8 @@ class _HighlightCard extends StatelessWidget {
     final type = (data['type'] as String?)?.toLowerCase() ?? 'outros';
     final createdByName = data['created_by_name'] as String?;
     final photoUrl = data['photo_url'] as String?;
-    final likes = (data['likes_count'] as num?)?.toInt() ?? 0;
-    final comments = (data['comments_count'] as num?)?.toInt() ?? 0;
+    final likes = int.tryParse(data['likes_count'].toString()) ?? 0;
+    final comments = int.tryParse(data['comments_count'].toString()) ?? 0;
 
     final catColor = _catColors[type] ?? Colors.grey;
     final catLabel = _catLabels[type] ?? 'Outros';

@@ -88,6 +88,7 @@ exports.getAll = async (req, res) => {
                 c.created_by,
                 u.name as created_by_name,
                 u.email as created_by_email,
+                u.photo_url as created_by_photo_url,
                 (SELECT COUNT(*)::int FROM complaint_likes WHERE complaint_id = c.id) AS likes_count
             FROM complaints c
             LEFT JOIN users u ON c.created_by = u.id

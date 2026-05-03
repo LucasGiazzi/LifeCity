@@ -1,7 +1,10 @@
+import 'dart:io';
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/constants/app_colors.dart';
 import '../../core/models/complaint_model.dart';
@@ -295,15 +298,30 @@ class _ComplaintSheetState extends State<ComplaintSheet> {
 
                             if (widget.complaint.address != null)
                               _InfoRow(icon: Icons.location_on_outlined, text: widget.complaint.address!),
+                            if (widget.complaint.latitude != null && widget.complaint.longitude != null)
+                              _DirectionsButton(
+                                lat: widget.complaint.latitude!,
+                                lng: widget.complaint.longitude!,
+                              ),
                             _InfoRow(
                               icon: Icons.calendar_today_outlined,
                               text: _formatDate(widget.complaint.occurrenceDate),
                             ),
                             if (widget.complaint.createdByName != null)
-                              _InfoRow(
-                                icon: Icons.person_outline,
-                                text: 'Por ${widget.complaint.createdByName}',
-                                small: true,
+                              _CreatorCard(
+                                userId: widget.complaint.createdBy,
+                                name: widget.complaint.createdByName!,
+                                photoUrl: widget.complaint.createdByPhotoUrl,
+                                currentUserId: authState.currentUser?['id']?.toString(),
+                                onTap: () => Navigator.pushNamed(
+                                  context,
+                                  '/friendProfile',
+                                  arguments: {
+                                    'userId': widget.complaint.createdBy ?? '',
+                                    'userName': widget.complaint.createdByName!,
+                                    'photoUrl': widget.complaint.createdByPhotoUrl,
+                                  },
+                                ),
                               ),
 
                             // Like button
@@ -1019,13 +1037,153 @@ class _TypePill extends StatelessWidget {
   }
 }
 
+// ─── Directions Button ───────────────────────────────────────────────────────
+
+class _DirectionsButton extends StatelessWidget {
+  final double lat;
+  final double lng;
+  const _DirectionsButton({required this.lat, required this.lng});
+
+  Future<void> _open() async {
+    final uri = Platform.isIOS
+        ? Uri.parse('https://maps.apple.com/?ll=$lat,$lng&dirflg=d')
+        : Uri.parse('geo:$lat,$lng?q=$lat,$lng');
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } else {
+      final fallback = Uri.parse('https://www.google.com/maps/dir/?api=1&destination=$lat,$lng');
+      await launchUrl(fallback, mode: LaunchMode.externalApplication);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: GestureDetector(
+        onTap: _open,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+          decoration: BoxDecoration(
+            color: AppColors.primary.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.navigation_rounded, size: 15, color: AppColors.primary),
+              const SizedBox(width: 6),
+              Text(
+                'Como chegar',
+                style: GoogleFonts.poppins(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.primary,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ─── Creator Card ────────────────────────────────────────────────────────────
+
+class _CreatorCard extends StatelessWidget {
+  final String? userId;
+  final String name;
+  final String? photoUrl;
+  final String? currentUserId;
+  final VoidCallback onTap;
+
+  const _CreatorCard({
+    required this.userId,
+    required this.name,
+    required this.photoUrl,
+    required this.currentUserId,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final isMe = userId != null && userId == currentUserId;
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Material(
+        color: AppColors.coloredBackground,
+        borderRadius: BorderRadius.circular(12),
+        child: InkWell(
+          onTap: isMe ? null : onTap,
+          borderRadius: BorderRadius.circular(12),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            child: Row(
+              children: [
+                CircleAvatar(
+                  radius: 18,
+                  backgroundColor: AppColors.primary.withValues(alpha: 0.15),
+                  child: (photoUrl != null && photoUrl!.isNotEmpty)
+                      ? ClipOval(
+                          child: CachedNetworkImage(
+                            imageUrl: photoUrl!,
+                            width: 36,
+                            height: 36,
+                            fit: BoxFit.cover,
+                          ),
+                        )
+                      : Text(
+                          name[0].toUpperCase(),
+                          style: GoogleFonts.poppins(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.primary,
+                          ),
+                        ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        name,
+                        style: GoogleFonts.poppins(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      Text(
+                        isMe ? 'Você' : 'Autor da reclamação',
+                        style: GoogleFonts.poppins(
+                          fontSize: 11,
+                          color: AppColors.placeholder,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                if (!isMe)
+                  const Icon(Icons.chevron_right_rounded,
+                      color: AppColors.placeholder, size: 18),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 // ─── Info Row ────────────────────────────────────────────────────────────────
 
 class _InfoRow extends StatelessWidget {
   final IconData icon;
   final String text;
-  final bool small;
-  const _InfoRow({required this.icon, required this.text, this.small = false});
+  const _InfoRow({required this.icon, required this.text});
 
   @override
   Widget build(BuildContext context) {
@@ -1034,13 +1192,13 @@ class _InfoRow extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, size: small ? 14 : 16, color: AppColors.placeholder),
+          Icon(icon, size: 16, color: AppColors.placeholder),
           const SizedBox(width: 6),
           Expanded(
             child: Text(text,
                 style: GoogleFonts.poppins(
-                  fontSize: small ? 12 : 13,
-                  color: small ? AppColors.placeholder : Theme.of(context).textTheme.bodyMedium?.color,
+                  fontSize: 13,
+                  color: Theme.of(context).textTheme.bodyMedium?.color,
                 )),
           ),
         ],

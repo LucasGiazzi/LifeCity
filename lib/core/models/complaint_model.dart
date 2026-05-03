@@ -10,6 +10,7 @@ class ComplaintModel {
   final String? createdBy;
   final String? createdByName;
   final String? createdByEmail;
+  final String? createdByPhotoUrl;
   final int likesCount;
 
   ComplaintModel({
@@ -24,6 +25,7 @@ class ComplaintModel {
     this.createdBy,
     this.createdByName,
     this.createdByEmail,
+    this.createdByPhotoUrl,
     this.likesCount = 0,
   });
 
@@ -44,7 +46,10 @@ class ComplaintModel {
       createdBy: json['created_by']?.toString(),
       createdByName: json['created_by_name'] as String?,
       createdByEmail: json['created_by_email'] as String?,
-      likesCount: (json['likes_count'] as int?) ?? 0,
+      createdByPhotoUrl: json['created_by_photo_url'] as String?,
+      likesCount: json['likes_count'] != null
+          ? int.tryParse(json['likes_count'].toString()) ?? 0
+          : 0,
     );
   }
 
