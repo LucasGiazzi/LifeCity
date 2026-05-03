@@ -254,6 +254,78 @@ exports.getUserInteractions = async (req, res) => {
     }
 };
 
+const XP_LEVELS = [
+    { level: 1, name: 'Morador',            min: 0    },
+    { level: 2, name: 'Vizinho Ativo',       min: 100  },
+    { level: 3, name: 'Guardião do Bairro',  min: 300  },
+    { level: 4, name: 'Voz da Cidade',       min: 700  },
+    { level: 5, name: 'Capivara Lendária',   min: 1500 },
+];
+
+function calcLevel(xp) {
+    let current = XP_LEVELS[0];
+    for (const l of XP_LEVELS) {
+        if (xp >= l.min) current = l;
+    }
+    const nextLevel = XP_LEVELS.find(l => l.min > current.min) ?? null;
+    return {
+        level: current.level,
+        name: current.name,
+        currentMin: current.min,
+        nextMin: nextLevel?.min ?? null,
+    };
+}
+
+exports.getMyXp = async (req, res) => {
+    const userId = req.user.id;
+    try {
+        const pool = await supabasePool.getPgPool();
+        const result = await pool.query(`
+            SELECT
+                (SELECT COUNT(*) FROM complaints WHERE created_by = $1)::int                               AS complaints_count,
+                (SELECT COUNT(*) FROM complaint_likes cl JOIN complaints c ON cl.complaint_id = c.id WHERE c.created_by = $1)::int AS likes_received,
+                (SELECT COUNT(*) FROM comments cm JOIN complaints c ON cm.complaint_id = c.id WHERE c.created_by = $1)::int        AS comments_received
+        `, [userId]);
+
+        const { complaints_count, likes_received, comments_received } = result.rows[0];
+        const xp = complaints_count * 50 + likes_received * 10 + comments_received * 5;
+        const levelInfo = calcLevel(xp);
+
+        res.status(200).json({
+            xp,
+            complaints_count,
+            likes_received,
+            comments_received,
+            ...levelInfo,
+        });
+    } catch (error) {
+        console.error('Erro ao buscar XP:', error);
+        res.status(500).json({ message: 'Erro ao buscar XP.' });
+    }
+};
+
+exports.getUserXp = async (req, res) => {
+    const { userId } = req.params;
+    try {
+        const pool = await supabasePool.getPgPool();
+        const result = await pool.query(`
+            SELECT
+                (SELECT COUNT(*) FROM complaints WHERE created_by = $1)::int                               AS complaints_count,
+                (SELECT COUNT(*) FROM complaint_likes cl JOIN complaints c ON cl.complaint_id = c.id WHERE c.created_by = $1)::int AS likes_received,
+                (SELECT COUNT(*) FROM comments cm JOIN complaints c ON cm.complaint_id = c.id WHERE c.created_by = $1)::int        AS comments_received
+        `, [userId]);
+
+        const { complaints_count, likes_received, comments_received } = result.rows[0];
+        const xp = complaints_count * 50 + likes_received * 10 + comments_received * 5;
+        const levelInfo = calcLevel(xp);
+
+        res.status(200).json({ xp, complaints_count, likes_received, comments_received, ...levelInfo });
+    } catch (error) {
+        console.error('Erro ao buscar XP do usuário:', error);
+        res.status(500).json({ message: 'Erro ao buscar XP.' });
+    }
+};
+
 exports.getHighlights = async (req, res) => {
     const period = req.query.period === 'week' ? 'week' : 'day';
     try {

@@ -180,6 +180,24 @@ class ComplaintService {
     }
   }
 
+  Future<Map<String, dynamic>?> getUserXp(String userId) async {
+    try {
+      final response = await _api.get('/api/complaints/users/$userId/xp');
+      return Map<String, dynamic>.from(response.data);
+    } on ApiException {
+      return null;
+    }
+  }
+
+  Future<Map<String, dynamic>?> getMyXp() async {
+    try {
+      final response = await _api.get('/api/complaints/me/xp');
+      return Map<String, dynamic>.from(response.data);
+    } on ApiException {
+      return null;
+    }
+  }
+
   Future<List<Map<String, dynamic>>> getHighlights({String period = 'day'}) async {
     try {
       final response = await _api.get('/api/complaints/highlights', params: {'period': period});

@@ -17,7 +17,7 @@ class ApiService {
   ApiService._internal()
       : _dio = Dio(
           BaseOptions(
-            baseUrl: 'https://lifecity.onrender.com',
+            baseUrl: 'http://192.168.15.7:3000',
             connectTimeout: const Duration(seconds: 30),
             receiveTimeout: const Duration(seconds: 30),
             headers: {

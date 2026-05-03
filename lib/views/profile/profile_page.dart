@@ -22,6 +22,7 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
 
   List<ComplaintModel> _myComplaints = [];
   List<Map<String, dynamic>> _myInteractions = [];
+  Map<String, dynamic>? _xpData;
   bool _isLoading = true;
   bool _isLoadingInteractions = false;
 
@@ -30,6 +31,7 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
     _loadMyComplaints();
+    _loadXp();
     _tabController.addListener(() {
       if (_tabController.index == 1 && _myInteractions.isEmpty && !_isLoadingInteractions) {
         _loadMyInteractions();
@@ -41,6 +43,11 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
   void dispose() {
     _tabController.dispose();
     super.dispose();
+  }
+
+  Future<void> _loadXp() async {
+    final data = await _complaintService.getMyXp();
+    if (mounted && data != null) setState(() => _xpData = data);
   }
 
   Future<void> _loadMyInteractions() async {
@@ -86,7 +93,7 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
       body: NestedScrollView(
         headerSliverBuilder: (_, __) => [
           SliverToBoxAdapter(
-            child: _ProfileHeader(userName: userName, photoUrl: photoUrl),
+            child: _ProfileHeader(userName: userName, photoUrl: photoUrl, xpData: _xpData),
           ),
         ],
         body: Column(
@@ -209,10 +216,31 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
 class _ProfileHeader extends StatelessWidget {
   final String userName;
   final String? photoUrl;
-  const _ProfileHeader({required this.userName, this.photoUrl});
+  final Map<String, dynamic>? xpData;
+
+  const _ProfileHeader({required this.userName, this.photoUrl, this.xpData});
+
+  static const _levelIcons = <int, IconData>{
+    1: Icons.home_rounded,
+    2: Icons.people_rounded,
+    3: Icons.shield_rounded,
+    4: Icons.campaign_rounded,
+    5: Icons.star_rounded,
+  };
 
   @override
   Widget build(BuildContext context) {
+    final xp = (xpData?['xp'] as num?)?.toInt() ?? 0;
+    final level = (xpData?['level'] as num?)?.toInt() ?? 1;
+    final levelName = xpData?['name'] as String? ?? 'Morador';
+    final currentMin = (xpData?['currentMin'] as num?)?.toInt() ?? 0;
+    final nextMin = (xpData?['nextMin'] as num?)?.toInt();
+    final icon = _levelIcons[level] ?? Icons.person_rounded;
+
+    final progress = nextMin != null && nextMin > currentMin
+        ? ((xp - currentMin) / (nextMin - currentMin)).clamp(0.0, 1.0)
+        : 1.0;
+
     return Container(
       width: double.infinity,
       decoration: const BoxDecoration(
@@ -249,6 +277,65 @@ class _ProfileHeader extends StatelessWidget {
               Text(
                 userName,
                 style: GoogleFonts.poppins(color: Colors.white, fontSize: 22, fontWeight: FontWeight.w700),
+              ),
+              const SizedBox(height: 8),
+
+              // Badge de nível
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(icon, color: Colors.white, size: 14),
+                    const SizedBox(width: 5),
+                    Text(
+                      'Nível $level — $levelName',
+                      style: GoogleFonts.poppins(
+                        color: Colors.white,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 10),
+
+              // Barra de progresso
+              Padding(
+                padding: const EdgeInsets.only(right: 20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          '$xp XP',
+                          style: GoogleFonts.poppins(color: Colors.white70, fontSize: 11),
+                        ),
+                        Text(
+                          nextMin != null ? '$nextMin XP' : 'Nível máximo!',
+                          style: GoogleFonts.poppins(color: Colors.white70, fontSize: 11),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(4),
+                      child: LinearProgressIndicator(
+                        value: progress,
+                        minHeight: 6,
+                        backgroundColor: Colors.white.withValues(alpha: 0.25),
+                        valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ],
           ),

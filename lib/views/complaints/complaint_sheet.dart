@@ -294,27 +294,16 @@ class _ComplaintSheetState extends State<ComplaintSheet> {
                                   ),
                               ],
                             ),
-                            const SizedBox(height: 8),
+                            const SizedBox(height: 10),
 
-                            if (widget.complaint.address != null)
-                              _InfoRow(icon: Icons.location_on_outlined, text: widget.complaint.address!),
-                            if (widget.complaint.latitude != null && widget.complaint.longitude != null)
-                              _DirectionsButton(
-                                lat: widget.complaint.latitude!,
-                                lng: widget.complaint.longitude!,
-                              ),
-                            _InfoRow(
-                              icon: Icons.calendar_today_outlined,
-                              text: _formatDate(widget.complaint.occurrenceDate),
-                            ),
+                            // Criador
                             if (widget.complaint.createdByName != null)
                               _CreatorCard(
                                 userId: widget.complaint.createdBy,
                                 name: widget.complaint.createdByName!,
                                 photoUrl: widget.complaint.createdByPhotoUrl,
                                 currentUserId: authState.currentUser?['id']?.toString(),
-                                onTap: () => Navigator.pushNamed(
-                                  context,
+                                onTap: () => Navigator.of(context, rootNavigator: true).pushNamed(
                                   '/friendProfile',
                                   arguments: {
                                     'userId': widget.complaint.createdBy ?? '',
@@ -324,8 +313,32 @@ class _ComplaintSheetState extends State<ComplaintSheet> {
                                 ),
                               ),
 
+                            // Localização
+                            if (widget.complaint.address != null)
+                              _InfoRow(icon: Icons.location_on_outlined, text: widget.complaint.address!),
+                            if (widget.complaint.latitude != null && widget.complaint.longitude != null)
+                              _DirectionsButton(
+                                lat: widget.complaint.latitude!,
+                                lng: widget.complaint.longitude!,
+                              ),
+
+                            // Data (discreta)
+                            Padding(
+                              padding: const EdgeInsets.only(bottom: 8),
+                              child: Row(
+                                children: [
+                                  const Icon(Icons.calendar_today_outlined, size: 13, color: AppColors.placeholder),
+                                  const SizedBox(width: 5),
+                                  Text(
+                                    _formatDate(widget.complaint.occurrenceDate),
+                                    style: GoogleFonts.poppins(fontSize: 12, color: AppColors.placeholder),
+                                  ),
+                                ],
+                              ),
+                            ),
+
                             // Like button
-                            const SizedBox(height: 12),
+                            const SizedBox(height: 4),
                             Row(
                               children: [
                                 GestureDetector(
@@ -1113,13 +1126,20 @@ class _CreatorCard extends StatelessWidget {
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
-      child: Material(
-        color: AppColors.coloredBackground,
-        borderRadius: BorderRadius.circular(12),
-        child: InkWell(
-          onTap: isMe ? null : onTap,
+      child: Container(
+        decoration: BoxDecoration(
+          color: Theme.of(context).brightness == Brightness.dark
+              ? AppColors.darkSurface
+              : AppColors.coloredBackground,
           borderRadius: BorderRadius.circular(12),
-          child: Padding(
+        ),
+        child: Material(
+          color: Colors.transparent,
+          borderRadius: BorderRadius.circular(12),
+          child: InkWell(
+            onTap: isMe ? null : onTap,
+            borderRadius: BorderRadius.circular(12),
+            child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
             child: Row(
               children: [
@@ -1174,7 +1194,8 @@ class _CreatorCard extends StatelessWidget {
           ),
         ),
       ),
-    );
+    ),
+  );
   }
 }
 

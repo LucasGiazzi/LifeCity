@@ -30,6 +30,7 @@ class _FriendProfilePageState extends State<FriendProfilePage>
 
   List<ComplaintModel> _complaints = [];
   List<Map<String, dynamic>> _interactions = [];
+  Map<String, dynamic>? _xpData;
   bool _isLoading = true;
   bool _isLoadingInteractions = false;
 
@@ -38,6 +39,7 @@ class _FriendProfilePageState extends State<FriendProfilePage>
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
     _loadComplaints();
+    _loadXp();
     _tabController.addListener(() {
       if (_tabController.index == 1 &&
           _interactions.isEmpty &&
@@ -51,6 +53,11 @@ class _FriendProfilePageState extends State<FriendProfilePage>
   void dispose() {
     _tabController.dispose();
     super.dispose();
+  }
+
+  Future<void> _loadXp() async {
+    final data = await _complaintService.getUserXp(widget.userId);
+    if (mounted && data != null) setState(() => _xpData = data);
   }
 
   Future<void> _loadComplaints() async {
@@ -97,6 +104,7 @@ class _FriendProfilePageState extends State<FriendProfilePage>
               userName: widget.userName,
               photoUrl: widget.photoUrl,
               complaintCount: _complaints.length,
+              xpData: _xpData,
             ),
           ),
         ],
@@ -186,15 +194,35 @@ class _FriendHeader extends StatelessWidget {
   final String userName;
   final String? photoUrl;
   final int complaintCount;
+  final Map<String, dynamic>? xpData;
 
   const _FriendHeader({
     required this.userName,
     this.photoUrl,
     required this.complaintCount,
+    this.xpData,
   });
+
+  static const _levelIcons = <int, IconData>{
+    1: Icons.home_rounded,
+    2: Icons.people_rounded,
+    3: Icons.shield_rounded,
+    4: Icons.campaign_rounded,
+    5: Icons.star_rounded,
+  };
 
   @override
   Widget build(BuildContext context) {
+    final xp = (xpData?['xp'] as num?)?.toInt() ?? 0;
+    final level = (xpData?['level'] as num?)?.toInt() ?? 1;
+    final levelName = xpData?['name'] as String? ?? 'Morador';
+    final currentMin = (xpData?['currentMin'] as num?)?.toInt() ?? 0;
+    final nextMin = (xpData?['nextMin'] as num?)?.toInt();
+    final icon = _levelIcons[level] ?? Icons.person_rounded;
+    final progress = nextMin != null && nextMin > currentMin
+        ? ((xp - currentMin) / (nextMin - currentMin)).clamp(0.0, 1.0)
+        : 1.0;
+
     return Container(
       width: double.infinity,
       decoration: const BoxDecoration(
@@ -220,7 +248,7 @@ class _FriendHeader extends StatelessWidget {
               Padding(
                 padding: const EdgeInsets.only(left: 12),
                 child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.end,
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     CircleAvatar(
                       radius: 38,
@@ -234,8 +262,7 @@ class _FriendHeader extends StatelessWidget {
                                 fit: BoxFit.cover,
                               ),
                             )
-                          : const Icon(Icons.person,
-                              size: 44, color: Colors.grey),
+                          : const Icon(Icons.person, size: 44, color: Colors.grey),
                     ),
                     const SizedBox(width: 16),
                     Expanded(
@@ -253,15 +280,6 @@ class _FriendHeader extends StatelessWidget {
                           const SizedBox(height: 4),
                           Row(
                             children: [
-                              const Icon(Icons.people_rounded,
-                                  color: Colors.white70, size: 14),
-                              const SizedBox(width: 4),
-                              Text(
-                                'Amigo',
-                                style: GoogleFonts.poppins(
-                                    color: Colors.white70, fontSize: 12),
-                              ),
-                              const SizedBox(width: 12),
                               const Icon(Icons.report_problem_rounded,
                                   color: Colors.white70, size: 14),
                               const SizedBox(width: 4),
@@ -269,6 +287,60 @@ class _FriendHeader extends StatelessWidget {
                                 '$complaintCount reclamação${complaintCount != 1 ? 'ões' : ''}',
                                 style: GoogleFonts.poppins(
                                     color: Colors.white70, fontSize: 12),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          // Badge de nível
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.2),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(icon, color: Colors.white, size: 13),
+                                const SizedBox(width: 5),
+                                Text(
+                                  'Nível $level — $levelName',
+                                  style: GoogleFonts.poppins(
+                                    color: Colors.white,
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          // Barra de progresso
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text('$xp XP',
+                                      style: GoogleFonts.poppins(
+                                          color: Colors.white70, fontSize: 10)),
+                                  Text(
+                                    nextMin != null ? '$nextMin XP' : 'Nível máximo!',
+                                    style: GoogleFonts.poppins(
+                                        color: Colors.white70, fontSize: 10),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 4),
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(4),
+                                child: LinearProgressIndicator(
+                                  value: progress,
+                                  minHeight: 5,
+                                  backgroundColor: Colors.white.withValues(alpha: 0.25),
+                                  valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
+                                ),
                               ),
                             ],
                           ),

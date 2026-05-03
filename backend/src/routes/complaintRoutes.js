@@ -29,8 +29,14 @@ router.get('/', complaintController.getAll);
 // Rota pública: destaques por engajamento
 router.get('/highlights', complaintController.getHighlights);
 
+// Rota autenticada: XP e nível do usuário logado
+router.get('/me/xp', authenticateToken, complaintController.getMyXp);
+
 // Rota autenticada: interações do usuário logado
 router.get('/me/interactions', authenticateToken, complaintController.getMyInteractions);
+
+// Rota pública: XP de outro usuário
+router.get('/users/:userId/xp', complaintController.getUserXp);
 
 // Rota autenticada: interações de outro usuário (perfil de amigo)
 router.get('/users/:userId/interactions', authenticateToken, complaintController.getUserInteractions);
