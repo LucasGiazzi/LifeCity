@@ -58,6 +58,12 @@ class _ComplaintSheetState extends State<ComplaintSheet> {
     'outros': (Icons.report_problem, Colors.grey, 'Outros'),
   };
 
+  static const _statusMap = <String, (IconData, Color, String)>{
+    'pending':     (Icons.radio_button_unchecked, Colors.orange, 'Aberta'),
+    'in_progress': (Icons.autorenew_rounded,      Colors.blue,   'Em andamento'),
+    'resolved':    (Icons.check_circle_outline,   Colors.green,  'Resolvida'),
+  };
+
   final _complaintService = ComplaintService();
   List<Map<String, dynamic>> _photos = [];
   List<Map<String, dynamic>> _comments = [];
@@ -67,21 +73,52 @@ class _ComplaintSheetState extends State<ComplaintSheet> {
   int _likeCount = 0;
   bool _userLiked = false;
   bool _togglingLike = false;
+  int _witnessCount = 0;
+  bool _userWitnessed = false;
+  bool _togglingWitness = false;
+  bool _updatingStatus = false;
+  late String _status;
   final _commentController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
     _likeCount = widget.complaint.likesCount;
+    _witnessCount = widget.complaint.witnessCount;
+    _status = widget.complaint.status;
     _loadPhotos();
     _loadComments();
     _loadLikeStatus();
+    _loadWitnessStatus();
   }
 
   @override
   void dispose() {
     _commentController.dispose();
     super.dispose();
+  }
+
+  Future<void> _loadWitnessStatus() async {
+    final data = await _complaintService.getWitnessStatus(widget.complaint.id);
+    if (!mounted || data == null) return;
+    setState(() {
+      _userWitnessed = data['witnessed'] == true;
+      _witnessCount = (data['count'] as int?) ?? _witnessCount;
+    });
+  }
+
+  Future<void> _toggleWitness() async {
+    if (_togglingWitness) return;
+    setState(() => _togglingWitness = true);
+    final data = await _complaintService.toggleWitness(widget.complaint.id);
+    if (!mounted) return;
+    if (data != null) {
+      setState(() {
+        _userWitnessed = data['witnessed'] == true;
+        _witnessCount = (data['count'] as int?) ?? _witnessCount;
+      });
+    }
+    setState(() => _togglingWitness = false);
   }
 
   Future<void> _loadPhotos() async {
@@ -137,6 +174,59 @@ class _ComplaintSheetState extends State<ComplaintSheet> {
       });
     }
     setState(() => _togglingLike = false);
+  }
+
+  Future<void> _changeStatus(String newStatus) async {
+    if (_updatingStatus) return;
+    setState(() => _updatingStatus = true);
+    final ok = await _complaintService.updateStatus(widget.complaint.id, newStatus);
+    if (!mounted) return;
+    if (ok) setState(() => _status = newStatus);
+    setState(() => _updatingStatus = false);
+  }
+
+  void _openStatusPicker(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (_) => Container(
+        decoration: BoxDecoration(
+          color: Theme.of(context).scaffoldBackgroundColor,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: Container(
+                width: 40, height: 4,
+                decoration: BoxDecoration(color: Colors.grey.shade300, borderRadius: BorderRadius.circular(2)),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text('Atualizar status', style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.w600)),
+            const SizedBox(height: 12),
+            ..._statusMap.entries.map((e) {
+              final key = e.key;
+              final (icon, color, label) = e.value;
+              final selected = _status == key;
+              return ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: Icon(icon, color: color),
+                title: Text(label, style: GoogleFonts.poppins(fontWeight: selected ? FontWeight.w600 : FontWeight.normal)),
+                trailing: selected ? Icon(Icons.check_rounded, color: color) : null,
+                onTap: () {
+                  Navigator.pop(context);
+                  if (!selected) _changeStatus(key);
+                },
+              );
+            }),
+          ],
+        ),
+      ),
+    );
   }
 
   void _openPhoto(String url) {
@@ -294,6 +384,16 @@ class _ComplaintSheetState extends State<ComplaintSheet> {
                                   ),
                               ],
                             ),
+                            const SizedBox(height: 8),
+
+                            // Status badge
+                            _StatusBadge(
+                              status: _status,
+                              statusMap: _statusMap,
+                              isOwner: isOwner,
+                              updating: _updatingStatus,
+                              onTap: isOwner ? () => _openStatusPicker(context) : null,
+                            ),
                             const SizedBox(height: 10),
 
                             // Criador
@@ -337,10 +437,11 @@ class _ComplaintSheetState extends State<ComplaintSheet> {
                               ),
                             ),
 
-                            // Like button
+                            // Like + Witness buttons
                             const SizedBox(height: 4),
                             Row(
                               children: [
+                                // Like
                                 GestureDetector(
                                   onTap: isLoggedIn ? _toggleLike : null,
                                   child: AnimatedContainer(
@@ -360,25 +461,47 @@ class _ComplaintSheetState extends State<ComplaintSheet> {
                                       mainAxisSize: MainAxisSize.min,
                                       children: [
                                         if (_togglingLike)
-                                          const SizedBox(
-                                            width: 16, height: 16,
-                                            child: CircularProgressIndicator(strokeWidth: 2, color: Colors.red),
-                                          )
+                                          const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.red))
                                         else
-                                          Icon(
-                                            _userLiked ? Icons.favorite_rounded : Icons.favorite_border_rounded,
-                                            size: 18,
-                                            color: _userLiked ? Colors.red : Colors.grey.shade500,
-                                          ),
+                                          Icon(_userLiked ? Icons.favorite_rounded : Icons.favorite_border_rounded,
+                                              size: 18, color: _userLiked ? Colors.red : Colors.grey.shade500),
                                         const SizedBox(width: 6),
-                                        Text(
-                                          '$_likeCount ${_likeCount == 1 ? 'apoio' : 'apoios'}',
-                                          style: GoogleFonts.poppins(
-                                            fontSize: 13,
-                                            fontWeight: FontWeight.w500,
-                                            color: _userLiked ? Colors.red : Colors.grey.shade600,
-                                          ),
-                                        ),
+                                        Text('$_likeCount ${_likeCount == 1 ? 'apoio' : 'apoios'}',
+                                            style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.w500,
+                                                color: _userLiked ? Colors.red : Colors.grey.shade600)),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                // Witness
+                                GestureDetector(
+                                  onTap: isLoggedIn ? _toggleWitness : null,
+                                  child: AnimatedContainer(
+                                    duration: const Duration(milliseconds: 200),
+                                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                                    decoration: BoxDecoration(
+                                      color: _userWitnessed
+                                          ? Colors.blue.withValues(alpha: 0.12)
+                                          : Colors.grey.withValues(alpha: 0.1),
+                                      borderRadius: BorderRadius.circular(20),
+                                      border: Border.all(
+                                        color: _userWitnessed ? Colors.blue.shade300 : Colors.grey.shade300,
+                                        width: 1,
+                                      ),
+                                    ),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        if (_togglingWitness)
+                                          SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.blue.shade400))
+                                        else
+                                          Icon(Icons.visibility_rounded,
+                                              size: 18, color: _userWitnessed ? Colors.blue.shade400 : Colors.grey.shade500),
+                                        const SizedBox(width: 6),
+                                        Text('$_witnessCount ${_witnessCount == 1 ? 'vi isso' : 'viram isso'}',
+                                            style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.w500,
+                                                color: _userWitnessed ? Colors.blue.shade400 : Colors.grey.shade600)),
                                       ],
                                     ),
                                   ),
@@ -1196,6 +1319,57 @@ class _CreatorCard extends StatelessWidget {
       ),
     ),
   );
+  }
+}
+
+// ─── Status Badge ────────────────────────────────────────────────────────────
+
+class _StatusBadge extends StatelessWidget {
+  final String status;
+  final Map<String, (IconData, Color, String)> statusMap;
+  final bool isOwner;
+  final bool updating;
+  final VoidCallback? onTap;
+
+  const _StatusBadge({
+    required this.status,
+    required this.statusMap,
+    required this.isOwner,
+    required this.updating,
+    this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final entry = statusMap[status] ?? statusMap['pending']!;
+    final (icon, color, label) = entry;
+
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.12),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: color.withValues(alpha: 0.4)),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            updating
+                ? SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2, color: color))
+                : Icon(icon, size: 14, color: color),
+            const SizedBox(width: 5),
+            Text(label, style: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.w600, color: color)),
+            if (isOwner) ...[
+              const SizedBox(width: 4),
+              Icon(Icons.expand_more_rounded, size: 14, color: color),
+            ],
+          ],
+        ),
+      ),
+    );
   }
 }
 

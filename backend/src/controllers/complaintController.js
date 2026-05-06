@@ -1,5 +1,6 @@
 const supabasePool = require('../infra/supabasePool');
 const { uploadToSupabase, listBlobs, removeFolder } = require('../infra/supabaseStorageClient');
+const { checkAchievements } = require('../infra/achievementChecker');
 
 exports.create = async (req, res) => {
     const { description, occurrence_date, address, latitude, longitude, type } = req.body;
@@ -64,9 +65,36 @@ exports.create = async (req, res) => {
                 longitude: result.rows[0].longitude,
             }
         });
+
+        // Verificação de conquistas em background (não bloqueia a resposta)
+        checkAchievements(created_by, 'complaint_created');
     } catch (error) {
         console.error('Erro ao criar reclamação:', error);
         res.status(500).json({ message: 'Erro ao criar reclamação.' });
+    }
+};
+
+exports.updateStatus = async (req, res) => {
+    const { id } = req.params;
+    const userId = req.user.id;
+    const { status } = req.body;
+
+    const allowed = ['pending', 'in_progress', 'resolved'];
+    if (!allowed.includes(status)) {
+        return res.status(400).json({ message: 'Status inválido.' });
+    }
+
+    try {
+        const pool = await supabasePool.getPgPool();
+        const check = await pool.query('SELECT created_by FROM complaints WHERE id = $1', [id]);
+        if (check.rows.length === 0) return res.status(404).json({ message: 'Reclamação não encontrada.' });
+        if (check.rows[0].created_by !== userId) return res.status(403).json({ message: 'Sem permissão.' });
+
+        await pool.query('UPDATE complaints SET status = $1 WHERE id = $2', [status, id]);
+        res.status(200).json({ status });
+    } catch (error) {
+        console.error('Erro ao atualizar status:', error);
+        res.status(500).json({ message: 'Erro ao atualizar status.' });
     }
 };
 
@@ -76,7 +104,7 @@ exports.getAll = async (req, res) => {
 
         // Buscar todas as reclamações com informações do criador
         const result = await pool.query(`
-            SELECT 
+            SELECT
                 c.id,
                 c.description,
                 c.occurrence_date,
@@ -86,10 +114,13 @@ exports.getAll = async (req, res) => {
                 c.longitude,
                 c.created_at,
                 c.created_by,
+                c.status,
                 u.name as created_by_name,
                 u.email as created_by_email,
                 u.photo_url as created_by_photo_url,
-                (SELECT COUNT(*)::int FROM complaint_likes WHERE complaint_id = c.id) AS likes_count
+                (SELECT COUNT(*)::int FROM complaint_likes WHERE complaint_id = c.id) AS likes_count,
+                (SELECT COUNT(*)::int FROM comments WHERE complaint_id = c.id) AS comments_count,
+                (SELECT COUNT(*)::int FROM complaint_witnesses WHERE complaint_id = c.id) AS witness_count
             FROM complaints c
             LEFT JOIN users u ON c.created_by = u.id
             ORDER BY c.occurrence_date DESC, c.created_at DESC
@@ -326,6 +357,45 @@ exports.getUserXp = async (req, res) => {
     }
 };
 
+exports.getWitnessStatus = async (req, res) => {
+    const { id } = req.params;
+    const userId = req.user?.id;
+    try {
+        const pool = await supabasePool.getPgPool();
+        const countResult = await pool.query(
+            'SELECT COUNT(*)::int FROM complaint_witnesses WHERE complaint_id = $1', [id]
+        );
+        const witnessed = userId ? (await pool.query(
+            'SELECT 1 FROM complaint_witnesses WHERE complaint_id = $1 AND user_id = $2', [id, userId]
+        )).rows.length > 0 : false;
+        res.status(200).json({ witnessed, count: countResult.rows[0].count });
+    } catch (error) {
+        res.status(500).json({ message: 'Erro ao buscar witnesses.' });
+    }
+};
+
+exports.toggleWitness = async (req, res) => {
+    const { id } = req.params;
+    const userId = req.user.id;
+    try {
+        const pool = await supabasePool.getPgPool();
+        const existing = await pool.query(
+            'SELECT id FROM complaint_witnesses WHERE complaint_id = $1 AND user_id = $2', [id, userId]
+        );
+        if (existing.rows.length > 0) {
+            await pool.query('DELETE FROM complaint_witnesses WHERE complaint_id = $1 AND user_id = $2', [id, userId]);
+        } else {
+            await pool.query('INSERT INTO complaint_witnesses (complaint_id, user_id) VALUES ($1, $2)', [id, userId]);
+        }
+        const countResult = await pool.query(
+            'SELECT COUNT(*)::int FROM complaint_witnesses WHERE complaint_id = $1', [id]
+        );
+        res.status(200).json({ witnessed: existing.rows.length === 0, count: countResult.rows[0].count });
+    } catch (error) {
+        res.status(500).json({ message: 'Erro ao processar witness.' });
+    }
+};
+
 exports.getHighlights = async (req, res) => {
     const period = req.query.period === 'week' ? 'week' : 'day';
     try {
@@ -341,10 +411,12 @@ exports.getHighlights = async (req, res) => {
                 c.longitude,
                 c.created_at,
                 c.created_by,
+                c.status,
                 u.name AS created_by_name,
-                u.photo_url,
+                u.photo_url AS created_by_photo_url,
                 COUNT(DISTINCT cl.id) AS likes_count,
                 COUNT(DISTINCT cm.id) AS comments_count,
+                COUNT(DISTINCT cw.id) AS witness_count,
                 (COUNT(DISTINCT cl.id) + COUNT(DISTINCT cm.id)) AS engagement_score
             FROM complaints c
             LEFT JOIN users u ON u.id = c.created_by
@@ -354,6 +426,7 @@ exports.getHighlights = async (req, res) => {
             LEFT JOIN comments cm
                 ON cm.complaint_id = c.id
                 AND cm.created_at >= NOW() - CASE WHEN $1 = 'week' THEN INTERVAL '7 days' ELSE INTERVAL '1 day' END
+            LEFT JOIN complaint_witnesses cw ON cw.complaint_id = c.id
             GROUP BY c.id, u.name, u.photo_url
             HAVING (COUNT(DISTINCT cl.id) + COUNT(DISTINCT cm.id)) > 0
             ORDER BY engagement_score DESC, c.created_at DESC
