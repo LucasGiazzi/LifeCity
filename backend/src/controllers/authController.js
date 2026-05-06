@@ -169,8 +169,8 @@ exports.editUser = async (req, res) => {
                 await deletePublicFile({ bucket: 'pfp', path: user.rows[0].photo_path });
             }
 
-            // Upload do novo pfp
-            const { path, publicUrl } = await uploadPublicFile({ bucket: 'pfp', path: `${req.user.id}/pfp.png`, file: pfp });
+            // Upload do novo pfp com nome único para evitar cache
+            const { path, publicUrl } = await uploadPublicFile({ bucket: 'pfp', path: `${req.user.id}/pfp_${Date.now()}.png`, file: pfp });
 
             // Atualizar o usuário com o novo pfp
             await pool.query('UPDATE users SET photo_url = $1, photo_path = $2 WHERE id = $3', [publicUrl, path, req.user.id]);

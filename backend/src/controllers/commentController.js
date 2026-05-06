@@ -1,5 +1,6 @@
 const supabasePool = require('../infra/supabasePool');
 const jwt = require('jsonwebtoken');
+const { checkAchievements } = require('../infra/achievementChecker');
 
 exports.getComments = async (req, res) => {
     const { id } = req.params;
@@ -63,11 +64,12 @@ exports.addComment = async (req, res) => {
         const pool = await supabasePool.getPgPool();
 
         const complaintCheck = await pool.query(
-            'SELECT id FROM complaints WHERE id = $1', [id]
+            'SELECT id, created_by FROM complaints WHERE id = $1', [id]
         );
         if (complaintCheck.rows.length === 0) {
             return res.status(404).json({ message: 'Reclamação não encontrada.' });
         }
+        const ownerId = complaintCheck.rows[0].created_by;
 
         const insert = await pool.query(
             'INSERT INTO comments (complaint_id, user_id, text) VALUES ($1, $2, $3) RETURNING id',
@@ -91,6 +93,16 @@ exports.addComment = async (req, res) => {
         `, [insert.rows[0].id]);
 
         res.status(201).json({ comment: result.rows[0] });
+
+        // Side effects após resposta (fire-and-forget)
+        if (ownerId !== userId) {
+            pool.query(
+                `INSERT INTO notifications (user_id, actor_id, type, reference_type, reference_id)
+                 VALUES ($1, $2, 'comment', 'complaint', $3)`,
+                [ownerId, userId, id.toString()]
+            ).catch(err => console.error('[notification:comment]', err.message));
+        }
+        checkAchievements(ownerId, 'comments_received');
     } catch (error) {
         console.error('Erro ao adicionar comentário:', error);
         res.status(500).json({ message: 'Erro ao adicionar comentário.' });

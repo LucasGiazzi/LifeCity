@@ -3,10 +3,14 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/constants/app_colors.dart';
+import '../../core/models/achievement_model.dart';
 import '../../core/models/complaint_model.dart';
 import '../../core/routes/app_routes.dart';
+import '../../core/services/achievement_service.dart';
 import '../../core/services/complaint_service.dart';
+import '../../core/services/notification_service.dart';
 import '../../core/state/auth_state.dart';
+import '../complaints/complaint_card.dart';
 import '../complaints/complaint_sheet.dart';
 
 class ProfilePage extends StatefulWidget {
@@ -19,22 +23,31 @@ class ProfilePage extends StatefulWidget {
 class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStateMixin {
   late TabController _tabController;
   final ComplaintService _complaintService = ComplaintService();
+  final AchievementService _achievementService = AchievementService();
+  final NotificationService _notificationService = NotificationService();
 
   List<ComplaintModel> _myComplaints = [];
   List<Map<String, dynamic>> _myInteractions = [];
+  List<AchievementModel> _myAchievements = [];
   Map<String, dynamic>? _xpData;
+  int _unreadNotifications = 0;
   bool _isLoading = true;
   bool _isLoadingInteractions = false;
+  bool _isLoadingAchievements = false;
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
+    _tabController = TabController(length: 3, vsync: this);
     _loadMyComplaints();
     _loadXp();
+    _loadUnreadNotifications();
     _tabController.addListener(() {
       if (_tabController.index == 1 && _myInteractions.isEmpty && !_isLoadingInteractions) {
         _loadMyInteractions();
+      }
+      if (_tabController.index == 2 && _myAchievements.isEmpty && !_isLoadingAchievements) {
+        _loadAchievements();
       }
     });
   }
@@ -48,6 +61,17 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
   Future<void> _loadXp() async {
     final data = await _complaintService.getMyXp();
     if (mounted && data != null) setState(() => _xpData = data);
+  }
+
+  Future<void> _loadUnreadNotifications() async {
+    final count = await _notificationService.getUnreadCount();
+    if (mounted) setState(() => _unreadNotifications = count);
+  }
+
+  Future<void> _loadAchievements() async {
+    setState(() => _isLoadingAchievements = true);
+    final data = await _achievementService.getMyAchievements();
+    if (mounted) setState(() { _myAchievements = data; _isLoadingAchievements = false; });
   }
 
   Future<void> _loadMyInteractions() async {
@@ -93,7 +117,16 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
       body: NestedScrollView(
         headerSliverBuilder: (_, __) => [
           SliverToBoxAdapter(
-            child: _ProfileHeader(userName: userName, photoUrl: photoUrl, xpData: _xpData),
+            child: _ProfileHeader(
+              userName: userName,
+              photoUrl: photoUrl,
+              xpData: _xpData,
+              unreadNotifications: _unreadNotifications,
+              onNotificationsTap: () async {
+                await Navigator.pushNamed(context, AppRoutes.notifications);
+                _loadUnreadNotifications();
+              },
+            ),
           ),
         ],
         body: Column(
@@ -103,11 +136,12 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
               labelColor: AppColors.primary,
               unselectedLabelColor: AppColors.placeholder,
               indicatorColor: AppColors.primary,
-              labelStyle: GoogleFonts.poppins(fontWeight: FontWeight.w600, fontSize: 13),
-              unselectedLabelStyle: GoogleFonts.poppins(fontSize: 13),
+              labelStyle: GoogleFonts.poppins(fontWeight: FontWeight.w600, fontSize: 12),
+              unselectedLabelStyle: GoogleFonts.poppins(fontSize: 12),
               tabs: const [
                 Tab(text: 'Reclamações', icon: Icon(Icons.report_problem_rounded, size: 18)),
                 Tab(text: 'Interações', icon: Icon(Icons.favorite_border_rounded, size: 18)),
+                Tab(text: 'Conquistas', icon: Icon(Icons.emoji_events_rounded, size: 18)),
               ],
             ),
             Expanded(
@@ -118,6 +152,7 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
                       children: [
                         _buildComplaintsList(),
                         _buildInteractionsList(),
+                        _buildAchievementsList(),
                       ],
                     ),
             ),
@@ -141,12 +176,8 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
         itemCount: _myComplaints.length,
         itemBuilder: (context, i) {
           final c = _myComplaints[i];
-          return _ActivityCard(
-            icon: Icons.report_problem_rounded,
-            iconColor: Colors.orange,
-            title: c.description,
-            subtitle: c.address,
-            date: _formatDate(c.occurrenceDate),
+          return ComplaintCard(
+            complaint: c,
             onTap: () => showComplaintSheet(
               context,
               c,
@@ -180,6 +211,23 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
     );
   }
 
+  Widget _buildAchievementsList() {
+    if (_isLoadingAchievements) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    if (_myAchievements.isEmpty) {
+      return _EmptyState(
+        icon: Icons.emoji_events_outlined,
+        message: 'Nenhuma conquista desbloqueada ainda\nComece criando sua primeira reclamação!',
+      );
+    }
+    return ListView.builder(
+      padding: const EdgeInsets.all(16),
+      itemCount: _myAchievements.length,
+      itemBuilder: (context, i) => _AchievementCard(achievement: _myAchievements[i]),
+    );
+  }
+
   Future<void> _deleteComplaint(ComplaintModel complaint) async {
     if (await _confirmDelete() != true) return;
     final ok = await _complaintService.deleteComplaint(complaint.id);
@@ -207,8 +255,81 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
         ),
       );
 
-  String _formatDate(DateTime dt) =>
-      '${dt.day.toString().padLeft(2, '0')}/${dt.month.toString().padLeft(2, '0')}/${dt.year}';
+}
+
+// ─── Achievement card ─────────────────────────────────────────────
+
+class _AchievementCard extends StatelessWidget {
+  final AchievementModel achievement;
+  const _AchievementCard({required this.achievement});
+
+  static const _triggerLabels = <String, String>{
+    'complaint_created': 'Reclamações criadas',
+    'likes_received': 'Curtidas recebidas',
+    'comments_received': 'Comentários recebidos',
+  };
+
+  @override
+  Widget build(BuildContext context) {
+    final label = _triggerLabels[achievement.triggerType] ?? '';
+    return Card(
+      margin: const EdgeInsets.only(bottom: 12),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+      child: Padding(
+        padding: const EdgeInsets.all(14),
+        child: Row(
+          children: [
+            Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                color: Colors.amber.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Icon(Icons.emoji_events_rounded, color: Colors.amber, size: 26),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    achievement.name,
+                    style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.w600),
+                  ),
+                  if (achievement.description != null)
+                    Text(
+                      achievement.description!,
+                      style: GoogleFonts.poppins(fontSize: 11, color: AppColors.placeholder),
+                    ),
+                  if (label.isNotEmpty)
+                    Text(
+                      '$label: ${achievement.triggerCount}',
+                      style: GoogleFonts.poppins(fontSize: 11, color: AppColors.placeholder),
+                    ),
+                ],
+              ),
+            ),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: Colors.amber.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                '+${achievement.xpReward} XP',
+                style: GoogleFonts.poppins(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.amber.shade700,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }
 
 // ─── Header ───────────────────────────────────────────────────────
@@ -217,8 +338,16 @@ class _ProfileHeader extends StatelessWidget {
   final String userName;
   final String? photoUrl;
   final Map<String, dynamic>? xpData;
+  final int unreadNotifications;
+  final VoidCallback? onNotificationsTap;
 
-  const _ProfileHeader({required this.userName, this.photoUrl, this.xpData});
+  const _ProfileHeader({
+    required this.userName,
+    this.photoUrl,
+    this.xpData,
+    this.unreadNotifications = 0,
+    this.onNotificationsTap,
+  });
 
   static const _levelIcons = <int, IconData>{
     1: Icons.home_rounded,
@@ -257,12 +386,41 @@ class _ProfileHeader extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Align(
-                alignment: Alignment.topRight,
-                child: IconButton(
-                  icon: const Icon(Icons.settings_rounded, color: Colors.white, size: 24),
-                  onPressed: () => Navigator.pushNamed(context, AppRoutes.settings),
-                ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  Stack(
+                    clipBehavior: Clip.none,
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.notifications_rounded, color: Colors.white, size: 24),
+                        onPressed: onNotificationsTap,
+                      ),
+                      if (unreadNotifications > 0)
+                        Positioned(
+                          right: 6,
+                          top: 6,
+                          child: Container(
+                            padding: const EdgeInsets.all(3),
+                            decoration: const BoxDecoration(
+                              color: Colors.redAccent,
+                              shape: BoxShape.circle,
+                            ),
+                            constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
+                            child: Text(
+                              unreadNotifications > 9 ? '9+' : '$unreadNotifications',
+                              style: const TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.bold),
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.settings_rounded, color: Colors.white, size: 24),
+                    onPressed: () => Navigator.pushNamed(context, AppRoutes.settings),
+                  ),
+                ],
               ),
               const SizedBox(height: 4),
               CircleAvatar(
@@ -336,75 +494,6 @@ class _ProfileHeader extends StatelessWidget {
                     ),
                   ],
                 ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-// ─── Cards de atividade ───────────────────────────────────────────
-
-class _ActivityCard extends StatelessWidget {
-  final IconData icon;
-  final Color iconColor;
-  final String title;
-  final String? subtitle;
-  final String date;
-  final VoidCallback? onTap;
-  final VoidCallback onDelete;
-
-  const _ActivityCard({
-    required this.icon,
-    required this.iconColor,
-    required this.title,
-    this.subtitle,
-    required this.date,
-    this.onTap,
-    required this.onDelete,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(14),
-        child: Padding(
-          padding: const EdgeInsets.all(14),
-          child: Row(
-            children: [
-              Container(
-                width: 42,
-                height: 42,
-                decoration: BoxDecoration(
-                  color: iconColor.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(icon, color: iconColor, size: 22),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(title, style: GoogleFonts.poppins(fontWeight: FontWeight.w600, fontSize: 14), maxLines: 2, overflow: TextOverflow.ellipsis),
-                    if (subtitle != null) ...[
-                      const SizedBox(height: 2),
-                      Text(subtitle!, style: GoogleFonts.poppins(fontSize: 12, color: AppColors.placeholder), maxLines: 1, overflow: TextOverflow.ellipsis),
-                    ],
-                    const SizedBox(height: 2),
-                    Text(date, style: GoogleFonts.poppins(fontSize: 11, color: AppColors.placeholder)),
-                  ],
-                ),
-              ),
-              IconButton(
-                icon: const Icon(Icons.delete_outline_rounded, color: Colors.red, size: 20),
-                onPressed: onDelete,
               ),
             ],
           ),

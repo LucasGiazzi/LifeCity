@@ -17,7 +17,7 @@ class ApiService {
   ApiService._internal()
       : _dio = Dio(
           BaseOptions(
-            baseUrl: 'http://192.168.15.7:3000',
+            baseUrl: 'http://10.0.1.104:3000',
             connectTimeout: const Duration(seconds: 30),
             receiveTimeout: const Duration(seconds: 30),
             headers: {
@@ -170,6 +170,15 @@ class ApiService {
   Future<Response> put(String endpoint, dynamic data) async {
     try {
       final response = await _dio.put(endpoint, data: data);
+      return response;
+    } on DioException catch (e) {
+      throw ApiException.fromDioError(e);
+    }
+  }
+
+  Future<Response> patch(String endpoint, dynamic data) async {
+    try {
+      final response = await _dio.patch(endpoint, data: data);
       return response;
     } on DioException catch (e) {
       throw ApiException.fromDioError(e);

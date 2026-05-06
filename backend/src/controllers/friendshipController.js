@@ -1,5 +1,13 @@
 const supabasePool = require('../infra/supabasePool');
 
+async function emitNotification(pool, userId, actorId, type, referenceType, referenceId) {
+    pool.query(
+        `INSERT INTO notifications (user_id, actor_id, type, reference_type, reference_id)
+         VALUES ($1, $2, $3, $4, $5)`,
+        [userId, actorId, type, referenceType, referenceId]
+    ).catch(err => console.error('[notification:friendship]', err.message));
+}
+
 /** Lista utilizadores (sem credenciais) com estado de amizade em relação ao utilizador autenticado. */
 exports.discover = async (req, res) => {
   const me = req.user.id;
@@ -147,10 +155,12 @@ exports.sendRequest = async (req, res) => {
            RETURNING *`,
           [row.id],
         );
-        return res.status(201).json({
+        res.status(201).json({
           message: 'Pedido reenviado.',
           friendship: upd.rows[0],
         });
+        emitNotification(pool, userId, me, 'friend_request', 'friendship', upd.rows[0].id.toString());
+        return;
       }
     }
 
@@ -181,6 +191,7 @@ exports.sendRequest = async (req, res) => {
       message: 'Pedido enviado.',
       friendship: ins.rows[0],
     });
+    emitNotification(pool, userId, me, 'friend_request', 'friendship', ins.rows[0].id.toString());
   } catch (error) {
     console.error('Erro em friendships.sendRequest:', error);
     if (error.code === '23505') {

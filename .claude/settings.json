@@ -9,7 +9,25 @@
       "Bash(git commit *)",
       "Bash(git stash *)",
       "Bash(git push *)",
-      "Bash(xargs ls *)"
+      "Bash(xargs ls *)",
+      "Bash(Get-ChildItem -Path \"c:\\\\LifeCity\\\\lib\\\\views\\\\map\\\\\" -File)",
+      "Bash(Get-ChildItem -Path \"c:\\\\LifeCity\\\\lib\" -Recurse -Filter \"*theme*\" -ErrorAction SilentlyContinue)",
+      "Bash(cargo --version)",
+      "WebFetch(domain:github.com)",
+      "Bash(gh release *)",
+      "PowerShell(Invoke-RestMethod \"https://api.github.com/repos/rtk-ai/rtk/releases/latest\")",
+      "PowerShell($r = Invoke-RestMethod \"https://api.github.com/repos/rtk-ai/rtk/releases/latest\"; $r.assets | ForEach-Object { $_.name + \" -> \" + $_.browser_download_url })",
+      "Read(//c/Users/lucas/.claude/**)",
+      "Bash(Get-ChildItem -Path \"C:\\\\LifeCity\" -Directory)",
+      "Bash(Select-Object Name)",
+      "Bash(rtk ls *)",
+      "Bash(rtk find *)",
+      "Bash(rtk read *)",
+      "Bash(Get-ChildItem -Path \"c:\\\\LifeCity\" -Recurse -Directory)",
+      "Bash(Select-Object FullName)"
+    ],
+    "additionalDirectories": [
+      "C:\\Users\\lucas\\.claude"
     ]
   }
 }

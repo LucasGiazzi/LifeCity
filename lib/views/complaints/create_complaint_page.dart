@@ -535,16 +535,7 @@ class _CreateComplaintPageState extends State<CreateComplaintPage> {
               backgroundColor: Colors.green,
             ),
           );
-          Navigator.of(context).pop(true); // Retorna true para indicar que reclamação foi criada
-        } else {
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Erro ao criar reclamação. Tente novamente.'),
-                backgroundColor: Colors.red,
-              ),
-            );
-          }
+          Navigator.of(context).pop(true);
         }
       } catch (e) {
         setState(() {
@@ -555,6 +546,7 @@ class _CreateComplaintPageState extends State<CreateComplaintPage> {
             SnackBar(
               content: Text('Erro: ${e.toString()}'),
               backgroundColor: Colors.red,
+              duration: const Duration(seconds: 6),
             ),
           );
         }
@@ -629,7 +621,7 @@ class _CreateComplaintPageState extends State<CreateComplaintPage> {
                           _selectedType = selected ? type['value'] as String : null;
                         });
                       },
-                      selectedColor: AppColors.primary.withOpacity(0.2),
+                      selectedColor: AppColors.primary.withValues(alpha: 0.2),
                       checkmarkColor: AppColors.primary,
                     );
                   }).toList(),

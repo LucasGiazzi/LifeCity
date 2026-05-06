@@ -14,39 +14,33 @@ class ComplaintService {
     double? longitude,
     List<File>? photos,
   }) async {
-    try {
-      FormData formData = FormData.fromMap({
-        'description': description,
-        'occurrence_date': occurrenceDate,
-        'address': address,
-        if (type != null && type.isNotEmpty) 'type': type,
-        if (latitude != null) 'latitude': latitude,
-        if (longitude != null) 'longitude': longitude,
-      });
+    FormData formData = FormData.fromMap({
+      'description': description,
+      'occurrence_date': occurrenceDate,
+      'address': address,
+      if (type != null && type.isNotEmpty) 'type': type,
+      if (latitude != null) 'latitude': latitude,
+      if (longitude != null) 'longitude': longitude,
+    });
 
-      // Adicionar fotos se houver
-      if (photos != null && photos.isNotEmpty) {
-        formData.files.addAll(
-          photos.asMap().entries.map((entry) {
-            final index = entry.key;
-            final photo = entry.value;
-            return MapEntry(
-              'photos',
-              MultipartFile.fromFileSync(
-                photo.path,
-                filename: 'photo_$index.jpg',
-              ),
-            );
-          }),
-        );
-      }
-
-      final response = await _api.postMultipart('/api/complaints/create', formData);
-      return response.data;
-    } on ApiException catch (e) {
-      print('Erro ao criar reclamação: ${e.message}');
-      return null;
+    if (photos != null && photos.isNotEmpty) {
+      formData.files.addAll(
+        photos.asMap().entries.map((entry) {
+          final index = entry.key;
+          final photo = entry.value;
+          return MapEntry(
+            'photos',
+            MultipartFile.fromFileSync(
+              photo.path,
+              filename: 'photo_$index.jpg',
+            ),
+          );
+        }),
+      );
     }
+
+    final response = await _api.postMultipart('/api/complaints/create', formData);
+    return response.data;
   }
 
   Future<List<Map<String, dynamic>>> getAllComplaints() async {
@@ -208,6 +202,34 @@ class ComplaintService {
     } on ApiException catch (e) {
       print('Erro ao buscar destaques: ${e.message}');
       return [];
+    }
+  }
+
+  Future<Map<String, dynamic>?> getWitnessStatus(String complaintId) async {
+    try {
+      final response = await _api.get('/api/complaints/$complaintId/witness');
+      return Map<String, dynamic>.from(response.data);
+    } on ApiException {
+      return null;
+    }
+  }
+
+  Future<Map<String, dynamic>?> toggleWitness(String complaintId) async {
+    try {
+      final response = await _api.post('/api/complaints/$complaintId/witness', {});
+      return Map<String, dynamic>.from(response.data);
+    } on ApiException {
+      return null;
+    }
+  }
+
+  Future<bool> updateStatus(String complaintId, String status) async {
+    try {
+      await _api.patch('/api/complaints/$complaintId/status', {'status': status});
+      return true;
+    } on ApiException catch (e) {
+      print('Erro ao atualizar status: ${e.message}');
+      return false;
     }
   }
 
