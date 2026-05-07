@@ -22,11 +22,22 @@ seguindo o padrão de separação de responsabilidades:
 
   \item \textbf{Camada de aplicação — Node.js/Express (Backend):} Responsável
         por toda a lógica de negócio, autenticação e autorização. Implementa
-        API RESTful com endpoints para usuários (\texttt{/api/auth}),
-        reclamações (\texttt{/api/complaints}) e eventos (\texttt{/api/events}).
+        API RESTful com os seguintes grupos de endpoints:
+        \begin{itemize}
+          \item \texttt{/api/auth} — cadastro, login, logout, refresh token;
+          \item \texttt{/api/users} — perfil, edição, XP, amizades;
+          \item \texttt{/api/complaints} — CRUD de reclamações, curtidas, comentários, testemunhos;
+          \item \texttt{/api/events} — CRUD de eventos;
+          \item \texttt{/api/achievements} — conquistas do usuário;
+          \item \texttt{/api/notifications} — listagem e marcação como lida;
+          \item \texttt{/api/missions} — missões ativas, detalhes;
+          \item \texttt{/api/missions/teams} — criar equipe, convidar, aceitar/recusar convite.
+        \end{itemize}
         Gerencia tokens JWT (access token de curta duração + refresh token de
         longa duração), incluindo renovação automática de sessão e invalidação
-        no logout.
+        no logout. Checadores de conquistas (\texttt{achievementChecker.js}) e
+        de progresso de missões (\texttt{missionProgressChecker.js}) são
+        disparados de forma assíncrona após ações do usuário.
 
   \item \textbf{Camada de dados — PostgreSQL via Supabase:} Responsável pelo
         armazenamento persistente dos dados. O banco PostgreSQL é gerenciado
