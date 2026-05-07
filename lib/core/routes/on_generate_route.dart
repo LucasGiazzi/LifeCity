@@ -19,6 +19,8 @@ import '../../views/entrypoint/entrypoint_ui.dart';
 import '../../views/events/create_event_page.dart';
 import '../../views/complaints/create_complaint_page.dart';
 import '../../views/onboarding/onboarding_page.dart';
+import '../../views/missions/create_team_page.dart';
+import '../../views/missions/team_detail_page.dart';
 import '../../views/profile/notification_page.dart';
 import '../../views/profile/profile_edit_page.dart';
 import '../../views/profile/settings/change_password_page.dart';
@@ -118,6 +120,15 @@ class RouteGenerator {
 
       case AppRoutes.contactUs:
         return CupertinoPageRoute(builder: (_) => const ContactUsPage());
+
+      case AppRoutes.createTeam:
+        return CupertinoPageRoute(builder: (_) => const CreateTeamPage());
+
+      case AppRoutes.teamDetail:
+        final teamId = settings.arguments as String;
+        return CupertinoPageRoute(
+          builder: (_) => TeamDetailPage(teamId: teamId),
+        );
 
       default:
         return errorRoute();

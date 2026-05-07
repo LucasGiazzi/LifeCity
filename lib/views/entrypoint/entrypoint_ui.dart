@@ -15,6 +15,7 @@ import '../../core/state/filter_scope.dart';
 import '../complaints/complaint_sheet.dart';
 import '../highlights/highlights_page.dart';
 import '../menu/menu_page.dart';
+import '../missions/missions_page.dart';
 import '../profile/profile_page.dart';
 import 'components/app_navigation_bar.dart';
 
@@ -46,6 +47,7 @@ class _EntryPointUIState extends State<EntryPointUI> {
     _MapBody(key: _mapBodyKey),
     const MenuPage(),
     const HighlightsPage(),
+    const MissionsPage(),
     const ProfilePage(),
   ];
 

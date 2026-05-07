@@ -1,6 +1,7 @@
 const supabasePool = require('../infra/supabasePool');
 const { uploadToSupabase, listBlobs, removeFolder } = require('../infra/supabaseStorageClient');
 const { checkAchievements } = require('../infra/achievementChecker');
+const { checkMissionProgress, checkMissionResolution } = require('../infra/missionProgressChecker');
 
 exports.create = async (req, res) => {
     const { description, occurrence_date, address, latitude, longitude, type } = req.body;
@@ -66,8 +67,9 @@ exports.create = async (req, res) => {
             }
         });
 
-        // Verificação de conquistas em background (não bloqueia a resposta)
+        // Verificações em background (não bloqueiam a resposta)
         checkAchievements(created_by, 'complaint_created');
+        checkMissionProgress(pool, complaintId);
     } catch (error) {
         console.error('Erro ao criar reclamação:', error);
         res.status(500).json({ message: 'Erro ao criar reclamação.' });
@@ -92,6 +94,10 @@ exports.updateStatus = async (req, res) => {
 
         await pool.query('UPDATE complaints SET status = $1 WHERE id = $2', [status, id]);
         res.status(200).json({ status });
+
+        if (status === 'resolved') {
+            checkMissionResolution(pool, id);
+        }
     } catch (error) {
         console.error('Erro ao atualizar status:', error);
         res.status(500).json({ message: 'Erro ao atualizar status.' });
@@ -313,20 +319,18 @@ exports.getMyXp = async (req, res) => {
         const pool = await supabasePool.getPgPool();
         const result = await pool.query(`
             SELECT
-                (SELECT COUNT(*) FROM complaints WHERE created_by = $1)::int                               AS complaints_count,
+                (SELECT COUNT(*) FROM complaints WHERE created_by = $1)::int AS complaints_count,
                 (SELECT COUNT(*) FROM complaint_likes cl JOIN complaints c ON cl.complaint_id = c.id WHERE c.created_by = $1)::int AS likes_received,
-                (SELECT COUNT(*) FROM comments cm JOIN complaints c ON cm.complaint_id = c.id WHERE c.created_by = $1)::int        AS comments_received
+                (SELECT COUNT(*) FROM comments cm JOIN complaints c ON cm.complaint_id = c.id WHERE c.created_by = $1)::int AS comments_received,
+                COALESCE((SELECT bonus_xp FROM users WHERE id = $1), 0) AS bonus_xp
         `, [userId]);
 
-        const { complaints_count, likes_received, comments_received } = result.rows[0];
-        const xp = complaints_count * 50 + likes_received * 10 + comments_received * 5;
+        const { complaints_count, likes_received, comments_received, bonus_xp } = result.rows[0];
+        const xp = complaints_count * 50 + likes_received * 10 + comments_received * 5 + bonus_xp;
         const levelInfo = calcLevel(xp);
 
         res.status(200).json({
-            xp,
-            complaints_count,
-            likes_received,
-            comments_received,
+            xp, complaints_count, likes_received, comments_received, bonus_xp,
             ...levelInfo,
         });
     } catch (error) {
@@ -341,16 +345,17 @@ exports.getUserXp = async (req, res) => {
         const pool = await supabasePool.getPgPool();
         const result = await pool.query(`
             SELECT
-                (SELECT COUNT(*) FROM complaints WHERE created_by = $1)::int                               AS complaints_count,
+                (SELECT COUNT(*) FROM complaints WHERE created_by = $1)::int AS complaints_count,
                 (SELECT COUNT(*) FROM complaint_likes cl JOIN complaints c ON cl.complaint_id = c.id WHERE c.created_by = $1)::int AS likes_received,
-                (SELECT COUNT(*) FROM comments cm JOIN complaints c ON cm.complaint_id = c.id WHERE c.created_by = $1)::int        AS comments_received
+                (SELECT COUNT(*) FROM comments cm JOIN complaints c ON cm.complaint_id = c.id WHERE c.created_by = $1)::int AS comments_received,
+                COALESCE((SELECT bonus_xp FROM users WHERE id = $1), 0) AS bonus_xp
         `, [userId]);
 
-        const { complaints_count, likes_received, comments_received } = result.rows[0];
-        const xp = complaints_count * 50 + likes_received * 10 + comments_received * 5;
+        const { complaints_count, likes_received, comments_received, bonus_xp } = result.rows[0];
+        const xp = complaints_count * 50 + likes_received * 10 + comments_received * 5 + bonus_xp;
         const levelInfo = calcLevel(xp);
 
-        res.status(200).json({ xp, complaints_count, likes_received, comments_received, ...levelInfo });
+        res.status(200).json({ xp, complaints_count, likes_received, comments_received, bonus_xp, ...levelInfo });
     } catch (error) {
         console.error('Erro ao buscar XP do usuário:', error);
         res.status(500).json({ message: 'Erro ao buscar XP.' });
