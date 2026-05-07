@@ -61,6 +61,10 @@ class NotificationModel {
         return achievementName != null
             ? 'Conquista desbloqueada: $achievementName'
             : 'Você desbloqueou uma conquista!';
+      case 'mission_completed':
+        return 'Você completou uma missão!';
+      case 'team_invite':
+        return '$actor convidou você para uma equipe';
       default:
         return 'Nova notificação';
     }

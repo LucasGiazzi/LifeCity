@@ -18,6 +18,10 @@ class AppRoutes {
   static const createEvent = '/create_event';
   static const createComplaint = '/create_complaint';
 
+  /* <---- Missions & Teams -----> */
+  static const createTeam = '/createTeam';
+  static const teamDetail = '/teamDetail';
+
   /* <---- Profile & Settings -----> */
   static const profile = 'profile';
   static const profileEdit = '/profileEdit';

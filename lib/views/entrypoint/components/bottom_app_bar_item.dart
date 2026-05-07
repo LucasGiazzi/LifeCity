@@ -7,13 +7,16 @@ import '../../../core/constants/constants.dart';
 class BottomAppBarItem extends StatelessWidget {
   const BottomAppBarItem({
     super.key,
-    required this.iconLocation,
+    this.iconLocation,
+    this.iconData,
     required this.name,
     required this.isActive,
     required this.onTap,
-  });
+  }) : assert(iconLocation != null || iconData != null,
+            'Provide iconLocation or iconData');
 
-  final String iconLocation;
+  final String? iconLocation;
+  final IconData? iconData;
   final String name;
   final bool isActive;
   final VoidCallback onTap;
@@ -39,19 +42,30 @@ class BottomAppBarItem extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            SvgPicture.asset(
-              iconLocation,
-              width: 22,
-              height: 22,
-              colorFilter: ColorFilter.mode(
-                isActive
+            if (iconData != null)
+              Icon(
+                iconData,
+                size: 22,
+                color: isActive
                     ? AppColors.primary
                     : Theme.of(context).brightness == Brightness.dark
                         ? Colors.white54
                         : AppColors.placeholder,
-                BlendMode.srcIn,
+              )
+            else
+              SvgPicture.asset(
+                iconLocation!,
+                width: 22,
+                height: 22,
+                colorFilter: ColorFilter.mode(
+                  isActive
+                      ? AppColors.primary
+                      : Theme.of(context).brightness == Brightness.dark
+                          ? Colors.white54
+                          : AppColors.placeholder,
+                  BlendMode.srcIn,
+                ),
               ),
-            ),
             AnimatedSize(
               duration: const Duration(milliseconds: 250),
               curve: Curves.easeInOut,

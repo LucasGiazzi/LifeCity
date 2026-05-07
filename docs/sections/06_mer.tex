@@ -4,10 +4,11 @@
 
 \section{MODELO ENTIDADE RELACIONAMENTO (MER)}
 
-O modelo entidade-relacionamento do LifeCity é composto por três entidades
-principais: \textbf{users}, \textbf{complaints} (reclamações) e \textbf{events}
-(eventos). Tanto reclamações quanto eventos possuem chave estrangeira
-referenciando o usuário que os criou (\texttt{created\_by}).
+O modelo entidade-relacionamento do LifeCity evoluiu ao longo dos três
+semestres de desenvolvimento. As entidades centrais são \textbf{users},
+\textbf{complaints} e \textbf{events}. A partir da Fase 1 foram adicionadas
+entidades de gamificação (conquistas, notificações) e na Fase 2 as entidades
+de missões e equipes.
 
 \begin{figure}[H]
   \centering
@@ -15,20 +16,98 @@ referenciando o usuário que os criou (\texttt{created\_by}).
   \caption{Modelo Entidade-Relacionamento do LifeCity}
 \end{figure}
 
-\paragraph{Entidade users}
-Armazena os dados cadastrais dos usuários: \texttt{id}, \texttt{name},
-\texttt{email}, \texttt{password}, \texttt{salt}, \texttt{cpf},
-\texttt{birth\_date}, \texttt{phone}, \texttt{created\_at},
-\texttt{photo\_url}, \texttt{photo\_path}.
+% ── Entidades principais ──────────────────────────────────────────
+\subsection*{Entidades principais}
 
-\paragraph{Entidade complaints}
-Armazena as reclamações registradas: \texttt{id}, \texttt{description},
+\paragraph{users}
+Dados cadastrais e de gamificação: \texttt{id}, \texttt{name}, \texttt{email},
+\texttt{password}, \texttt{salt}, \texttt{cpf}, \texttt{birth\_date},
+\texttt{phone}, \texttt{photo\_url}, \texttt{photo\_path}, \texttt{xp},
+\texttt{level}, \texttt{bonus\_xp}, \texttt{created\_at}.
+
+\paragraph{complaints}
+Reclamações geolocalizadas: \texttt{id}, \texttt{description},
 \texttt{occurrence\_date}, \texttt{category}, \texttt{addr},
-\texttt{latitude}, \texttt{longitude}, \texttt{created\_by} (FK $\to$ users),
+\texttt{latitude}, \texttt{longitude}, \texttt{status},
+\texttt{created\_by} (FK $\to$ users), \texttt{created\_at}.
+
+\paragraph{events}
+Eventos locais: \texttt{id}, \texttt{description}, \texttt{category},
+\texttt{start\_date}, \texttt{end\_date}, \texttt{addr}, \texttt{latitude},
+\texttt{longitude}, \texttt{created\_by} (FK $\to$ users),
 \texttt{created\_at}.
 
-\paragraph{Entidade events}
-Armazena os eventos cadastrados: \texttt{id}, \texttt{description},
-\texttt{category}, \texttt{start\_date}, \texttt{end\_date},
-\texttt{created\_by} (FK $\to$ users), \texttt{created\_at}, \texttt{addr},
-\texttt{latitude}, \texttt{longitude}.
+% ── Engajamento social ────────────────────────────────────────────
+\subsection*{Engajamento social}
+
+\paragraph{complaint\_likes}
+Curtidas em reclamações: \texttt{id}, \texttt{complaint\_id}
+(FK $\to$ complaints), \texttt{user\_id} (FK $\to$ users),
+\texttt{created\_at}. Chave única em (\texttt{complaint\_id}, \texttt{user\_id}).
+
+\paragraph{complaint\_comments}
+Comentários em reclamações: \texttt{id}, \texttt{complaint\_id},
+\texttt{user\_id}, \texttt{content}, \texttt{created\_at}.
+
+\paragraph{complaint\_witnesses}
+Testemunhos em reclamações: \texttt{id}, \texttt{complaint\_id},
+\texttt{user\_id}, \texttt{created\_at}.
+
+\paragraph{friendships}
+Relações de amizade: \texttt{id}, \texttt{requester\_id}
+(FK $\to$ users), \texttt{addressee\_id} (FK $\to$ users),
+\texttt{status} (pending | accepted | declined), \texttt{created\_at}.
+
+% ── Fase 1 — Gamificação ──────────────────────────────────────────
+\subsection*{Fase 1 — Conquistas e Notificações}
+
+\paragraph{achievements}
+Catálogo de conquistas disponíveis: \texttt{id}, \texttt{name},
+\texttt{description}, \texttt{icon}, \texttt{xp\_reward},
+\texttt{trigger\_type} (complaint\_created | likes\_received |
+comments\_received | mission\_completed), \texttt{trigger\_count},
+\texttt{created\_at}. Chave única em (\texttt{trigger\_type},
+\texttt{trigger\_count}).
+
+\paragraph{user\_achievements}
+Conquistas desbloqueadas por usuário: \texttt{id}, \texttt{user\_id}
+(FK $\to$ users), \texttt{achievement\_id} (FK $\to$ achievements),
+\texttt{unlocked\_at}, \texttt{is\_featured}. Chave única em
+(\texttt{user\_id}, \texttt{achievement\_id}).
+
+\paragraph{notifications}
+Notificações sociais e de sistema: \texttt{id}, \texttt{user\_id}
+(FK $\to$ users — destinatário), \texttt{actor\_id}
+(FK $\to$ users — quem gerou), \texttt{type} (like | comment |
+friend\_request | achievement\_unlocked | mission\_completed | team\_invite),
+\texttt{reference\_type}, \texttt{reference\_id}, \texttt{read\_at},
+\texttt{created\_at}.
+
+% ── Fase 2 — Missões e Equipes ────────────────────────────────────
+\subsection*{Fase 2 — Missões e Equipes}
+
+\paragraph{mission\_templates}
+Pool de missões gerenciado por administradores: \texttt{id}, \texttt{title},
+\texttt{description}, \texttt{frequency} (daily | weekly),
+\texttt{goal\_type} (count | count\_and\_resolved), \texttt{goal\_count},
+\texttt{goal\_resolved\_percent}, \texttt{complaint\_category},
+\texttt{base\_xp\_reward}, \texttt{is\_active}, \texttt{created\_at}.
+
+\paragraph{user\_missions}
+Missões sorteadas e atribuídas a cada usuário: \texttt{id},
+\texttt{user\_id} (FK $\to$ users), \texttt{mission\_template\_id}
+(FK $\to$ mission\_templates), \texttt{frequency},
+\texttt{contribution\_count}, \texttt{xp\_earned},
+\texttt{bonus\_xp\_earned}, \texttt{completed\_at},
+\texttt{expires\_at}, \texttt{created\_at}.
+
+\paragraph{teams}
+Equipes permanentes: \texttt{id}, \texttt{name},
+\texttt{creator\_id} (FK $\to$ users), \texttt{total\_xp},
+\texttt{created\_at}.
+
+\paragraph{team\_members}
+Membros das equipes: \texttt{id}, \texttt{team\_id} (FK $\to$ teams),
+\texttt{user\_id} (FK $\to$ users), \texttt{status} (active | pending |
+rejected), \texttt{joined\_at}. Chave única em
+(\texttt{team\_id}, \texttt{user\_id}).

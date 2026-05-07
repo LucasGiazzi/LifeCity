@@ -5,10 +5,11 @@ let pool;
 function createPool() {
   const newPool = new Pool({
     host: process.env.SUPABASE_DB_SERVER,
-    port: 5432,
+    port: 6543,
     user: process.env.SUPABASE_DB_USER,
     password: process.env.SUPABASE_DB_PASSWORD,
     database: process.env.SUPABASE_DB_NAME,
+    ssl: { rejectUnauthorized: false },
     max: 20, // máximo de conexões
     idleTimeoutMillis: 30000, // fecha conexões inativas
     connectionTimeoutMillis: 10000 // falha se não conectar em 10s
