@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 
 import '../../core/components/app_back_button.dart';
 import '../../core/constants/app_colors.dart';
+import '../../core/constants/app_symbols.dart';
 import '../../core/models/mission_model.dart';
 import '../../core/services/friendship_service.dart';
 import '../../core/services/mission_service.dart';
@@ -95,7 +96,7 @@ class _TeamDetailPageState extends State<TeamDetailPage> {
         actions: [
           if (canInvite)
             IconButton(
-              icon: const Icon(Icons.person_add_rounded),
+              icon: const Icon(Symbols.person_add),
               tooltip: 'Convidar amigo',
               onPressed: userId != null ? () => _openInviteSheet(userId) : null,
             ),
@@ -152,7 +153,7 @@ class _TeamHeader extends StatelessWidget {
                 color: AppColors.primary.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(14),
               ),
-              child: const Icon(Icons.groups_rounded,
+              child: const Icon(Symbols.groups,
                   color: AppColors.primary, size: 26),
             ),
             const SizedBox(width: 14),
@@ -175,7 +176,7 @@ class _TeamHeader extends StatelessWidget {
               borderRadius: BorderRadius.circular(10),
             ),
             child: Row(children: [
-              Icon(Icons.emoji_events_rounded,
+              Icon(AppSymbols.emojiEvents,
                   color: Colors.amber.shade700, size: 18),
               const SizedBox(width: 8),
               Text('${team.totalXp} XP acumulado pela equipe',
@@ -188,7 +189,7 @@ class _TeamHeader extends StatelessWidget {
           if (pendingCount > 0) ...[
             const SizedBox(height: 10),
             Row(children: [
-              const Icon(Icons.hourglass_top_rounded,
+              const Icon(Symbols.hourglass_top,
                   size: 14, color: AppColors.placeholder),
               const SizedBox(width: 6),
               Text('$pendingCount convite(s) pendente(s)',
@@ -229,7 +230,7 @@ class _MemberTile extends StatelessWidget {
           backgroundImage:
               member.photoUrl != null ? NetworkImage(member.photoUrl!) : null,
           child: member.photoUrl == null
-              ? const Icon(Icons.person, size: 24, color: Colors.grey)
+              ? const Icon(AppSymbols.person, size: 24, color: Colors.grey)
               : null,
         ),
         const SizedBox(width: 12),
@@ -316,7 +317,7 @@ class _InviteSheet extends StatelessWidget {
                   backgroundImage:
                       photoUrl != null ? NetworkImage(photoUrl) : null,
                   child: photoUrl == null
-                      ? const Icon(Icons.person, color: Colors.grey)
+                      ? const Icon(AppSymbols.person, color: Colors.grey)
                       : null,
                 ),
                 title: Text(f['name'] as String? ?? 'Amigo',

@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
 import '../../../core/constants/app_colors.dart';
+import '../../../core/constants/app_symbols.dart';
 import '../../../core/routes/app_routes.dart';
 import '../../../core/state/auth_state.dart';
 import '../../../core/utils/validators.dart';
@@ -71,7 +72,7 @@ class _LoginPageFormState extends State<LoginPageForm> {
                 style: GoogleFonts.poppins(fontSize: 15, color: AppColors.dark),
                 decoration: InputDecoration(
                   hintText: 'E-mail',
-                  prefixIcon: const Icon(Icons.email_outlined,
+                  prefixIcon: const Icon(AppSymbols.email,
                       color: AppColors.placeholder, size: 20),
                 ),
               ),
@@ -87,13 +88,13 @@ class _LoginPageFormState extends State<LoginPageForm> {
                 style: GoogleFonts.poppins(fontSize: 15, color: AppColors.dark),
                 decoration: InputDecoration(
                   hintText: 'Senha',
-                  prefixIcon: const Icon(Icons.lock_outline_rounded,
+                  prefixIcon: const Icon(AppSymbols.lock,
                       color: AppColors.placeholder, size: 20),
                   suffixIcon: IconButton(
                     icon: Icon(
                       _isPasswordObscured
-                          ? Icons.visibility_outlined
-                          : Icons.visibility_off_outlined,
+                          ? AppSymbols.visibility
+                          : AppSymbols.visibilityOff,
                       color: AppColors.placeholder,
                       size: 20,
                     ),
@@ -230,7 +231,7 @@ class _LoginPageFormState extends State<LoginPageForm> {
                     AppRoutes.entryPoint,
                     (route) => false,
                   ),
-                  icon: const Icon(Icons.visibility_outlined, size: 18),
+                  icon: const Icon(AppSymbols.visibility, size: 18),
                   label: Text(
                     'Explorar visual (sem login)',
                     style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.w500),

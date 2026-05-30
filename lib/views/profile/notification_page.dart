@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../core/components/app_back_button.dart';
 import '../../core/constants/app_colors.dart';
+import '../../core/constants/app_symbols.dart';
 import '../../core/models/notification_model.dart';
 import '../../core/services/notification_service.dart';
 
@@ -122,10 +123,10 @@ class _NotificationTile extends StatelessWidget {
   const _NotificationTile({required this.notification, required this.onTap});
 
   static const _typeIcons = <String, IconData>{
-    'like': Icons.favorite_rounded,
-    'comment': Icons.chat_bubble_rounded,
-    'friend_request': Icons.person_add_rounded,
-    'achievement_unlocked': Icons.emoji_events_rounded,
+    'like': AppSymbols.favorite,
+    'comment': AppSymbols.chatBubble,
+    'friend_request': Symbols.person_add,
+    'achievement_unlocked': AppSymbols.emojiEvents,
   };
 
   static const _typeColors = <String, Color>{
@@ -137,7 +138,7 @@ class _NotificationTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final icon = _typeIcons[notification.type] ?? Icons.notifications_rounded;
+    final icon = _typeIcons[notification.type] ?? AppSymbols.notifications;
     final color = _typeColors[notification.type] ?? AppColors.primary;
     final isUnread = !notification.isRead;
 
@@ -295,7 +296,7 @@ class _EmptyState extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.notifications_none_rounded, size: 64, color: AppColors.placeholder),
+          const Icon(AppSymbols.notifications, size: 64, color: AppColors.placeholder),
           const SizedBox(height: 16),
           Text(
             'Nenhuma notificação ainda',

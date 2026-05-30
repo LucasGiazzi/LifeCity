@@ -23,8 +23,8 @@ async function calculateTeamBonus(pool, userId, baseXpReward) {
            AND tm.user_id != $2
            AND tm.status = 'active'
            AND um.frequency = 'weekly'
-           AND um.created_at >= date_trunc('week', NOW())
-           AND um.expires_at > NOW()`,
+           AND um.expires_at > NOW()
+           AND um.created_at >= date_trunc('week', NOW())`,
         [teams[0].id, userId]
     );
 
@@ -54,10 +54,12 @@ async function completeUserMissionIfReady(pool, userMissionId) {
              FROM complaints c
              WHERE c.created_by = $1
                AND ($2::varchar IS NULL OR c.category = $2)
-               AND c.created_at >= $3
-               AND c.created_at <= $4
+               AND c.created_at >= CASE $3::text
+                   WHEN 'daily' THEN CURRENT_DATE::timestamptz
+                   ELSE date_trunc('week', NOW())
+               END
                AND c.status = 'resolved'`,
-            [um.user_id, um.complaint_category, um.created_at, um.expires_at]
+            [um.user_id, um.complaint_category, um.frequency]
         );
         const resolvedPct = um.contribution_count > 0
             ? Math.round((resolved_count / um.contribution_count) * 100)
@@ -65,7 +67,6 @@ async function completeUserMissionIfReady(pool, userMissionId) {
         if (resolvedPct < um.goal_resolved_percent) return;
     }
 
-    // Marca como concluída — previne race condition
     const { rows: claimed } = await pool.query(
         `UPDATE user_missions SET completed_at = NOW()
          WHERE id = $1 AND completed_at IS NULL
@@ -107,66 +108,51 @@ async function completeUserMissionIfReady(pool, userMissionId) {
     ).catch(err => console.error('[notification:mission_completed]', err.message));
 }
 
-async function checkMissionProgress(pool, complaintId) {
+// Recalcula o contribution_count de todas as missões ativas do usuário
+// contando as reclamações reais no período — imune a deleções e burlas.
+async function recalculateMissionProgress(pool, userId) {
     try {
-        const { rows: [complaint] } = await pool.query(
-            `SELECT id, category, created_by, created_at FROM complaints WHERE id = $1`,
-            [complaintId]
-        );
-        if (!complaint) return;
-
         const { rows: missions } = await pool.query(
-            `SELECT um.id
+            `SELECT um.id, um.frequency, mt.complaint_category
              FROM user_missions um
              JOIN mission_templates mt ON mt.id = um.mission_template_id
              WHERE um.user_id = $1
                AND um.completed_at IS NULL
-               AND um.expires_at > NOW()
-               AND $2 >= um.created_at
-               AND (mt.complaint_category IS NULL OR mt.complaint_category = $3)`,
-            [complaint.created_by, complaint.created_at, complaint.category]
+               AND um.expires_at > NOW()`,
+            [userId]
         );
 
-        for (const { id: umId } of missions) {
-            await pool.query(
-                `UPDATE user_missions SET contribution_count = contribution_count + 1
-                 WHERE id = $1`,
-                [umId]
+        for (const um of missions) {
+            const { rows: [{ count }] } = await pool.query(
+                `SELECT COUNT(*)::int AS count
+                 FROM complaints
+                 WHERE created_by = $1
+                   AND created_at >= CASE $2::text
+                       WHEN 'daily' THEN CURRENT_DATE::timestamptz
+                       ELSE date_trunc('week', NOW())
+                   END
+                   AND ($3::varchar IS NULL OR category = $3)`,
+                [userId, um.frequency, um.complaint_category]
             );
-            await completeUserMissionIfReady(pool, umId);
+
+            await pool.query(
+                `UPDATE user_missions SET contribution_count = $1 WHERE id = $2`,
+                [count, um.id]
+            );
+
+            await completeUserMissionIfReady(pool, um.id);
         }
     } catch (err) {
         console.error('[missionProgressChecker] Erro:', err.message);
     }
 }
 
-async function checkMissionResolution(pool, complaintId) {
-    try {
-        const { rows: [complaint] } = await pool.query(
-            `SELECT id, category, created_by, created_at FROM complaints WHERE id = $1`,
-            [complaintId]
-        );
-        if (!complaint) return;
+async function checkMissionProgress(pool, userId) {
+    await recalculateMissionProgress(pool, userId);
+}
 
-        const { rows: missions } = await pool.query(
-            `SELECT um.id
-             FROM user_missions um
-             JOIN mission_templates mt ON mt.id = um.mission_template_id
-             WHERE um.user_id = $1
-               AND um.completed_at IS NULL
-               AND um.expires_at > NOW()
-               AND mt.goal_type = 'count_and_resolved'
-               AND $2 >= um.created_at
-               AND (mt.complaint_category IS NULL OR mt.complaint_category = $3)`,
-            [complaint.created_by, complaint.created_at, complaint.category]
-        );
-
-        for (const { id: umId } of missions) {
-            await completeUserMissionIfReady(pool, umId);
-        }
-    } catch (err) {
-        console.error('[missionResolutionChecker] Erro:', err.message);
-    }
+async function checkMissionResolution(pool, userId) {
+    await recalculateMissionProgress(pool, userId);
 }
 
 module.exports = { checkMissionProgress, checkMissionResolution };

@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 
+import '../../views/auth/code_verification_page.dart';
 import '../../views/auth/forget_password_page.dart';
 import '../../views/profile/friend_profile_page.dart';
 import '../../views/auth/login_loading_page.dart';
@@ -79,8 +80,20 @@ class RouteGenerator {
       case AppRoutes.forgotPassword:
         return CupertinoPageRoute(builder: (_) => const ForgetPasswordPage());
 
+      case AppRoutes.codeVerification:
+        final email = settings.arguments as String;
+        return CupertinoPageRoute(
+          builder: (_) => CodeVerificationPage(email: email),
+        );
+
       case AppRoutes.passwordReset:
-        return CupertinoPageRoute(builder: (_) => const PasswordResetPage());
+        final args = settings.arguments as Map<String, dynamic>;
+        return CupertinoPageRoute(
+          builder: (_) => PasswordResetPage(
+            email: args['email'] as String,
+            code: args['code'] as String,
+          ),
+        );
 
       case AppRoutes.profileEdit:
         return CupertinoPageRoute(builder: (_) => const ProfileEditPage());

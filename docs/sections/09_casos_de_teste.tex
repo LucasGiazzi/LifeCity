@@ -220,6 +220,68 @@ ao atingir marcos predefinidos e emite a notificação correspondente.
   \hline
 \end{longtable}
 
+\subsection*{Caso de teste \#8 – Recuperação de senha via e-mail}
+
+\textbf{Propósito:} Verificar se o usuário consegue redefinir sua senha por
+meio do código de verificação enviado ao e-mail cadastrado.
+
+\textbf{Pré-condições:}
+\begin{itemize}
+  \item Usuário cadastrado com e-mail válido.
+  \item Backend configurado com \texttt{EMAIL\_USER} e \texttt{EMAIL\_PASS}.
+\end{itemize}
+
+\begin{longtable}{|c|p{3.5cm}|p{3cm}|p{5cm}|}
+  \hline
+  \textbf{\#} & \textbf{Ação} & \textbf{Entrada} & \textbf{Saída esperada} \\
+  \hline
+  \endfirsthead
+  \hline
+  \textbf{\#} & \textbf{Ação} & \textbf{Entrada} & \textbf{Saída esperada} \\
+  \hline
+  \endhead
+  1 & Solicitar código com e-mail cadastrado & ana@email.com & Código enviado ao e-mail; usuário encaminhado para tela de redefinição. \\
+  \hline
+  2 & Solicitar código com e-mail não cadastrado & naoexiste@email.com & Mesmo retorno do caso 1 (sem revelar quais e-mails existem). \\
+  \hline
+  3 & Inserir código correto + nova senha válida & Código de 6 dígitos correto & Senha redefinida; usuário redirecionado para o login. \\
+  \hline
+  4 & Inserir código errado & Código incorreto & ``Código inválido ou expirado.''; não redefine. \\
+  \hline
+  5 & Inserir código após 15 minutos & Código expirado & ``Código inválido ou expirado.''; não redefine. \\
+  \hline
+  6 & Inserir nova senha com menos de 6 caracteres & ``123'' & ``Mínimo 6 caracteres''; não envia ao backend. \\
+  \hline
+\end{longtable}
+
+\subsection*{Caso de teste \#10 – Denúncia de reclamação}
+
+\textbf{Propósito:} Verificar se um usuário consegue denunciar uma reclamação de outro usuário e se o sistema aplica a moderação automática ao atingir o threshold.
+
+\textbf{Pré-condições:}
+\begin{itemize}
+  \item Usuário autenticado visualizando uma reclamação de outro usuário.
+\end{itemize}
+
+\begin{longtable}{|c|p{4cm}|p{3cm}|p{4.5cm}|}
+  \hline
+  \textbf{\#} & \textbf{Ação} & \textbf{Motivo} & \textbf{Saída esperada} \\
+  \hline
+  \endfirsthead
+  \hline
+  \textbf{\#} & \textbf{Ação} & \textbf{Motivo} & \textbf{Saída esperada} \\
+  \hline
+  \endhead
+  1 & Denunciar reclamação de outro usuário & Informação falsa & Denúncia registrada; snackbar ``Denúncia enviada''. \\
+  \hline
+  2 & Tentar denunciar a mesma reclamação novamente & Spam & ``Você já denunciou este conteúdo.''; não registra duplicata. \\
+  \hline
+  3 & 5 usuários distintos denunciam a mesma reclamação & Qualquer motivo & Reclamação ocultada automaticamente (\texttt{is\_hidden = TRUE}); não aparece mais no mapa nem nos destaques. \\
+  \hline
+  4 & Autor da reclamação tenta denunciá-la & — & Botão de denúncia não exibido para o autor. \\
+  \hline
+\end{longtable}
+
 \subsection*{Caso de teste \#9 – Alternância de tema (modo claro/escuro)}
 
 \textbf{Propósito:} Verificar se o usuário consegue alternar entre modo claro

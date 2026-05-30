@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/constants/constants.dart';
@@ -7,22 +6,25 @@ import '../../../core/constants/constants.dart';
 class BottomAppBarItem extends StatelessWidget {
   const BottomAppBarItem({
     super.key,
-    this.iconLocation,
-    this.iconData,
+    required this.icon,
     required this.name,
     required this.isActive,
     required this.onTap,
-  }) : assert(iconLocation != null || iconData != null,
-            'Provide iconLocation or iconData');
+  });
 
-  final String? iconLocation;
-  final IconData? iconData;
+  final IconData icon;
   final String name;
   final bool isActive;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
+    final color = isActive
+        ? AppColors.primary
+        : Theme.of(context).brightness == Brightness.dark
+            ? Colors.white54
+            : AppColors.placeholder;
+
     return GestureDetector(
       onTap: onTap,
       behavior: HitTestBehavior.opaque,
@@ -42,30 +44,7 @@ class BottomAppBarItem extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            if (iconData != null)
-              Icon(
-                iconData,
-                size: 22,
-                color: isActive
-                    ? AppColors.primary
-                    : Theme.of(context).brightness == Brightness.dark
-                        ? Colors.white54
-                        : AppColors.placeholder,
-              )
-            else
-              SvgPicture.asset(
-                iconLocation!,
-                width: 22,
-                height: 22,
-                colorFilter: ColorFilter.mode(
-                  isActive
-                      ? AppColors.primary
-                      : Theme.of(context).brightness == Brightness.dark
-                          ? Colors.white54
-                          : AppColors.placeholder,
-                  BlendMode.srcIn,
-                ),
-              ),
+            Icon(icon, size: 22, color: color, fill: isActive ? 1.0 : 0.0),
             AnimatedSize(
               duration: const Duration(milliseconds: 250),
               curve: Curves.easeInOut,

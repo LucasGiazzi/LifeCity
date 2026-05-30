@@ -51,3 +51,7 @@ app.*.map.json
 
 # Firebase
 /android/app/google-services.json
+
+# Node
+node_modules/
+backend/node_modules/

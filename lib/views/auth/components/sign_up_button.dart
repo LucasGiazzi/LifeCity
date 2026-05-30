@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/svg.dart';
 
+import '../../../core/constants/app_symbols.dart';
 import '../../../core/constants/constants.dart';
 
 class SignUpButton extends StatelessWidget {
@@ -24,13 +24,7 @@ class SignUpButton extends StatelessWidget {
           ElevatedButton(
             onPressed: onPressed,
             style: ElevatedButton.styleFrom(elevation: 1),
-            child: SvgPicture.asset(
-              AppIcons.arrowForward,
-              colorFilter: const ColorFilter.mode(
-                Colors.white,
-                BlendMode.srcIn,
-              ),
-            ),
+            child: const Icon(AppSymbols.arrowForward, color: Colors.white),
           ),
         ],
       ),

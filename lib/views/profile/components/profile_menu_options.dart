@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../../core/constants/app_symbols.dart';
 import '../../../core/constants/constants.dart';
 import '../../../core/routes/app_routes.dart';
 import '../../../core/state/auth_state.dart';
@@ -23,25 +24,25 @@ class ProfileMenuOptions extends StatelessWidget {
         children: [
           ProfileListTile(
             title: 'Editar Perfil',
-            icon: AppIcons.profilePerson,
+            icon: AppSymbols.person,
             onTap: () => Navigator.pushNamed(context, AppRoutes.profileEdit),
           ),
           const Divider(thickness: 0.1),
           ProfileListTile(
             title: 'Notificações',
-            icon: AppIcons.profileNotification,
+            icon: AppSymbols.notifications,
             onTap: () => Navigator.pushNamed(context, AppRoutes.notifications),
           ),
           const Divider(thickness: 0.1),
           ProfileListTile(
             title: 'Configurações',
-            icon: AppIcons.profileSetting,
+            icon: AppSymbols.settings,
             onTap: () => Navigator.pushNamed(context, AppRoutes.settings),
           ),
           const Divider(thickness: 0.1),
           ProfileListTile(
             title: 'Sair',
-            icon: AppIcons.profileLogout,
+            icon: AppSymbols.logout,
             onTap: () async {
               final nav = Navigator.of(context);
               await Provider.of<AuthState>(context, listen: false).logout();

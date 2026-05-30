@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 
 import '../../../core/components/app_settings_tile.dart';
+import '../../../core/constants/app_symbols.dart';
 import '../../../core/constants/constants.dart';
 
 class HelpTopics extends StatelessWidget {
@@ -25,23 +25,23 @@ class HelpTopics extends StatelessWidget {
         const SizedBox(height: AppDefaults.padding / 2),
         AppSettingsListTile(
           label: 'My Account',
-          trailing: SvgPicture.asset(AppIcons.right),
+          trailing: const Icon(AppSymbols.chevronRight),
         ),
         AppSettingsListTile(
           label: 'Payment and Wallet',
-          trailing: SvgPicture.asset(AppIcons.right),
+          trailing: const Icon(AppSymbols.chevronRight),
         ),
         AppSettingsListTile(
           label: 'Shipping & Delivery',
-          trailing: SvgPicture.asset(AppIcons.right),
+          trailing: const Icon(AppSymbols.chevronRight),
         ),
         AppSettingsListTile(
           label: 'Vouchers & Promotions',
-          trailing: SvgPicture.asset(AppIcons.right),
+          trailing: const Icon(AppSymbols.chevronRight),
         ),
         AppSettingsListTile(
           label: 'Ordering',
-          trailing: SvgPicture.asset(AppIcons.right),
+          trailing: const Icon(AppSymbols.chevronRight),
         ),
       ],
     );

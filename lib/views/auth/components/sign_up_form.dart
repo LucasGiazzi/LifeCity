@@ -4,6 +4,7 @@ import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
 import 'package:provider/provider.dart';
 
 import '../../../core/constants/app_colors.dart';
+import '../../../core/constants/app_symbols.dart';
 import '../../../core/routes/app_routes.dart';
 import '../../../core/state/auth_state.dart';
 import '../../../core/utils/validators.dart';
@@ -88,7 +89,7 @@ class _SignUpFormState extends State<SignUpForm> {
           _Field(
             controller: _nameController,
             hint: 'Nome completo',
-            icon: Icons.person_outline_rounded,
+            icon: AppSymbols.person,
             validator: Validators.requiredWithFieldName('Nome').call,
             action: TextInputAction.next,
           ),
@@ -96,7 +97,7 @@ class _SignUpFormState extends State<SignUpForm> {
           _Field(
             controller: _cpfController,
             hint: 'CPF',
-            icon: Icons.badge_outlined,
+            icon: AppSymbols.badge,
             keyboardType: TextInputType.number,
             formatters: [cpfFormatter],
             validator: (value) {
@@ -110,7 +111,7 @@ class _SignUpFormState extends State<SignUpForm> {
           _Field(
             controller: _phoneController,
             hint: 'Telefone',
-            icon: Icons.phone_outlined,
+            icon: AppSymbols.phone,
             keyboardType: TextInputType.phone,
             formatters: [phoneFormatter],
             validator: Validators.required.call,
@@ -125,7 +126,7 @@ class _SignUpFormState extends State<SignUpForm> {
           _Field(
             controller: _emailController,
             hint: 'E-mail',
-            icon: Icons.email_outlined,
+            icon: AppSymbols.email,
             keyboardType: TextInputType.emailAddress,
             validator: Validators.email.call,
             action: TextInputAction.next,
@@ -156,7 +157,6 @@ class _SignUpFormState extends State<SignUpForm> {
 
           const SizedBox(height: 16),
 
-          // Mensagem de erro
           Consumer<AuthState>(
             builder: (context, auth, _) => auth.errorMessage != null
                 ? Padding(
@@ -170,7 +170,6 @@ class _SignUpFormState extends State<SignUpForm> {
                 : const SizedBox.shrink(),
           ),
 
-          // Botão principal
           Consumer<AuthState>(
             builder: (context, auth, _) => SizedBox(
               height: 56,
@@ -194,7 +193,6 @@ class _SignUpFormState extends State<SignUpForm> {
 
           const SizedBox(height: 20),
 
-          // Link login
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
@@ -307,10 +305,10 @@ class _PasswordField extends StatelessWidget {
       style: GoogleFonts.poppins(fontSize: 15, color: AppColors.dark),
       decoration: InputDecoration(
         hintText: hint,
-        prefixIcon: const Icon(Icons.lock_outline_rounded, color: AppColors.placeholder, size: 20),
+        prefixIcon: const Icon(AppSymbols.lock, color: AppColors.placeholder, size: 20),
         suffixIcon: IconButton(
           icon: Icon(
-            isObscured ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+            isObscured ? AppSymbols.visibility : AppSymbols.visibilityOff,
             color: AppColors.placeholder,
             size: 20,
           ),

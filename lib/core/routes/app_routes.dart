@@ -11,6 +11,7 @@ class AppRoutes {
   static const loginOrSignup = '/loginOrSignup';
   static const numberVerification = '/numberVerification';
   static const forgotPassword = '/forgotPassword';
+  static const codeVerification = '/codeVerification';
   static const passwordReset = '/passwordReset';
 
   /* <---- ENTRYPOINT -----> */

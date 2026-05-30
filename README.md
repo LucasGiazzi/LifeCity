@@ -65,10 +65,16 @@ O **LifeCity** é um aplicativo mobile que conecta moradores e poder público, p
 - Centro de notificações com badge de não lidas
 - Tipos: curtida, comentário, pedido de amizade, conquista desbloqueada, missão concluída, convite de equipe
 
+### Moderação comunitária
+- Botão "Denunciar publicação" em cada reclamação (para não-autores) com seleção de motivo
+- Botão "Denunciar usuário" no perfil de outros usuários
+- Thresholds automáticos: 5 denúncias → reclamação ocultada; 10 denúncias → conta restrita
+
 ### Conta e Configurações
 - Modo claro e modo escuro (alternância nas configurações)
 - Edição de perfil (nome, foto, CPF, data de nascimento)
 - Alteração de senha e telefone
+- **Recuperação de senha** via e-mail (código de verificação de 6 dígitos com validade de 15 min)
 - Tela "Meus itens" com histórico de reclamações e eventos
 
 ## Banco de dados — tabelas principais
@@ -89,6 +95,8 @@ O **LifeCity** é um aplicativo mobile que conecta moradores e poder público, p
 | `user_missions` | Missões atribuídas a cada usuário |
 | `teams` | Equipes permanentes |
 | `team_members` | Membros das equipes |
+| `reports` | Denúncias de reclamações e usuários |
+| `password_reset_tokens` | Tokens de recuperação de senha (expiram em 15 min) |
 
 ## Como rodar
 
@@ -97,7 +105,10 @@ O **LifeCity** é um aplicativo mobile que conecta moradores e poder público, p
 ```bash
 cd backend
 npm install
-# Crie um .env com: DATABASE_URL, JWT_SECRET, JWT_REFRESH_SECRET, SUPABASE_URL, SUPABASE_SERVICE_KEY
+# Crie um .env com as variáveis abaixo:
+# DATABASE_URL, JWT_SECRET, JWT_REFRESH_SECRET, SUPABASE_URL, SUPABASE_SERVICE_KEY
+# EMAIL_USER=seu@gmail.com
+# EMAIL_PASS=<senha de app gerada em myaccount.google.com → Segurança → Senhas de app>
 npm run dev
 ```
 

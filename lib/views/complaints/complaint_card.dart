@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../core/constants/app_colors.dart';
+import '../../core/constants/app_symbols.dart';
 import '../../core/models/complaint_model.dart';
 
 class ComplaintCard extends StatelessWidget {
@@ -36,17 +37,17 @@ class ComplaintCard extends StatelessWidget {
   };
 
   static const _catIcons = <String, IconData>{
-    'infraestrutura': Icons.construction_rounded,
-    'seguranca':      Icons.security_rounded,
-    'limpeza':        Icons.cleaning_services_rounded,
-    'transito':       Icons.traffic_rounded,
-    'outros':         Icons.report_problem_rounded,
+    'infraestrutura': AppSymbols.construction,
+    'seguranca':      AppSymbols.security,
+    'limpeza':        AppSymbols.cleaningServices,
+    'transito':       AppSymbols.traffic,
+    'outros':         AppSymbols.warning,
   };
 
   static const _statusMap = <String, (IconData, Color, String)>{
-    'pending':     (Icons.radio_button_unchecked, Colors.orange, 'Aberta'),
-    'in_progress': (Icons.autorenew_rounded,      Colors.blue,   'Em andamento'),
-    'resolved':    (Icons.check_circle_outline,   Colors.green,  'Resolvida'),
+    'pending':     (AppSymbols.radioButtonUnchecked, Colors.orange, 'Aberta'),
+    'in_progress': (AppSymbols.autorenew,            Colors.blue,   'Em andamento'),
+    'resolved':    (AppSymbols.checkCircle,          Colors.green,  'Resolvida'),
   };
 
   String _timeAgo(DateTime dt) {
@@ -64,10 +65,9 @@ class ComplaintCard extends StatelessWidget {
     final type = complaint.type?.toLowerCase() ?? 'outros';
     final catColor = _catColors[type] ?? Colors.grey;
     final catLabel = _catLabels[type] ?? 'Outros';
-    final catIcon = _catIcons[type] ?? Icons.report_problem_rounded;
+    final catIcon = _catIcons[type] ?? AppSymbols.warning;
     final (statusIcon, statusColor, statusLabel) = _statusMap[complaint.status] ?? _statusMap['pending']!;
 
-    // Cores alinhadas com o tema do projeto
     final cardBg = isDark ? AppColors.darkSurface : Colors.white;
     final titleColor = Theme.of(context).textTheme.titleMedium?.color;
     final authorColor = Theme.of(context).textTheme.bodyLarge?.color;
@@ -110,7 +110,7 @@ class ComplaintCard extends StatelessWidget {
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(catIcon, size: 11, color: catColor),
+                          Icon(catIcon, size: 11, color: catColor, fill: 1.0),
                           const SizedBox(width: 4),
                           Text(catLabel,
                               style: GoogleFonts.poppins(
@@ -143,7 +143,7 @@ class ComplaintCard extends StatelessWidget {
                         onTap: onDelete,
                         child: Padding(
                           padding: const EdgeInsets.only(left: 8),
-                          child: Icon(Icons.delete_outline_rounded,
+                          child: Icon(AppSymbols.delete,
                               size: 18, color: Colors.red.shade400),
                         ),
                       ),
@@ -169,7 +169,7 @@ class ComplaintCard extends StatelessWidget {
                   const SizedBox(height: 5),
                   Row(
                     children: [
-                      const Icon(Icons.location_on_outlined, size: 13, color: AppColors.placeholder),
+                      const Icon(AppSymbols.locationOn, size: 13, color: AppColors.placeholder),
                       const SizedBox(width: 3),
                       Expanded(
                         child: Text(
@@ -197,7 +197,7 @@ class ComplaintCard extends StatelessWidget {
                           ? CachedNetworkImageProvider(complaint.createdByPhotoUrl!)
                           : null,
                       child: (complaint.createdByPhotoUrl == null || complaint.createdByPhotoUrl!.isEmpty)
-                          ? Icon(Icons.person_rounded, size: 14, color: AppColors.primary)
+                          ? Icon(AppSymbols.person, size: 14, color: AppColors.primary, fill: 1.0)
                           : null,
                     ),
                     const SizedBox(width: 7),
@@ -225,20 +225,20 @@ class ComplaintCard extends StatelessWidget {
                 Row(
                   children: [
                     _EngagementItem(
-                      icon: Icons.favorite_rounded,
+                      icon: AppSymbols.favorite,
                       count: complaint.likesCount,
                       color: Colors.red.shade400,
                     ),
                     const SizedBox(width: 14),
                     _EngagementItem(
-                      icon: Icons.visibility_rounded,
+                      icon: AppSymbols.visibility,
                       count: complaint.witnessCount,
                       color: Colors.blue.shade400,
                       label: 'vi isso',
                     ),
                     const SizedBox(width: 14),
                     _EngagementItem(
-                      icon: Icons.chat_bubble_rounded,
+                      icon: AppSymbols.chatBubble,
                       count: complaint.commentsCount,
                       color: AppColors.primary,
                     ),
@@ -306,7 +306,7 @@ class _EngagementItem extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, size: 14, color: color),
+        Icon(icon, size: 14, color: color, fill: 1.0),
         const SizedBox(width: 4),
         Text(text,
             style: GoogleFonts.poppins(

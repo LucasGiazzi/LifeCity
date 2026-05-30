@@ -6,7 +6,9 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../core/components/report_sheet.dart';
 import '../../core/constants/app_colors.dart';
+import '../../core/constants/app_symbols.dart';
 import '../../core/models/complaint_model.dart';
 import '../../core/services/complaint_service.dart';
 import '../../core/state/auth_state.dart';
@@ -51,17 +53,17 @@ class ComplaintSheet extends StatefulWidget {
 
 class _ComplaintSheetState extends State<ComplaintSheet> {
   static const _catMap = <String, (IconData, Color, String)>{
-    'infraestrutura': (Icons.construction, Colors.orange, 'Infraestrutura'),
-    'seguranca': (Icons.security, Colors.red, 'Segurança'),
-    'limpeza': (Icons.cleaning_services, Colors.teal, 'Limpeza'),
-    'transito': (Icons.traffic, Colors.amber, 'Trânsito'),
-    'outros': (Icons.report_problem, Colors.grey, 'Outros'),
+    'infraestrutura': (AppSymbols.construction,     Colors.orange, 'Infraestrutura'),
+    'seguranca':      (AppSymbols.security,          Colors.red,    'Segurança'),
+    'limpeza':        (AppSymbols.cleaningServices,  Colors.teal,   'Limpeza'),
+    'transito':       (AppSymbols.traffic,           Colors.amber,  'Trânsito'),
+    'outros':         (AppSymbols.warning,           Colors.grey,   'Outros'),
   };
 
   static const _statusMap = <String, (IconData, Color, String)>{
-    'pending':     (Icons.radio_button_unchecked, Colors.orange, 'Aberta'),
-    'in_progress': (Icons.autorenew_rounded,      Colors.blue,   'Em andamento'),
-    'resolved':    (Icons.check_circle_outline,   Colors.green,  'Resolvida'),
+    'pending':     (AppSymbols.radioButtonUnchecked, Colors.orange, 'Aberta'),
+    'in_progress': (AppSymbols.autorenew,            Colors.blue,   'Em andamento'),
+    'resolved':    (AppSymbols.checkCircle,          Colors.green,  'Resolvida'),
   };
 
   final _complaintService = ComplaintService();
@@ -216,7 +218,7 @@ class _ComplaintSheetState extends State<ComplaintSheet> {
                 contentPadding: EdgeInsets.zero,
                 leading: Icon(icon, color: color),
                 title: Text(label, style: GoogleFonts.poppins(fontWeight: selected ? FontWeight.w600 : FontWeight.normal)),
-                trailing: selected ? Icon(Icons.check_rounded, color: color) : null,
+                trailing: selected ? Icon(AppSymbols.check, color: color) : null,
                 onTap: () {
                   Navigator.pop(context);
                   if (!selected) _changeStatus(key);
@@ -250,7 +252,7 @@ class _ComplaintSheetState extends State<ComplaintSheet> {
                   imageUrl: url,
                   fit: BoxFit.contain,
                   placeholder: (c, s) => const CircularProgressIndicator(color: Colors.white),
-                  errorWidget: (c, s, e) => const Icon(Icons.broken_image_outlined, color: Colors.white, size: 48),
+                  errorWidget: (c, s, e) => const Icon(AppSymbols.brokenImage, color: Colors.white, size: 48),
                 ),
               ),
             ),
@@ -262,7 +264,7 @@ class _ComplaintSheetState extends State<ComplaintSheet> {
                 child: Container(
                   padding: const EdgeInsets.all(6),
                   decoration: const BoxDecoration(color: Colors.black54, shape: BoxShape.circle),
-                  child: const Icon(Icons.close, color: Colors.white, size: 20),
+                  child: const Icon(AppSymbols.close, color: Colors.white, size: 20),
                 ),
               ),
             ),
@@ -280,7 +282,7 @@ class _ComplaintSheetState extends State<ComplaintSheet> {
       builder: (_) => _EditComplaintSheet(
         complaint: widget.complaint,
         onSaved: () {
-          Navigator.of(context).pop(); // close detail sheet
+          Navigator.of(context).pop();
           widget.onEdited?.call();
         },
       ),
@@ -327,7 +329,7 @@ class _ComplaintSheetState extends State<ComplaintSheet> {
 
     final catEntry = _catMap[widget.complaint.type?.toLowerCase()];
     final catColor = catEntry?.$2 ?? Colors.grey;
-    final catIcon = catEntry?.$1 ?? Icons.warning;
+    final catIcon = catEntry?.$1 ?? AppSymbols.warning;
     final firstPhotoUrl = !_loadingPhotos && _photos.isNotEmpty
         ? _photos.first['url'] as String?
         : null;
@@ -363,7 +365,6 @@ class _ComplaintSheetState extends State<ComplaintSheet> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            // Title row with edit button
                             Row(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
@@ -375,10 +376,20 @@ class _ComplaintSheetState extends State<ComplaintSheet> {
                                 ),
                                 if (isOwner)
                                   IconButton(
-                                    icon: const Icon(Icons.edit_outlined, size: 20),
+                                    icon: const Icon(AppSymbols.edit, size: 20),
                                     color: AppColors.placeholder,
                                     onPressed: () => _openEdit(context),
                                     tooltip: 'Editar',
+                                    visualDensity: VisualDensity.compact,
+                                    padding: EdgeInsets.zero,
+                                  ),
+                                if (!isOwner && isLoggedIn)
+                                  IconButton(
+                                    icon: const Icon(AppSymbols.flag, size: 20),
+                                    color: AppColors.placeholder,
+                                    onPressed: () => showReportComplaintSheet(
+                                        context, widget.complaint.id.toString()),
+                                    tooltip: 'Denunciar',
                                     visualDensity: VisualDensity.compact,
                                     padding: EdgeInsets.zero,
                                   ),
@@ -386,7 +397,6 @@ class _ComplaintSheetState extends State<ComplaintSheet> {
                             ),
                             const SizedBox(height: 8),
 
-                            // Status badge
                             _StatusBadge(
                               status: _status,
                               statusMap: _statusMap,
@@ -396,7 +406,6 @@ class _ComplaintSheetState extends State<ComplaintSheet> {
                             ),
                             const SizedBox(height: 10),
 
-                            // Criador
                             if (widget.complaint.createdByName != null)
                               _CreatorCard(
                                 userId: widget.complaint.createdBy,
@@ -413,21 +422,19 @@ class _ComplaintSheetState extends State<ComplaintSheet> {
                                 ),
                               ),
 
-                            // Localização
                             if (widget.complaint.address != null)
-                              _InfoRow(icon: Icons.location_on_outlined, text: widget.complaint.address!),
+                              _InfoRow(icon: AppSymbols.locationOn, text: widget.complaint.address!),
                             if (widget.complaint.latitude != null && widget.complaint.longitude != null)
                               _DirectionsButton(
                                 lat: widget.complaint.latitude!,
                                 lng: widget.complaint.longitude!,
                               ),
 
-                            // Data (discreta)
                             Padding(
                               padding: const EdgeInsets.only(bottom: 8),
                               child: Row(
                                 children: [
-                                  const Icon(Icons.calendar_today_outlined, size: 13, color: AppColors.placeholder),
+                                  const Icon(AppSymbols.calendarToday, size: 13, color: AppColors.placeholder),
                                   const SizedBox(width: 5),
                                   Text(
                                     _formatDate(widget.complaint.occurrenceDate),
@@ -437,7 +444,6 @@ class _ComplaintSheetState extends State<ComplaintSheet> {
                               ),
                             ),
 
-                            // Like + Witness buttons
                             const SizedBox(height: 4),
                             Row(
                               children: [
@@ -463,8 +469,10 @@ class _ComplaintSheetState extends State<ComplaintSheet> {
                                         if (_togglingLike)
                                           const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.red))
                                         else
-                                          Icon(_userLiked ? Icons.favorite_rounded : Icons.favorite_border_rounded,
-                                              size: 18, color: _userLiked ? Colors.red : Colors.grey.shade500),
+                                          Icon(AppSymbols.favorite,
+                                              size: 18,
+                                              fill: _userLiked ? 1.0 : 0.0,
+                                              color: _userLiked ? Colors.red : Colors.grey.shade500),
                                         const SizedBox(width: 6),
                                         Text('$_likeCount ${_likeCount == 1 ? 'apoio' : 'apoios'}',
                                             style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.w500,
@@ -496,8 +504,10 @@ class _ComplaintSheetState extends State<ComplaintSheet> {
                                         if (_togglingWitness)
                                           SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.blue.shade400))
                                         else
-                                          Icon(Icons.visibility_rounded,
-                                              size: 18, color: _userWitnessed ? Colors.blue.shade400 : Colors.grey.shade500),
+                                          Icon(AppSymbols.visibility,
+                                              size: 18,
+                                              fill: _userWitnessed ? 1.0 : 0.0,
+                                              color: _userWitnessed ? Colors.blue.shade400 : Colors.grey.shade500),
                                         const SizedBox(width: 6),
                                         Text('$_witnessCount ${_witnessCount == 1 ? 'vi isso' : 'viram isso'}',
                                             style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.w500,
@@ -509,7 +519,6 @@ class _ComplaintSheetState extends State<ComplaintSheet> {
                               ],
                             ),
 
-                            // Photos
                             if (!_loadingPhotos && _photos.isNotEmpty) ...[
                               const SizedBox(height: 16),
                               Text('Fotos', style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w600)),
@@ -540,7 +549,7 @@ class _ComplaintSheetState extends State<ComplaintSheet> {
                                             errorWidget: (c, s, e) => Container(
                                                 width: 110, height: 110,
                                                 color: Colors.grey[200],
-                                                child: const Icon(Icons.broken_image_outlined)),
+                                                child: const Icon(AppSymbols.brokenImage)),
                                           ),
                                         ),
                                       ),
@@ -550,13 +559,12 @@ class _ComplaintSheetState extends State<ComplaintSheet> {
                               ),
                             ],
 
-                            // Comments
                             const SizedBox(height: 20),
                             const Divider(height: 1),
                             const SizedBox(height: 16),
                             Row(
                               children: [
-                                Icon(Icons.chat_bubble_outline_rounded, size: 16, color: AppColors.placeholder),
+                                const Icon(AppSymbols.chatBubble, size: 16, color: AppColors.placeholder),
                                 const SizedBox(width: 6),
                                 Text(
                                   'Comentários${_comments.isNotEmpty ? ' (${_comments.length})' : ''}',
@@ -585,7 +593,6 @@ class _ComplaintSheetState extends State<ComplaintSheet> {
                             else
                               for (final comment in _comments) _CommentItem(comment: comment, isLoggedIn: isLoggedIn),
 
-                            // Delete
                             if (isOwner) ...[
                               const SizedBox(height: 16),
                               SizedBox(
@@ -593,7 +600,7 @@ class _ComplaintSheetState extends State<ComplaintSheet> {
                                 height: 48,
                                 child: OutlinedButton.icon(
                                   onPressed: () => _confirmDelete(context),
-                                  icon: const Icon(Icons.delete_outline, size: 18),
+                                  icon: const Icon(AppSymbols.delete, size: 18),
                                   label: const Text('Excluir reclamação'),
                                   style: OutlinedButton.styleFrom(
                                     foregroundColor: Colors.red,
@@ -643,11 +650,11 @@ class _EditComplaintSheet extends StatefulWidget {
 
 class _EditComplaintSheetState extends State<_EditComplaintSheet> {
   static const _categories = [
-    ('infraestrutura', 'Infraestrutura', Icons.construction, Colors.orange),
-    ('seguranca', 'Segurança', Icons.security, Colors.red),
-    ('limpeza', 'Limpeza', Icons.cleaning_services, Colors.teal),
-    ('transito', 'Trânsito', Icons.traffic, Colors.amber),
-    ('outros', 'Outros', Icons.report_problem, Colors.grey),
+    ('infraestrutura', 'Infraestrutura', AppSymbols.construction,     Colors.orange),
+    ('seguranca',      'Segurança',      AppSymbols.security,          Colors.red),
+    ('limpeza',        'Limpeza',        AppSymbols.cleaningServices,  Colors.teal),
+    ('transito',       'Trânsito',       AppSymbols.traffic,           Colors.amber),
+    ('outros',         'Outros',         AppSymbols.warning,           Colors.grey),
   ];
 
   final _complaintService = ComplaintService();
@@ -727,7 +734,6 @@ class _EditComplaintSheetState extends State<_EditComplaintSheet> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Handle
               Center(
                 child: Container(
                   width: 40, height: 4,
@@ -743,7 +749,6 @@ class _EditComplaintSheetState extends State<_EditComplaintSheet> {
                   style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.w600)),
               const SizedBox(height: 16),
 
-              // Descrição
               TextFormField(
                 controller: _descController,
                 minLines: 2,
@@ -754,7 +759,6 @@ class _EditComplaintSheetState extends State<_EditComplaintSheet> {
               ),
               const SizedBox(height: 12),
 
-              // Categoria
               DropdownButtonFormField<String>(
                 initialValue: _selectedType,
                 style: const TextStyle(color: Colors.black87),
@@ -763,10 +767,9 @@ class _EditComplaintSheetState extends State<_EditComplaintSheet> {
                     .map((c) => DropdownMenuItem(
                           value: c.$1,
                           child: Row(children: [
-                            Icon(c.$3, size: 16, color: c.$4),
+                            Icon(c.$3, size: 16, color: c.$4, fill: 1.0),
                             const SizedBox(width: 8),
-                            Text(c.$2,
-                                style: const TextStyle(color: Colors.black87)),
+                            Text(c.$2, style: const TextStyle(color: Colors.black87)),
                           ]),
                         ))
                     .toList(),
@@ -774,7 +777,6 @@ class _EditComplaintSheetState extends State<_EditComplaintSheet> {
               ),
               const SizedBox(height: 12),
 
-              // Endereço
               TextFormField(
                 controller: _addressController,
                 style: const TextStyle(color: Colors.black87),
@@ -782,7 +784,6 @@ class _EditComplaintSheetState extends State<_EditComplaintSheet> {
               ),
               const SizedBox(height: 12),
 
-              // Data
               GestureDetector(
                 onTap: _pickDate,
                 child: AbsorbPointer(
@@ -793,7 +794,7 @@ class _EditComplaintSheetState extends State<_EditComplaintSheet> {
                           '${_selectedDate.day.toString().padLeft(2, '0')}/${_selectedDate.month.toString().padLeft(2, '0')}/${_selectedDate.year}',
                     ),
                     decoration: _inputDecoration('Data de ocorrência')
-                        .copyWith(suffixIcon: const Icon(Icons.calendar_today_outlined, size: 18)),
+                        .copyWith(suffixIcon: const Icon(AppSymbols.calendarToday, size: 18)),
                   ),
                 ),
               ),
@@ -919,7 +920,7 @@ class _CoverGradient extends StatelessWidget {
           end: Alignment.bottomRight,
         ),
       ),
-      child: Center(child: Icon(icon, size: 120, color: Colors.white.withValues(alpha: 0.15))),
+      child: Center(child: Icon(icon, size: 120, fill: 1.0, color: Colors.white.withValues(alpha: 0.15))),
     );
   }
 }
@@ -978,7 +979,7 @@ class _CommentInputBar extends StatelessWidget {
                   customBorder: const CircleBorder(),
                   onTap: onSubmit,
                   child: const SizedBox(width: 40, height: 40,
-                      child: Icon(Icons.send_rounded, color: Colors.white, size: 18)),
+                      child: Icon(AppSymbols.send, fill: 1.0, color: Colors.white, size: 18)),
                 ),
               ),
           ],
@@ -1047,7 +1048,7 @@ class _CommentItemState extends State<_CommentItem> {
                 ? CachedNetworkImageProvider(photoUrl)
                 : null,
             child: photoUrl == null || photoUrl.isEmpty
-                ? Icon(Icons.person, size: 18, color: Colors.grey.shade500)
+                ? Icon(AppSymbols.person, size: 18, fill: 1.0, color: Colors.grey.shade500)
                 : null,
           ),
           const SizedBox(width: 10),
@@ -1079,7 +1080,6 @@ class _CommentItemState extends State<_CommentItem> {
                           style: GoogleFonts.poppins(fontSize: 10, color: AppColors.placeholder),
                         ),
                       const Spacer(),
-                      // Like button
                       GestureDetector(
                         onTap: widget.isLoggedIn ? _toggle : null,
                         child: Row(
@@ -1092,8 +1092,9 @@ class _CommentItemState extends State<_CommentItem> {
                               )
                             else
                               Icon(
-                                _liked ? Icons.favorite_rounded : Icons.favorite_border_rounded,
+                                AppSymbols.favorite,
                                 size: 14,
+                                fill: _liked ? 1.0 : 0.0,
                                 color: _liked ? Colors.red : Colors.grey.shade400,
                               ),
                             if (_likeCount > 0) ...[
@@ -1141,17 +1142,17 @@ class _TypePill extends StatelessWidget {
   const _TypePill({required this.type, this.bright = false});
 
   static const _map = {
-    'infraestrutura': (Icons.construction, Colors.orange, 'Infraestrutura'),
-    'seguranca': (Icons.security, Colors.red, 'Segurança'),
-    'limpeza': (Icons.cleaning_services, Colors.teal, 'Limpeza'),
-    'transito': (Icons.traffic, Colors.amber, 'Trânsito'),
-    'outros': (Icons.report_problem, Colors.grey, 'Outros'),
+    'infraestrutura': (AppSymbols.construction,     Colors.orange, 'Infraestrutura'),
+    'seguranca':      (AppSymbols.security,          Colors.red,    'Segurança'),
+    'limpeza':        (AppSymbols.cleaningServices,  Colors.teal,   'Limpeza'),
+    'transito':       (AppSymbols.traffic,           Colors.amber,  'Trânsito'),
+    'outros':         (AppSymbols.warning,           Colors.grey,   'Outros'),
   };
 
   @override
   Widget build(BuildContext context) {
     final entry = _map[type.toLowerCase()];
-    final icon = entry?.$1 ?? Icons.category;
+    final icon = entry?.$1 ?? AppSymbols.category;
     final color = entry?.$2 ?? Colors.grey;
     final label = entry?.$3 ?? type;
 
@@ -1164,7 +1165,7 @@ class _TypePill extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 14, color: color),
+          Icon(icon, size: 14, color: color, fill: 1.0),
           const SizedBox(width: 5),
           Text(label, style: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.w600, color: color)),
         ],
@@ -1208,7 +1209,7 @@ class _DirectionsButton extends StatelessWidget {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.navigation_rounded, size: 15, color: AppColors.primary),
+              const Icon(AppSymbols.navigation, size: 15, color: AppColors.primary, fill: 1.0),
               const SizedBox(width: 6),
               Text(
                 'Como chegar',
@@ -1310,7 +1311,7 @@ class _CreatorCard extends StatelessWidget {
                   ),
                 ),
                 if (!isMe)
-                  const Icon(Icons.chevron_right_rounded,
+                  const Icon(AppSymbols.chevronRight,
                       color: AppColors.placeholder, size: 18),
               ],
             ),
@@ -1364,7 +1365,7 @@ class _StatusBadge extends StatelessWidget {
             Text(label, style: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.w600, color: color)),
             if (isOwner) ...[
               const SizedBox(width: 4),
-              Icon(Icons.expand_more_rounded, size: 14, color: color),
+              Icon(AppSymbols.expandMore, size: 14, color: color),
             ],
           ],
         ),

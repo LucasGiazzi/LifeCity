@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../../core/components/network_image.dart';
+import '../../../core/constants/app_symbols.dart';
 import '../../../core/constants/constants.dart';
 import '../../../core/state/auth_state.dart';
 
@@ -67,7 +68,7 @@ class _UserData extends StatelessWidget {
                     : Container(
                         color: Colors.grey[300],
                         child: const Icon(
-                          Icons.person,
+                          AppSymbols.person,
                           size: 50,
                           color: Colors.grey,
                         ),

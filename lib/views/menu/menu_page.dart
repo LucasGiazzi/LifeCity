@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/constants/app_colors.dart';
+import '../../core/constants/app_symbols.dart';
 import '../../core/routes/app_routes.dart';
 import '../../core/services/api_service.dart';
 import '../../core/services/friendship_service.dart';
@@ -573,7 +574,7 @@ class _FriendsList extends StatelessWidget {
             ),
             leading: _UserAvatar(photoUrl: photo, name: name),
             title: Text(name, style: GoogleFonts.poppins(fontWeight: FontWeight.w500)),
-            trailing: const Icon(Icons.chevron_right_rounded, color: AppColors.placeholder, size: 20),
+            trailing: const Icon(AppSymbols.chevronRight, color: AppColors.placeholder, size: 20),
           );
         },
       ),

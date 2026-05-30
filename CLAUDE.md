@@ -5,6 +5,75 @@
 
 ---
 
+## PRIMEIRO DE TUDO!
+Sempre atualize este arquivo quando descobrir:
+- Decisões arquiteturais e o motivo delas
+- Convenções de código adotadas no projeto
+- Bugs conhecidos ou armadilhas a evitar
+- Integrações e dependências não óbvias
+- Mudanças de escopo ou direção do projeto
+
+## Decisões arquiteturais e convenções
+
+### Sistema de ícones — Material Symbols
+Todos os `Icons.*` do Flutter foram migrados para `material_symbols_icons` (`Symbols.*`).
+A classe `AppSymbols` em `lib/core/constants/app_symbols.dart` centraliza aliases semânticos.
+- `fill: 1.0` = ícone preenchido/ativo; sem `fill` = outline/inativo
+- Exceção: logos de marca (Google, Apple, Facebook, Twitter) continuam como SVG em `AppIcons`
+
+### CPF — sempre armazenado sem formatação
+O backend sempre chama `.replace(/\D/g, '')` antes de salvar no banco.
+Uma migration aplica essa limpeza nos registros existentes.
+Nunca confiar no formato recebido do Flutter.
+
+### Sistema de denúncias (reports)
+- Tabela `reports` com `UNIQUE(reporter_id, target_type, target_id)` — um usuário denuncia cada item só uma vez
+- Threshold: 5 denúncias → `complaints.is_hidden = TRUE`; 10 denúncias → `users.is_restricted = TRUE`
+- Queries de `getAll` e `getHighlights` de complaints filtram `WHERE is_hidden = FALSE`
+
+### Recuperação de senha
+- Fluxo 3 telas: (1) `ForgetPasswordPage` — digita e-mail; (2) `CodeVerificationPage` — digita código de 6 dígitos; (3) `PasswordResetPage` — digita nova senha
+- Backend: gera código, hash SHA-256, salva em `password_reset_tokens` com expiração de 15 min via `NOW() + INTERVAL '15 minutes'`, envia por e-mail via Nodemailer/Gmail
+- Tabela `password_reset_tokens`: apaga tokens anteriores do mesmo usuário antes de criar novo; token consumido (`used_at`) após reset bem-sucedido
+- Endpoint `POST /api/auth/forgot-password` sempre retorna 200 (não revela quais e-mails estão cadastrados)
+- Rotas: `codeVerification` recebe `String email`; `passwordReset` recebe `Map<String, dynamic>` com `email` e `code`
+- Variáveis de ambiente necessárias: `EMAIL_USER` (endereço Gmail) e `EMAIL_PASS` (senha de app do Gmail — não a senha da conta)
+
+### ARMADILHA: TIMESTAMP WITHOUT TIME ZONE + Node.js pg
+**Sintoma:** token de reset sempre retorna "expirado" mesmo recém-criado. `expires_at > NOW()` falha.  
+**Causa:** o driver `pg` serializa objetos `Date` do JS como string de hora LOCAL para colunas `TIMESTAMP WITHOUT TIME ZONE`. Se o servidor roda em UTC-3 (Brasil), o valor salvo fica 3h atrás do UTC. PostgreSQL usa UTC no `NOW()`, então o token parece expirado antes de existir.  
+**Fix:** nunca passe `Date` do JS para colunas TIMESTAMP. Use aritmética inteiramente dentro do SQL:
+```sql
+-- ERRADO: passa JS Date que é serializado em UTC-3
+INSERT INTO ... (expires_at) VALUES ($1)  -- com new Date(Date.now() + 15*60*1000)
+
+-- CORRETO: deixa o PostgreSQL calcular
+INSERT INTO ... (expires_at) VALUES (NOW() + INTERVAL '15 minutes')
+```
+**Onde se aplica:** qualquer `INSERT`/`UPDATE` com valor de timestamp calculado no Node.js.
+
+### Variáveis de ambiente do backend (.env)
+```
+DATABASE_URL
+JWT_SECRET
+JWT_REFRESH_SECRET
+SUPABASE_URL
+SUPABASE_SERVICE_KEY
+EMAIL_USER       # endereço Gmail para envio
+EMAIL_PASS       # senha de app gerada em myaccount.google.com → Segurança → Senhas de app
+```
+
+### Migrations
+Todas as alterações de schema são aplicadas automaticamente via `runMigrations()` em `server.js` ao iniciar o servidor. Padrão: `ALTER TABLE ... ADD COLUMN IF NOT EXISTS` e `CREATE TABLE IF NOT EXISTS`.
+
+### Supabase free tier — cold start
+O projeto é pausado automaticamente após 7 dias sem uso. A primeira requisição após pausa demora 20–30 s para acordar o banco. Não é bug do app.
+
+### Navegação com argumentos
+Rotas que precisam de dados usam `settings.arguments` no `RouteGenerator`. Exemplo: `AppRoutes.passwordReset` espera `String email`; `AppRoutes.friendProfile` espera `Map<String, dynamic>`.
+
+---
+
 ## Contexto
 
 O LifeCity já possui um MVP funcional com mapa interativo, reclamações georreferenciadas, sistema de amizades, perfil com XP/níveis e autenticação. As features descritas neste doc expandem o engajamento social e a gamificação sem alterar as entidades centrais existentes.
@@ -230,3 +299,4 @@ CREATE TABLE user_missions (
 - Chat direto entre usuários
 - Moderação de missões por administradores
 - Integração direta com sistemas da prefeitura
+

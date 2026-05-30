@@ -31,13 +31,17 @@ seguindo o padrão de separação de responsabilidades:
           \item \texttt{/api/achievements} — conquistas do usuário;
           \item \texttt{/api/notifications} — listagem e marcação como lida;
           \item \texttt{/api/missions} — missões ativas, detalhes;
-          \item \texttt{/api/missions/teams} — criar equipe, convidar, aceitar/recusar convite.
+          \item \texttt{/api/missions/teams} — criar equipe, convidar, aceitar/recusar convite;
+          \item \texttt{/api/reports} — denúncias de reclamações e usuários com moderação automática por threshold;
+          \item \texttt{/api/auth/forgot-password} e \texttt{/api/auth/reset-password} — recuperação de senha por e-mail com código de verificação de uso único.
         \end{itemize}
         Gerencia tokens JWT (access token de curta duração + refresh token de
         longa duração), incluindo renovação automática de sessão e invalidação
         no logout. Checadores de conquistas (\texttt{achievementChecker.js}) e
         de progresso de missões (\texttt{missionProgressChecker.js}) são
-        disparados de forma assíncrona após ações do usuário.
+        disparados de forma assíncrona após ações do usuário. O envio de e-mails
+        transacionais (recuperação de senha) é feito via \texttt{Nodemailer}
+        integrado ao Gmail com autenticação por senha de aplicativo.
 
   \item \textbf{Camada de dados — PostgreSQL via Supabase:} Responsável pelo
         armazenamento persistente dos dados. O banco PostgreSQL é gerenciado

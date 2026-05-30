@@ -7,6 +7,7 @@ import 'package:latlong2/latlong.dart';
 import 'package:geolocator/geolocator.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_defaults.dart';
+import '../../core/constants/app_symbols.dart';
 import '../../core/models/complaint_model.dart';
 import '../../core/routes/app_routes.dart';
 import '../../core/services/complaint_service.dart';
@@ -131,7 +132,7 @@ class _GradientFab extends StatelessWidget {
         child: InkWell(
           customBorder: const CircleBorder(),
           onTap: onPressed,
-          child: const Icon(Icons.add_rounded, color: Colors.white, size: 30),
+          child: const Icon(Symbols.add, color: Colors.white, size: 30, fill: 1.0),
         ),
       ),
     );
@@ -144,11 +145,11 @@ class _FilterBar extends StatelessWidget {
   const _FilterBar();
 
   static const List<Map<String, dynamic>> _categories = [
-    {'key': 'infraestrutura', 'label': 'Infra', 'icon': Icons.construction, 'color': Colors.orange},
-    {'key': 'seguranca', 'label': 'Segurança', 'icon': Icons.security, 'color': Colors.red},
-    {'key': 'limpeza', 'label': 'Limpeza', 'icon': Icons.cleaning_services, 'color': Colors.teal},
-    {'key': 'transito', 'label': 'Trânsito', 'icon': Icons.traffic, 'color': Colors.amber},
-    {'key': 'outros', 'label': 'Outros', 'icon': Icons.report_problem, 'color': Colors.grey},
+    {'key': 'infraestrutura', 'label': 'Infra', 'icon': AppSymbols.construction, 'color': Colors.orange},
+    {'key': 'seguranca', 'label': 'Segurança', 'icon': AppSymbols.security, 'color': Colors.red},
+    {'key': 'limpeza', 'label': 'Limpeza', 'icon': AppSymbols.cleaningServices, 'color': Colors.teal},
+    {'key': 'transito', 'label': 'Trânsito', 'icon': AppSymbols.traffic, 'color': Colors.amber},
+    {'key': 'outros', 'label': 'Outros', 'icon': AppSymbols.warning, 'color': Colors.grey},
   ];
 
   @override
@@ -252,10 +253,10 @@ extension on _MapLayerKind {
       };
 
   IconData get pickerIcon => switch (this) {
-        _MapLayerKind.streets => Icons.map_rounded,
-        _MapLayerKind.satellite => Icons.satellite_alt_rounded,
-        _MapLayerKind.terrain => Icons.terrain_rounded,
-        _MapLayerKind.dark => Icons.dark_mode_rounded,
+        _MapLayerKind.streets => Symbols.map,
+        _MapLayerKind.satellite => Symbols.satellite_alt,
+        _MapLayerKind.terrain => Symbols.terrain,
+        _MapLayerKind.dark => Symbols.dark_mode,
       };
 }
 
@@ -411,7 +412,7 @@ class _MapBodyState extends State<_MapBody> {
                 leading: Icon(kind.pickerIcon, color: AppColors.primary),
                 title: Text(kind.label, style: GoogleFonts.poppins(fontSize: 15)),
                 trailing: kind == _mapLayer
-                    ? const Icon(Icons.check_rounded, color: AppColors.primary)
+                    ? const Icon(AppSymbols.check, color: AppColors.primary)
                     : null,
                 onTap: () {
                   setState(() => _mapLayer = kind);
@@ -517,7 +518,7 @@ class _MapBodyState extends State<_MapBody> {
                       tooltip: 'Camada do mapa',
                       onTap: _openMapLayerSheet,
                       child: Icon(
-                        Icons.layers_rounded,
+                        Symbols.layers,
                         size: 22,
                         color: Theme.of(context).iconTheme.color,
                       ),
@@ -534,7 +535,7 @@ class _MapBodyState extends State<_MapBody> {
                       tooltip: 'Aproximar',
                       onTap: () => _zoomBy(1),
                       child: Icon(
-                        Icons.add_rounded,
+                        Symbols.add,
                         size: 26,
                         color: Theme.of(context).iconTheme.color,
                       ),
@@ -544,7 +545,7 @@ class _MapBodyState extends State<_MapBody> {
                       tooltip: 'Afastar',
                       onTap: () => _zoomBy(-1),
                       child: Icon(
-                        Icons.remove_rounded,
+                        Symbols.remove,
                         size: 26,
                         color: Theme.of(context).iconTheme.color,
                       ),
@@ -641,7 +642,7 @@ class _LocationButton extends StatelessWidget {
           child: const SizedBox(
             width: 44,
             height: 44,
-            child: Icon(Icons.my_location_rounded, size: 22),
+            child: Icon(Symbols.my_location, size: 22, fill: 1.0),
           ),
         ),
       ),
@@ -654,20 +655,20 @@ class _ComplaintPin extends StatelessWidget {
   const _ComplaintPin({this.type});
 
   static const _cats = [
-    {'key': 'infraestrutura', 'icon': Icons.construction, 'color': Colors.orange},
-    {'key': 'seguranca', 'icon': Icons.security, 'color': Colors.red},
-    {'key': 'limpeza', 'icon': Icons.cleaning_services, 'color': Colors.teal},
-    {'key': 'transito', 'icon': Icons.traffic, 'color': Colors.amber},
-    {'key': 'outros', 'icon': Icons.report_problem, 'color': Colors.grey},
+    {'key': 'infraestrutura', 'icon': AppSymbols.construction, 'color': Colors.orange},
+    {'key': 'seguranca', 'icon': AppSymbols.security, 'color': Colors.red},
+    {'key': 'limpeza', 'icon': AppSymbols.cleaningServices, 'color': Colors.teal},
+    {'key': 'transito', 'icon': AppSymbols.traffic, 'color': Colors.amber},
+    {'key': 'outros', 'icon': AppSymbols.warning, 'color': Colors.grey},
   ];
 
   @override
   Widget build(BuildContext context) {
     final cat = type == null
-        ? {'icon': Icons.warning, 'color': Colors.red}
+        ? {'icon': AppSymbols.warning, 'color': Colors.red}
         : _cats.firstWhere(
             (c) => c['key'] == type!.toLowerCase(),
-            orElse: () => {'icon': Icons.warning, 'color': Colors.red},
+            orElse: () => {'icon': AppSymbols.warning, 'color': Colors.red},
           );
 
     final color = cat['color'] as Color;

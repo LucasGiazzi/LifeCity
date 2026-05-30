@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/constants/app_colors.dart';
+import '../../core/constants/app_symbols.dart';
 import '../../core/models/achievement_model.dart';
 import '../../core/models/complaint_model.dart';
 import '../../core/routes/app_routes.dart';
@@ -139,9 +140,9 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
               labelStyle: GoogleFonts.poppins(fontWeight: FontWeight.w600, fontSize: 12),
               unselectedLabelStyle: GoogleFonts.poppins(fontSize: 12),
               tabs: const [
-                Tab(text: 'Reclamações', icon: Icon(Icons.report_problem_rounded, size: 18)),
-                Tab(text: 'Interações', icon: Icon(Icons.favorite_border_rounded, size: 18)),
-                Tab(text: 'Conquistas', icon: Icon(Icons.emoji_events_rounded, size: 18)),
+                Tab(text: 'Reclamações', icon: Icon(AppSymbols.warning, size: 18)),
+                Tab(text: 'Interações', icon: Icon(AppSymbols.favorite, size: 18)),
+                Tab(text: 'Conquistas', icon: Icon(AppSymbols.emojiEvents, size: 18)),
               ],
             ),
             Expanded(
@@ -165,7 +166,7 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
   Widget _buildComplaintsList() {
     if (_myComplaints.isEmpty) {
       return _EmptyState(
-        icon: Icons.check_circle_outline_rounded,
+        icon: AppSymbols.checkCircle,
         message: 'Você ainda não criou nenhuma reclamação',
       );
     }
@@ -197,7 +198,7 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
     }
     if (_myInteractions.isEmpty) {
       return _EmptyState(
-        icon: Icons.favorite_border_rounded,
+        icon: AppSymbols.favorite,
         message: 'Você ainda não curtiu\nnem comentou nenhuma reclamação',
       );
     }
@@ -217,7 +218,7 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
     }
     if (_myAchievements.isEmpty) {
       return _EmptyState(
-        icon: Icons.emoji_events_outlined,
+        icon: AppSymbols.emojiEvents,
         message: 'Nenhuma conquista desbloqueada ainda\nComece criando sua primeira reclamação!',
       );
     }
@@ -286,7 +287,7 @@ class _AchievementCard extends StatelessWidget {
                 color: Colors.amber.withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: const Icon(Icons.emoji_events_rounded, color: Colors.amber, size: 26),
+              child: const Icon(AppSymbols.emojiEvents, color: Colors.amber, size: 26, fill: 1.0),
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -350,11 +351,11 @@ class _ProfileHeader extends StatelessWidget {
   });
 
   static const _levelIcons = <int, IconData>{
-    1: Icons.home_rounded,
-    2: Icons.people_rounded,
-    3: Icons.shield_rounded,
-    4: Icons.campaign_rounded,
-    5: Icons.star_rounded,
+    1: Symbols.home,
+    2: Symbols.people,
+    3: Symbols.shield,
+    4: Symbols.campaign,
+    5: Symbols.star,
   };
 
   @override
@@ -364,7 +365,7 @@ class _ProfileHeader extends StatelessWidget {
     final levelName = xpData?['name'] as String? ?? 'Morador';
     final currentMin = (xpData?['currentMin'] as num?)?.toInt() ?? 0;
     final nextMin = (xpData?['nextMin'] as num?)?.toInt();
-    final icon = _levelIcons[level] ?? Icons.person_rounded;
+    final icon = _levelIcons[level] ?? AppSymbols.person;
 
     final progress = nextMin != null && nextMin > currentMin
         ? ((xp - currentMin) / (nextMin - currentMin)).clamp(0.0, 1.0)
@@ -393,7 +394,7 @@ class _ProfileHeader extends StatelessWidget {
                     clipBehavior: Clip.none,
                     children: [
                       IconButton(
-                        icon: const Icon(Icons.notifications_rounded, color: Colors.white, size: 24),
+                        icon: const Icon(AppSymbols.notifications, color: Colors.white, size: 24, fill: 1.0),
                         onPressed: onNotificationsTap,
                       ),
                       if (unreadNotifications > 0)
@@ -417,7 +418,7 @@ class _ProfileHeader extends StatelessWidget {
                     ],
                   ),
                   IconButton(
-                    icon: const Icon(Icons.settings_rounded, color: Colors.white, size: 24),
+                    icon: const Icon(AppSymbols.settings, color: Colors.white, size: 24, fill: 1.0),
                     onPressed: () => Navigator.pushNamed(context, AppRoutes.settings),
                   ),
                 ],
@@ -428,7 +429,7 @@ class _ProfileHeader extends StatelessWidget {
                 backgroundColor: Colors.white,
                 backgroundImage: (photoUrl != null && photoUrl!.isNotEmpty) ? NetworkImage(photoUrl!) : null,
                 child: (photoUrl == null || photoUrl!.isEmpty)
-                    ? const Icon(Icons.person, size: 44, color: Colors.grey)
+                    ? const Icon(AppSymbols.person, size: 44, color: Colors.grey, fill: 1.0)
                     : null,
               ),
               const SizedBox(height: 12),
@@ -513,7 +514,7 @@ class _InteractionCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final isLike = data['type'] == 'like';
     final iconColor = isLike ? Colors.red : AppColors.primary;
-    final icon = isLike ? Icons.favorite_rounded : Icons.chat_bubble_rounded;
+    final icon = isLike ? AppSymbols.favorite : AppSymbols.chatBubble;
     final title = data['description'] as String? ?? '';
     final address = data['address'] as String?;
     final commentText = data['comment_text'] as String?;
@@ -568,7 +569,7 @@ class _InteractionCard extends StatelessWidget {
               const SizedBox(height: 2),
               Row(
                 children: [
-                  const Icon(Icons.location_on_outlined, size: 13, color: AppColors.placeholder),
+                  const Icon(AppSymbols.locationOn, size: 13, color: AppColors.placeholder),
                   const SizedBox(width: 2),
                   Expanded(
                     child: Text(

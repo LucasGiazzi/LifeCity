@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../core/constants/app_colors.dart';
+import '../../core/constants/app_symbols.dart';
 import '../../core/models/mission_model.dart';
 import '../../core/routes/app_routes.dart';
 import '../../core/services/mission_service.dart';
@@ -74,7 +75,7 @@ class _MissionsPageState extends State<MissionsPage> {
           _load();
         },
         backgroundColor: AppColors.primary,
-        icon: const Icon(Icons.group_add_rounded, color: Colors.white),
+        icon: const Icon(Symbols.group_add, color: Colors.white, fill: 1.0),
         label: Text('Nova equipe',
             style: GoogleFonts.poppins(color: Colors.white, fontWeight: FontWeight.w600)),
       ),
@@ -251,7 +252,7 @@ class _MissionCard extends StatelessWidget {
           if (mission.complaintCategory != null) ...[
             const SizedBox(height: 4),
             Row(children: [
-              const Icon(Icons.category_rounded, size: 12, color: AppColors.placeholder),
+              const Icon(AppSymbols.category, size: 12, color: AppColors.placeholder),
               const SizedBox(width: 4),
               Text(mission.complaintCategory!,
                   style: GoogleFonts.poppins(
@@ -329,8 +330,8 @@ class _TeamCard extends StatelessWidget {
                 color: AppColors.primary.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: const Icon(Icons.groups_rounded,
-                  color: AppColors.primary, size: 22),
+              child: const Icon(Symbols.groups,
+                  color: AppColors.primary, size: 22, fill: 1.0),
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -345,7 +346,7 @@ class _TeamCard extends StatelessWidget {
                         fontSize: 12, color: AppColors.placeholder)),
               ]),
             ),
-            const Icon(Icons.chevron_right_rounded, color: AppColors.placeholder),
+            const Icon(AppSymbols.chevronRight, color: AppColors.placeholder),
           ]),
         ),
       ),
@@ -375,7 +376,7 @@ class _TeamInviteCard extends StatelessWidget {
         padding: const EdgeInsets.all(14),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Row(children: [
-            const Icon(Icons.mail_outline_rounded,
+            const Icon(AppSymbols.email,
                 size: 16, color: AppColors.primary),
             const SizedBox(width: 6),
             Text('Convite recebido',

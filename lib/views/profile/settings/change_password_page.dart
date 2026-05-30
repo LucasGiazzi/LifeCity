@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/constants/app_colors.dart';
+import '../../../core/constants/app_symbols.dart';
 import '../../../core/services/auth_service.dart';
 
 class ChangePasswordPage extends StatefulWidget {
@@ -92,7 +93,7 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Icon(Icons.arrow_back_ios_new_rounded,
+                          const Icon(AppSymbols.arrowBack,
                               color: Colors.white70, size: 16),
                           const SizedBox(width: 4),
                           Text(
@@ -116,7 +117,7 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
                         border: Border.all(
                             color: AppColors.primary.withValues(alpha: 0.4)),
                       ),
-                      child: const Icon(Icons.lock_outline_rounded,
+                      child: const Icon(AppSymbols.lock,
                           color: AppColors.primary, size: 26),
                     ),
                     SizedBox(height: screen.height * 0.015),
@@ -208,7 +209,7 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
                                 color: AppColors.dark),
                             decoration: InputDecoration(
                               hintText: 'Digite sua senha atual',
-                              prefixIcon: const Icon(Icons.lock_outline_rounded,
+                              prefixIcon: const Icon(AppSymbols.lock,
                                   color: AppColors.placeholder, size: 20),
                               suffixIcon: _EyeToggle(
                                 obscured: _currentObscured,
@@ -237,7 +238,7 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
                             decoration: InputDecoration(
                               hintText: 'Mínimo 8 caracteres',
                               prefixIcon: const Icon(
-                                  Icons.lock_reset_rounded,
+                                  Symbols.lock_reset,
                                   color: AppColors.placeholder,
                                   size: 20),
                               suffixIcon: _EyeToggle(
@@ -273,7 +274,7 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
                                 color: AppColors.dark),
                             decoration: InputDecoration(
                               hintText: 'Repita a nova senha',
-                              prefixIcon: const Icon(Icons.check_circle_outline,
+                              prefixIcon: const Icon(AppSymbols.checkCircle,
                                   color: AppColors.placeholder, size: 20),
                               suffixIcon: _EyeToggle(
                                 obscured: _confirmObscured,
@@ -305,7 +306,7 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
                               ),
                               child: Row(
                                 children: [
-                                  Icon(Icons.error_outline,
+                                  Icon(AppSymbols.error,
                                       color: Colors.red.shade600, size: 18),
                                   const SizedBox(width: 8),
                                   Expanded(
@@ -388,7 +389,7 @@ class _EyeToggle extends StatelessWidget {
   Widget build(BuildContext context) {
     return IconButton(
       icon: Icon(
-        obscured ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+        obscured ? AppSymbols.visibility : AppSymbols.visibilityOff,
         color: AppColors.placeholder,
         size: 20,
       ),

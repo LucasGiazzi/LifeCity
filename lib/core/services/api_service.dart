@@ -17,7 +17,7 @@ class ApiService {
   ApiService._internal()
       : _dio = Dio(
           BaseOptions(
-            baseUrl: 'http://10.0.1.104:3000',
+            baseUrl: 'http://10.0.1.109:3000',
             connectTimeout: const Duration(seconds: 30),
             receiveTimeout: const Duration(seconds: 30),
             headers: {
