@@ -2,6 +2,12 @@ const crypto = require('crypto');
 const supabasePool = require('../infra/supabasePool');
 const { encryptPassword, generateSalt } = require('../infra/crypto');
 const { uploadPublicFile, deletePublicFile } = require('../infra/supabaseStorageClient');
+const {
+    getActiveTenantsForUser,
+    getMembership,
+    buildAccessToken,
+    buildRefreshToken,
+} = require('../services/tenantService');
 const { isValidCpf } = require('../infra/cpfValidator');
 const { sendPasswordResetEmail } = require('../infra/mailer');
 const jwt = require('jsonwebtoken')
@@ -19,25 +25,43 @@ exports.login = async (req, res) => {
         }
         
         if (user.length === 0) {
-            return res.status(401).json({ message: 'Email ou senha inválidos.' });
+            return res.status(401).json({ message: 'Email ou senha inv?lidos.' });
         }
                 
         if (!isPasswordValid(password, user[0])) {
-            console.log('Senha inválida');
-            return res.status(401).json({ message: 'Email ou senha inválidos.' });
+            console.log('Senha inv?lida');
+            return res.status(401).json({ message: 'Email ou senha inv?lidos.' });
         }
         
-        const accessToken = jwt.sign({ userId: user[0].id }, process.env.JWT_SECRET, { expiresIn: '15m' });
-        const refreshToken = jwt.sign({ userId: user[0].id }, process.env.JWT_REFRESH_SECRET, { expiresIn: '7d' });
-        
-        res.status(200).json({ message: 'Login bem sucedido', user: {
-            id: user[0].id,
-            email: user[0].email,
-            name: user[0].name,
-            phone: user[0].phone,
-            cpf: user[0].cpf,
-            photo_url: user[0].photo_url,
-        }, accessToken, refreshToken });
+        const userLevel = Number(user[0].user_level ?? 1);
+        const tenants = await getActiveTenantsForUser(pool, user[0].id);
+        const activeTenant = tenants.length > 0 ? tenants[0] : null;
+        const activeTenantId = activeTenant?.id ?? null;
+
+        const accessToken = buildAccessToken(user[0].id, activeTenant);
+        const refreshToken = buildRefreshToken(user[0].id, activeTenantId);
+
+        const response = {
+            message: 'Login bem sucedido',
+            user: {
+                id: user[0].id,
+                email: user[0].email,
+                name: user[0].name,
+                phone: user[0].phone,
+                cpf: user[0].cpf,
+                photo_url: user[0].photo_url,
+                user_level: userLevel,
+            },
+            accessToken,
+            refreshToken,
+            tenants,
+        };
+
+        if (activeTenantId) {
+            response.activeTenantId = activeTenantId;
+        }
+
+        res.status(200).json(response);
     } catch (error) {
         console.error('Erro ao fazer login:', error);
         res.status(500).json({ message: 'Erro ao fazer login.' });
@@ -51,17 +75,23 @@ exports.refreshToken = async (req, res) => {
     try {
     
         if (!refreshToken) {
-            return res.status(401).json({ message: 'Token de refresh não encontrado.' });
+            return res.status(401).json({ message: 'Token de refresh n?o encontrado.' });
         }
     
         const decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET);
     
         if (!decoded) {
-            return res.status(401).json({ message: 'Token de refresh inválido.' });
+            return res.status(401).json({ message: 'Token de refresh inv?lido.' });
         }
     
-        const accessToken = jwt.sign({ userId: decoded.userId }, process.env.JWT_SECRET, { expiresIn: '15m' });
-    
+        let activeTenant = null;
+        if (decoded.tenantId) {
+            const pool = await supabasePool.getPgPool();
+            activeTenant = await getMembership(pool, decoded.userId, decoded.tenantId);
+        }
+
+        const accessToken = buildAccessToken(decoded.userId, activeTenant);
+
         res.status(200).json({ message: 'Token de acesso atualizado', accessToken });
 
     } catch (error) {
@@ -76,13 +106,13 @@ exports.logout = async (req, res) => {
     try {
 
         if (!refreshToken) {
-            return res.status(401).json({ message: 'Token de refresh não encontrado.' });
+            return res.status(401).json({ message: 'Token de refresh n?o encontrado.' });
         }
 
         const decoded = jwt.verify(refreshToken, process.env.JWT_SECRET);
 
         if (!decoded) {
-            return res.status(401).json({ message: 'Token de refresh inválido.' });
+            return res.status(401).json({ message: 'Token de refresh inv?lido.' });
         }
 
         res.status(200).json({ message: 'Logout successful' });
@@ -106,7 +136,7 @@ exports.register = async (req, res) => {
         const user = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
 
         if (user.rows.length > 0) {
-            return res.status(400).json({ message: 'Email já está cadastrado.' });
+            return res.status(400).json({ message: 'Email j? est? cadastrado.' });
         }
 
         const existingCpf = await pool.query('SELECT id FROM users WHERE cpf = $1', [cpf.replace(/\D/g, '')]);
@@ -120,29 +150,172 @@ exports.register = async (req, res) => {
 
         await pool.query('INSERT INTO users (email, password, name, cpf, phone, salt) VALUES ($1, $2, $3, $4, $5, $6)', [email, hashedPassword, name, cpf.replace(/\D/g, ''), phone, salt]);
 
-        return res.status(200).json({ message: 'Registrado com sucesso' });
+        return res.status(200).json({
+            message: 'Registrado com sucesso',
+            requiresLocationConfirmation: true,
+        });
     } catch (error) {
-        console.error('Erro ao registrar usuário:', error);
-        return res.status(500).json({ message: 'Erro ao registrar usuário. Tente novamente.' });
+        console.error('Erro ao registrar usu?rio:', error);
+        return res.status(500).json({ message: 'Erro ao registrar usu?rio. Tente novamente.' });
     }
 }
+
+const USER_SELECT_WITH_MUNICIPIO = `
+    SELECT u.id, u.email, u.name, u.phone, u.cpf, u.photo_url, u.birth_date,
+           COALESCE(u.user_level, 1) AS user_level,
+           u.home_cd_mun, u.registration_address, u.address_confirmed_at,
+           m.nm_mun AS municipio_nome
+    FROM users u
+    LEFT JOIN malhas.municipios m ON m.cd_mun = u.home_cd_mun
+    WHERE u.id = $1
+`;
+
+const RESOLVE_MUNICIPIO_SQL = `
+    SELECT m.cd_mun, m.nm_mun, m.sigla_uf,
+           EXISTS(
+               SELECT 1 FROM tenants t
+               WHERE t.cd_mun = m.cd_mun AND t.status IN ('trial', 'active')
+           ) AS tenant_active
+    FROM malhas.municipios m
+    WHERE ST_Contains(m.geometry, ST_SetSRID(ST_MakePoint($1, $2), 4326))
+    LIMIT 1
+`;
+
+exports.resolveLocation = async (req, res) => {
+    const latitude = Number(req.body?.latitude);
+    const longitude = Number(req.body?.longitude);
+
+    if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
+        return res.status(400).json({ message: 'Latitude e longitude são obrigatórias.' });
+    }
+
+    try {
+        const pool = await supabasePool.getPgPool();
+        const { rows } = await pool.query(RESOLVE_MUNICIPIO_SQL, [longitude, latitude]);
+
+        if (rows.length === 0) {
+            return res.status(404).json({
+                message: 'Não identificamos sua cidade. Verifique se a localização está ativa.',
+            });
+        }
+
+        const row = rows[0];
+        if (!row.tenant_active) {
+            return res.status(403).json({
+                message: 'LifeCity ainda não está disponível em sua cidade.',
+            });
+        }
+
+        return res.status(200).json({
+            cd_mun: row.cd_mun,
+            municipio: row.nm_mun,
+            sigla_uf: row.sigla_uf,
+            tenantActive: true,
+            suggestedAddress: null,
+        });
+    } catch (error) {
+        console.error('Erro ao resolver localização:', error);
+        return res.status(500).json({ message: 'Erro ao resolver localização.' });
+    }
+};
+
+exports.confirmLocation = async (req, res) => {
+    const { cd_mun, address, latitude, longitude } = req.body ?? {};
+    const lat = Number(latitude);
+    const lng = Number(longitude);
+
+    if (!cd_mun || !address || !Number.isFinite(lat) || !Number.isFinite(lng)) {
+        return res.status(400).json({
+            message: 'cd_mun, address, latitude e longitude são obrigatórios.',
+        });
+    }
+
+    try {
+        const pool = await supabasePool.getPgPool();
+
+        const { rows: existing } = await pool.query(
+            'SELECT address_confirmed_at, home_cd_mun, registration_address FROM users WHERE id = $1',
+            [req.user.id],
+        );
+
+        if (existing.length === 0) {
+            return res.status(404).json({ message: 'Usuário não encontrado.' });
+        }
+
+        if (existing[0].address_confirmed_at) {
+            const { rows: userRows } = await pool.query(USER_SELECT_WITH_MUNICIPIO, [req.user.id]);
+            const u = userRows[0];
+            return res.status(200).json({
+                message: 'Localização confirmada',
+                user: {
+                    home_cd_mun: u.home_cd_mun,
+                    municipio: u.municipio_nome,
+                    address_confirmed_at: u.address_confirmed_at,
+                },
+            });
+        }
+
+        const { rows: resolved } = await pool.query(RESOLVE_MUNICIPIO_SQL, [lng, lat]);
+
+        if (resolved.length === 0) {
+            return res.status(404).json({
+                message: 'Não identificamos sua cidade. Verifique se a localização está ativa.',
+            });
+        }
+
+        const match = resolved[0];
+        if (String(match.cd_mun).trim() !== String(cd_mun).trim()) {
+            return res.status(400).json({ message: 'Município não corresponde à localização informada.' });
+        }
+
+        if (!match.tenant_active) {
+            return res.status(403).json({
+                message: 'LifeCity ainda não está disponível em sua cidade.',
+            });
+        }
+
+        await pool.query(
+            `UPDATE users
+             SET home_cd_mun = $1,
+                 registration_address = $2,
+                 address_confirmed_at = NOW()
+             WHERE id = $3`,
+            [cd_mun, address, req.user.id],
+        );
+
+        const { rows: userRows } = await pool.query(USER_SELECT_WITH_MUNICIPIO, [req.user.id]);
+        const u = userRows[0];
+
+        return res.status(200).json({
+            message: 'Localização confirmada',
+            user: {
+                home_cd_mun: u.home_cd_mun,
+                municipio: u.municipio_nome,
+                address_confirmed_at: u.address_confirmed_at,
+            },
+        });
+    } catch (error) {
+        console.error('Erro ao confirmar localização:', error);
+        return res.status(500).json({ message: 'Erro ao confirmar localização.' });
+    }
+};
 
 exports.getMe = async (req, res) => {
     try {
         const pool = await supabasePool.getPgPool();
         
-        const { rows: user } = await pool.query('SELECT id, email, name, phone, cpf, photo_url, birth_date FROM users WHERE id = $1', [req.user.id]);
+        const { rows: user } = await pool.query(USER_SELECT_WITH_MUNICIPIO, [req.user.id]);
         
         if (user.length === 0) {
-            return res.status(404).json({ message: 'Usuário não encontrado.' });
+            return res.status(404).json({ message: 'Usu?rio n?o encontrado.' });
         }
 
         res.status(200).json({
             user: user[0]
         });
     } catch (error) {
-        console.error('Erro ao buscar usuário:', error);
-        res.status(500).json({ message: 'Erro ao buscar dados do usuário.' });
+        console.error('Erro ao buscar usu?rio:', error);
+        res.status(500).json({ message: 'Erro ao buscar dados do usu?rio.' });
     }
 };
 
@@ -154,14 +327,16 @@ exports.editUser = async (req, res) => {
 
         const pool = await supabasePool.getPgPool();
 
-        // Buscar o usuário
+        // Buscar o usu?rio
         const user = await pool.query('SELECT * FROM users WHERE id = $1', [req.user.id]);
 
-        // Verificar se o usuário existe
+        // Verificar se o usu?rio existe
         if (user.rows.length === 0) {
-            return res.status(400).json({ message: 'Usuário não encontrado.' });
+            return res.status(400).json({ message: 'Usu?rio n?o encontrado.' });
         }
 
+        // Atualizar o usu?rio sem o pfp
+        await pool.query('UPDATE users SET name = $1, phone = $2, cpf = $3, birth_date = $4 WHERE id = $5', [name, phone, cpf, birthDate, req.user.id]);
         const cleanCpf = cpf ? cpf.replace(/\D/g, '') : cpf;
 
         // Atualizar o usuário sem o pfp
@@ -176,12 +351,12 @@ exports.editUser = async (req, res) => {
             // Upload do novo pfp com nome único para evitar cache
             const { path, publicUrl } = await uploadPublicFile({ bucket: 'pfp', path: `${req.user.id}/pfp_${Date.now()}.png`, file: pfp });
 
-            // Atualizar o usuário com o novo pfp
+            // Atualizar o usu?rio com o novo pfp
             await pool.query('UPDATE users SET photo_url = $1, photo_path = $2 WHERE id = $3', [publicUrl, path, req.user.id]);
 
         }
 
-        // Buscar dados atualizados do usuário
+        // Buscar dados atualizados do usu?rio
         const { rows: updatedUser } = await pool.query('SELECT id, email, name, phone, cpf, photo_url, birth_date FROM users WHERE id = $1', [req.user.id]);
 
         res.status(200).json({
@@ -191,7 +366,7 @@ exports.editUser = async (req, res) => {
 
     } catch (error) {
         console.error('Erro ao editar usuário:', error);
-        res.status(500).json({ message: 'Erro ao editar usuário.', error: error.message });
+        res.status(500).json({ message: 'Erro ao editar usu?rio.', error: error.message });
     }
 }
 

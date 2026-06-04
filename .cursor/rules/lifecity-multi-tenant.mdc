@@ -1,0 +1,46 @@
+# LifeCity — Multi-tenant (ADR-001)
+
+Este rule aplica-se a implementações do [ADR-001](../../docs/adr/ADR-001-multi-tenant-municipal.md).
+
+## Invariantes obrigatórios
+
+1. **Fases 1–2:** não alterar comportamento do app Flutter. Colunas novas em `users`/`complaints` devem ser nullable.
+2. **`malhas.municipios(cd_mun)`** é a dimensão municipal. Nunca criar `dim_municipios` duplicada.
+3. **MCP Supabase (`user-supabase-lifecity`):** apenas SELECT / explore. DDL e DML via arquivos em `backend/migrations/` para revisão humana.
+4. **FKs municipais** referenciam `malhas.municipios(cd_mun)` — exige UNIQUE em `cd_mun`.
+5. **Tenant operacional** = `public.tenants` (1:1 com `cd_mun` nesta fase). RBAC admin = `tenant_members`.
+6. **Dashboard admin (Fase 2):** somente leitura analítica. Sem gestão de status/atribuição de reclamações.
+7. **Fase 3:** cadastro cidadão usa ST_Contains; reclamações **sem** restrição geográfica até ADR futuro.
+8. **JWT tenant:** claims `tenantId`, `cd_mun`, `tenantRole` só em rotas `/api/admin/*`; não quebrar JWT do app.
+9. **Auth Supabase:** se usar RLS no futuro, nunca autorizar via `user_metadata`; usar JWT backend ou `app_metadata`.
+
+## Ordem de execução
+
+```
+Fase 1 (DB) → Fase 2 (admin-web + backend admin) → Fase 3 (Flutter)
+```
+
+Antes de implementar, ler o contrato da fase em `docs/contracts/phase-N-*.md`.
+
+## Prompts padrão
+
+**Explore:** usar prompt EXPLORE do contrato da fase; MCP read-only; reportar gaps.
+
+**Execute:** seguir contrato linha a linha; rodar testes da seção "Testes de validação"; não expandir escopo.
+
+## Arquivos de referência
+
+| Fase | Contrato | Foco |
+|------|----------|------|
+| 1 | `docs/contracts/phase-1-database.md` | migrations SQL |
+| 2 | `docs/contracts/phase-2-admin-web.md` | `/api/admin/*`, dashboard |
+| 3 | `docs/contracts/phase-3-flutter.md` | cadastro + geo |
+
+## Tenant piloto
+
+- Campinas: `cd_mun = 3509502`, `slug = campinas`
+
+## Skills recomendadas
+
+- `supabase` — migrations, advisors, PostGIS
+- `supabase-postgres-best-practices` — índices GIST, queries espaciais

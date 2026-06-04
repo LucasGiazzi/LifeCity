@@ -10,6 +10,7 @@ import '../../views/auth/login_page.dart';
 import '../../views/auth/number_verification_page.dart';
 import '../../views/auth/password_reset_page.dart';
 import '../../views/auth/sign_up_page.dart';
+import '../../views/auth/location_confirmation_page.dart';
 import '../../views/drawer/about_us_page.dart';
 import '../../views/drawer/contact_us_page.dart';
 import '../../views/drawer/drawer_page.dart';
@@ -70,6 +71,9 @@ class RouteGenerator {
 
       case AppRoutes.signup:
         return CupertinoPageRoute(builder: (_) => const SignUpPage());
+
+      case AppRoutes.locationConfirmation:
+        return CupertinoPageRoute(builder: (_) => const LocationConfirmationPage());
 
       case AppRoutes.loginOrSignup:
         return CupertinoPageRoute(builder: (_) => const LoginOrSignUpPage());

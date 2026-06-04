@@ -1,15 +1,16 @@
 import 'dart:async';
-import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 import 'package:geolocator/geolocator.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:provider/provider.dart';
 import '../../core/components/app_back_button.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_defaults.dart';
 import '../../core/constants/app_symbols.dart';
 import '../../core/services/complaint_service.dart';
+import '../../core/services/geocoding_service.dart';
+import '../../core/state/category_state.dart';
 
 class CreateComplaintPage extends StatefulWidget {
   const CreateComplaintPage({super.key});
@@ -25,6 +26,7 @@ class _CreateComplaintPageState extends State<CreateComplaintPage> {
   final _dateController = TextEditingController();
   
   final ComplaintService _complaintService = ComplaintService();
+  final GeocodingService _geocodingService = GeocodingService();
   bool _isLoading = false;
   bool _isGeocoding = false;
   bool _isGettingLocation = false;
@@ -184,7 +186,6 @@ class _CreateComplaintPageState extends State<CreateComplaintPage> {
         _isGettingLocation = false;
       });
 
-      // Fazer reverse geocoding para obter o endereço
       await _reverseGeocode(position.latitude, position.longitude);
 
       if (mounted) {
@@ -213,41 +214,15 @@ class _CreateComplaintPageState extends State<CreateComplaintPage> {
   }
 
   Future<void> _reverseGeocode(double lat, double lon) async {
+    setState(() => _isReverseGeocoding = true);
+    final address = await _geocodingService.reverseGeocode(lat, lon);
+    if (!mounted) return;
     setState(() {
-      _isReverseGeocoding = true;
-    });
-
-    try {
-      // Reverse geocoding usando Nominatim (gratuito)
-      final url = 'https://nominatim.openstreetmap.org/reverse?lat=$lat&lon=$lon&format=json&addressdetails=1';
-      
-      final response = await http.get(
-        Uri.parse(url),
-        headers: {'User-Agent': 'LifeCityApp/1.0'},
-      ).timeout(const Duration(seconds: 10));
-
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        if (data['display_name'] != null) {
-          final address = data['display_name'] as String;
-          setState(() {
-            _addressController.text = address;
-            _isReverseGeocoding = false;
-          });
-          return;
-        }
+      if (address != null) {
+        _addressController.text = address;
       }
-      
-      setState(() {
-        _isReverseGeocoding = false;
-      });
-    } catch (e) {
-      setState(() {
-        _isReverseGeocoding = false;
-      });
-      debugPrint('Erro ao fazer reverse geocoding: $e');
-      // Não é crítico, apenas não preenche o endereço
-    }
+      _isReverseGeocoding = false;
+    });
   }
 
   Future<void> _searchAddresses(String query) async {
@@ -257,26 +232,13 @@ class _CreateComplaintPageState extends State<CreateComplaintPage> {
     }
 
     try {
-      // Buscar endereços usando Nominatim Search API (gratuito)
-      final encodedQuery = Uri.encodeComponent(query + ', Campinas, SP, Brasil');
-      final url = 'https://nominatim.openstreetmap.org/search?q=$encodedQuery&format=json&limit=5&addressdetails=1';
-      
-      final response = await http.get(
-        Uri.parse(url),
-        headers: {'User-Agent': 'LifeCityApp/1.0'},
-      ).timeout(const Duration(seconds: 5));
-
-      if (response.statusCode == 200) {
-        final List<dynamic> data = json.decode(response.body);
-        setState(() {
-          _addressSuggestions = data.map((item) => {
-            'display_name': item['display_name'] as String? ?? '',
-            'lat': item['lat'] as String? ?? '',
-            'lon': item['lon'] as String? ?? '',
-          }).toList();
-        });
-        _showAddressSuggestions();
-      }
+      final results = await _geocodingService.searchAddresses(
+        query,
+        regionSuffix: ', Campinas, SP, Brasil',
+      );
+      if (!mounted) return;
+      setState(() => _addressSuggestions = results);
+      _showAddressSuggestions();
     } catch (e) {
       debugPrint('Erro ao buscar endereços: $e');
       _hideSuggestions();
@@ -374,60 +336,45 @@ class _CreateComplaintPageState extends State<CreateComplaintPage> {
       return;
     }
 
-    setState(() {
-      _isGeocoding = true;
-    });
+    setState(() => _isGeocoding = true);
 
     try {
-      // Usando Nominatim (OpenStreetMap) para geocoding gratuito
-      final address = Uri.encodeComponent(_addressController.text.trim() + ', Campinas, SP, Brasil');
-      final url = 'https://nominatim.openstreetmap.org/search?q=$address&format=json&limit=1';
-      
-      final response = await http.get(
-        Uri.parse(url),
-        headers: {'User-Agent': 'LifeCityApp/1.0'},
-      ).timeout(const Duration(seconds: 10));
+      final coords = await _geocodingService.geocodeAddress(
+        _addressController.text.trim(),
+        regionSuffix: ', Campinas, SP, Brasil',
+      );
 
-      if (response.statusCode == 200) {
-        final List<dynamic> data = json.decode(response.body);
-        if (data.isNotEmpty) {
-          final lat = double.tryParse(data[0]['lat'] ?? '');
-          final lon = double.tryParse(data[0]['lon'] ?? '');
-          if (lat != null && lon != null) {
-            setState(() {
-              _latitude = lat;
-              _longitude = lon;
-              _isGeocoding = false;
-            });
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Localização encontrada!'),
-                backgroundColor: Colors.green,
-                duration: Duration(seconds: 2),
-              ),
-            );
-            return;
-          }
-        }
+      if (!mounted) return;
+
+      if (coords != null) {
+        setState(() {
+          _latitude = coords.lat;
+          _longitude = coords.lon;
+          _isGeocoding = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Localização encontrada!'),
+            backgroundColor: Colors.green,
+            duration: Duration(seconds: 2),
+          ),
+        );
+        return;
       }
-      
-      setState(() {
-        _isGeocoding = false;
-      });
-      
+
+      setState(() => _isGeocoding = false);
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Não foi possível encontrar a localização. Você pode criar a reclamação sem coordenadas.'),
+          content: Text(
+            'Não foi possível encontrar a localização. Você pode criar a reclamação sem coordenadas.',
+          ),
           backgroundColor: Colors.orange,
           duration: Duration(seconds: 3),
         ),
       );
     } catch (e) {
-      setState(() {
-        _isGeocoding = false;
-      });
+      if (mounted) setState(() => _isGeocoding = false);
       debugPrint('Erro ao fazer geocoding: $e');
-      // Não bloqueia o envio, apenas avisa
     }
   }
 
@@ -557,6 +504,8 @@ class _CreateComplaintPageState extends State<CreateComplaintPage> {
 
   @override
   Widget build(BuildContext context) {
+    final complaintTypes = context.watch<CategoryState>().categories;
+
     return Scaffold(
       appBar: AppBar(
         leading: const AppBackButton(),
@@ -605,25 +554,25 @@ class _CreateComplaintPageState extends State<CreateComplaintPage> {
                 Wrap(
                   spacing: 8,
                   runSpacing: 8,
-                  children: _complaintTypes.map((type) {
-                    final isSelected = _selectedType == type['value'];
+                  children: complaintTypes.map((type) {
+                    final isSelected = _selectedType == type.slug;
                     return ChoiceChip(
                       label: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(type['icon'] as IconData, size: 18),
+                          Icon(type.icon, size: 18, color: type.color),
                           const SizedBox(width: 4),
-                          Text(type['label'] as String),
+                          Text(type.name),
                         ],
                       ),
                       selected: isSelected,
                       onSelected: (selected) {
                         setState(() {
-                          _selectedType = selected ? type['value'] as String : null;
+                          _selectedType = selected ? type.slug : null;
                         });
                       },
-                      selectedColor: AppColors.primary.withValues(alpha: 0.2),
-                      checkmarkColor: AppColors.primary,
+                      selectedColor: type.color.withValues(alpha: 0.2),
+                      checkmarkColor: type.color,
                     );
                   }).toList(),
                 ),

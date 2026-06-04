@@ -1,5 +1,6 @@
 const supabasePool = require('../infra/supabasePool');
 const { uploadToSupabase, listBlobs, removeFolder } = require('../infra/supabaseStorageClient');
+const { INSERT_COMPLAINT_WITH_GEO } = require('../services/complaintGeoService');
 const { checkAchievements } = require('../infra/achievementChecker');
 const { checkMissionProgress, checkMissionResolution } = require('../infra/missionProgressChecker');
 
@@ -20,12 +21,17 @@ exports.create = async (req, res) => {
 
         const pool = await supabasePool.getPgPool();
 
-        // Inserir a reclamação na tabela
         // created_at será preenchido automaticamente pelo banco (default: now())
-        const result = await pool.query(
-            'INSERT INTO complaints (description, occurrence_date, created_by, category, address, latitude, longitude) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *',
-            [description, occurrence_date, created_by, type || null, address || null, latitude || null, longitude || null]
-        );
+        // location, cd_mun, setor/bairro e tenant_id derivados de lat/lng via geo.* (ADR-001)
+        const result = await pool.query(INSERT_COMPLAINT_WITH_GEO, [
+            description,
+            occurrence_date,
+            created_by,
+            type || null,
+            address || null,
+            latitude != null ? String(latitude) : null,
+            longitude != null ? String(longitude) : null,
+        ]);
 
         const complaintId = result.rows[0].id;
 
