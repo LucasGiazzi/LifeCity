@@ -1,25 +1,21 @@
-import '../../../core/constants/app_images.dart';
 import 'onboarding_model.dart';
 
 class OnboardingData {
   static List<OnboardingModel> items = [
     OnboardingModel(
-      imageUrl: AppImages.onboarding1,
-      headline: 'Browse all the category',
-      description:
-          'In aliquip aute exercitation ut et nisi ut mollit. Deserunt dolor elit pariatur aute .',
+      imageUrl: 'assets/images/onboarding1.png',
+      headline: 'Bem-vindo ao\nLifeCity',
+      description: 'A rede social da sua cidade. Conecte-se com o que acontece perto de você.',
     ),
     OnboardingModel(
-      imageUrl: AppImages.onboarding2,
-      headline: 'Amazing Discounts & Offers',
-      description:
-          'In aliquip aute exercitation ut et nisi ut mollit. Deserunt dolor elit pariatur aute .',
+      imageUrl: 'assets/images/onboarding2.PNG',
+      headline: 'Registre o que\nfaz falta',
+      description: 'Buracos, iluminação, segurança — reporte problemas e ajude a sua cidade a melhorar.',
     ),
     OnboardingModel(
-      imageUrl: AppImages.onboarding3,
-      headline: 'Delivery in 30 Min',
-      description:
-          'In aliquip aute exercitation ut et nisi ut mollit. Deserunt dolor elit pariatur aute .',
+      imageUrl: 'assets/images/onboarding3.PNG',
+      headline: 'Juntos pela\ncidade',
+      description: 'Veja o que outros moradores estão reportando e ajude a prefeitura a priorizar o que mais importa.',
     ),
   ];
 }

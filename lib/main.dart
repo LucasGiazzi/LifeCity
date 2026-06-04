@@ -1,11 +1,34 @@
 import 'package:flutter/material.dart';
-
-import 'core/routes/app_routes.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
+import 'core/components/connectivity_banner.dart';
 import 'core/routes/on_generate_route.dart';
+import 'core/state/auth_state.dart';
+import 'core/state/theme_provider.dart';
 import 'core/themes/app_themes.dart';
+import 'views/wrapper.dart';
 
-void main() {
-  runApp(const MyApp());
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await dotenv.load(fileName: 'backend/.env');
+  GoogleFonts.config.allowRuntimeFetching = true;
+
+  final authState = AuthState();
+  await authState.initialize();
+
+  final themeProvider = ThemeProvider();
+  await themeProvider.initialize();
+
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider.value(value: authState),
+        ChangeNotifierProvider.value(value: themeProvider),
+      ],
+      child: const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -13,11 +36,16 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = context.watch<ThemeProvider>();
+
     return MaterialApp(
-      title: 'eGrocery',
-      theme: AppTheme.defaultTheme,
+      title: 'LifeCity',
+      theme: AppTheme.light(accent: themeProvider.accentColor),
+      darkTheme: AppTheme.dark(accent: themeProvider.accentColor),
+      themeMode: themeProvider.mode,
+      builder: (context, child) => ConnectivityBanner(child: child!),
+      home: const Wrapper(),
       onGenerateRoute: RouteGenerator.onGenerate,
-      initialRoute: AppRoutes.onboarding,
     );
   }
 }

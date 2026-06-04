@@ -4,6 +4,7 @@ plugins {
     id "dev.flutter.flutter-gradle-plugin"
 }
 
+
 def localProperties = new Properties()
 def localPropertiesFile = rootProject.file('local.properties')
 if (localPropertiesFile.exists()) {
@@ -23,26 +24,26 @@ if (flutterVersionName == null) {
 }
 
 android {
-    namespace "com.seu.pacote" // já deve existir no seu
-    compileSdk 34
+  namespace "br.com.lucas.lifecity"     // <= seu pacote
+  compileSdk 36
 
-    defaultConfig {
-        minSdkVersion flutter.minSdkVersion
-        targetSdk 34
-    }
+  defaultConfig {
+    applicationId "br.com.lucas.lifecity"  // <= igual ao namespace
+    minSdkVersion flutter.minSdkVersion
+    targetSdk 36
+    versionCode 1               // <= ISSO resolve o "Manifest versionCode not found"
+    versionName "1.0"
+    multiDexEnabled true
+  }
 
-    compileOptions {
-        sourceCompatibility JavaVersion.VERSION_17
-        targetCompatibility JavaVersion.VERSION_17
-    }
-    kotlinOptions {
-        jvmTarget = "17"
-    }
+  compileOptions {
+    sourceCompatibility JavaVersion.VERSION_17
+    targetCompatibility JavaVersion.VERSION_17
+  }
+  kotlinOptions { jvmTarget = "17" }
 }
 
 
 flutter {
     source '../..'
 }
-
-dependencies {}

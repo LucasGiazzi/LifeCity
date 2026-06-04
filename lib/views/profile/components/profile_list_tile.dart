@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 
+import '../../../core/constants/app_symbols.dart';
 import '../../../core/constants/constants.dart';
 
 class ProfileListTile extends StatelessWidget {
@@ -12,11 +12,12 @@ class ProfileListTile extends StatelessWidget {
   });
 
   final void Function() onTap;
-  final String icon;
+  final IconData icon;
   final String title;
 
   @override
   Widget build(BuildContext context) {
+    final iconColor = Theme.of(context).iconTheme.color ?? Colors.black;
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -26,17 +27,15 @@ class ProfileListTile extends StatelessWidget {
           padding: const EdgeInsets.all(8.0),
           child: Row(
             children: [
-              SvgPicture.asset(icon),
+              Icon(icon, color: iconColor, size: 22),
               const SizedBox(width: 16),
               Text(
                 title,
-                style: Theme.of(context)
-                    .textTheme
-                    .bodyLarge
-                    ?.copyWith(color: Colors.black),
+                style: Theme.of(context).textTheme.bodyLarge,
               ),
               const Spacer(),
-              SvgPicture.asset(AppIcons.right),
+              Icon(AppSymbols.chevronRight,
+                  size: 16, color: iconColor.withValues(alpha: 0.5)),
             ],
           ),
         ),

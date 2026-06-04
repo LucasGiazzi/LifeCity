@@ -31,9 +31,7 @@ class AppSettingsListTile extends StatelessWidget {
                 children: [
                   Text(
                     label,
-                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                          color: Colors.black,
-                        ),
+                    style: Theme.of(context).textTheme.bodyLarge,
                   ),
                   const Spacer(),
                   if (trailing != null) trailing!,

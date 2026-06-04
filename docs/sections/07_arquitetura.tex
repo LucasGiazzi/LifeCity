@@ -1,0 +1,54 @@
+% ============================================================
+% SEÇÃO 7 – MODELO ARQUITETURAL
+% ============================================================
+
+\section{MODELO ARQUITETURAL}
+
+A arquitetura do LifeCity é estruturada em três camadas bem definidas,
+seguindo o padrão de separação de responsabilidades:
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.6\textwidth]{images/arquitetura.png}
+  \caption{Modelo arquitetural do LifeCity}
+\end{figure}
+
+\begin{itemize}
+  \item \textbf{Camada de apresentação — Flutter App:} Responsável pela
+        interface com o usuário. Desenvolvida em Flutter/Dart, comunica-se
+        exclusivamente com a camada de aplicação via requisições HTTP REST,
+        utilizando a biblioteca \texttt{Dio}. Gerencia autenticação local por
+        meio de tokens JWT armazenados de forma segura no dispositivo.
+
+  \item \textbf{Camada de aplicação — Node.js/Express (Backend):} Responsável
+        por toda a lógica de negócio, autenticação e autorização. Implementa
+        API RESTful com os seguintes grupos de endpoints:
+        \begin{itemize}
+          \item \texttt{/api/auth} — cadastro, login, logout, refresh token;
+          \item \texttt{/api/users} — perfil, edição, XP, amizades;
+          \item \texttt{/api/complaints} — CRUD de reclamações, curtidas, comentários, testemunhos;
+          \item \texttt{/api/events} — CRUD de eventos;
+          \item \texttt{/api/achievements} — conquistas do usuário;
+          \item \texttt{/api/notifications} — listagem e marcação como lida;
+          \item \texttt{/api/missions} — missões ativas, detalhes;
+          \item \texttt{/api/missions/teams} — criar equipe, convidar, aceitar/recusar convite;
+          \item \texttt{/api/reports} — denúncias de reclamações e usuários com moderação automática por threshold;
+          \item \texttt{/api/auth/forgot-password} e \texttt{/api/auth/reset-password} — recuperação de senha por e-mail com código de verificação de uso único.
+        \end{itemize}
+        Gerencia tokens JWT (access token de curta duração + refresh token de
+        longa duração), incluindo renovação automática de sessão e invalidação
+        no logout. Checadores de conquistas (\texttt{achievementChecker.js}) e
+        de progresso de missões (\texttt{missionProgressChecker.js}) são
+        disparados de forma assíncrona após ações do usuário. O envio de e-mails
+        transacionais (recuperação de senha) é feito via \texttt{Nodemailer}
+        integrado ao Gmail com autenticação por senha de aplicativo.
+
+  \item \textbf{Camada de dados — PostgreSQL via Supabase:} Responsável pelo
+        armazenamento persistente dos dados. O banco PostgreSQL é gerenciado
+        pela plataforma Supabase, que também provê o serviço de armazenamento
+        de arquivos de mídia (fotos de perfil e imagens de reclamações).
+\end{itemize}
+
+O aplicativo Flutter nunca acessa o banco de dados diretamente; toda
+comunicação passa obrigatoriamente pelo backend Node.js, garantindo
+controle de acesso e segurança centralizada.

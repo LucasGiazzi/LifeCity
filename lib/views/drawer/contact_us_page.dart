@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/svg.dart';
 
 import '../../core/components/app_back_button.dart';
 import '../../core/components/network_image.dart';
+import '../../core/constants/app_symbols.dart';
 import '../../core/constants/constants.dart';
 
 class ContactUsPage extends StatelessWidget {
@@ -15,7 +15,6 @@ class ContactUsPage extends StatelessWidget {
         leading: const AppBackButton(),
         title: const Text('Contact Us'),
       ),
-      backgroundColor: AppColors.cardColor,
       body: Container(
         margin: const EdgeInsets.all(AppDefaults.padding),
         padding: const EdgeInsets.symmetric(
@@ -23,7 +22,7 @@ class ContactUsPage extends StatelessWidget {
           vertical: AppDefaults.padding * 2,
         ),
         decoration: BoxDecoration(
-          color: AppColors.scaffoldBackground,
+          color: Theme.of(context).cardColor,
           borderRadius: AppDefaults.borderRadius,
         ),
         child: Column(
@@ -34,7 +33,7 @@ class ContactUsPage extends StatelessWidget {
               child: Text(
                 'Contact Us',
                 style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      color: Colors.black,
+                      color: Theme.of(context).textTheme.bodyLarge?.color,
                       fontWeight: FontWeight.bold,
                     ),
               ),
@@ -45,7 +44,7 @@ class ContactUsPage extends StatelessWidget {
             /// Number
             Row(
               children: [
-                SvgPicture.asset(AppIcons.contactPhone),
+                const Icon(AppSymbols.phone),
                 const SizedBox(width: AppDefaults.padding),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -53,14 +52,14 @@ class ContactUsPage extends StatelessWidget {
                     Text(
                       '+8801710000000',
                       style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                            color: Colors.black,
+                            color: Theme.of(context).textTheme.bodyLarge?.color,
                           ),
                     ),
                     const SizedBox(height: AppDefaults.padding / 2),
                     Text(
                       '+8801710000000',
                       style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                            color: Colors.black,
+                            color: Theme.of(context).textTheme.bodyLarge?.color,
                           ),
                     ),
                   ],
@@ -70,12 +69,12 @@ class ContactUsPage extends StatelessWidget {
             const SizedBox(height: AppDefaults.padding),
             Row(
               children: [
-                SvgPicture.asset(AppIcons.contactEmail),
+                const Icon(AppSymbols.email),
                 const SizedBox(width: AppDefaults.padding),
                 Text(
                   'jonarban45@gmail.com',
                   style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                        color: Colors.black,
+                        color: Theme.of(context).textTheme.bodyLarge?.color,
                       ),
                 ),
               ],
@@ -84,12 +83,12 @@ class ContactUsPage extends StatelessWidget {
             const SizedBox(height: AppDefaults.padding),
             Row(
               children: [
-                SvgPicture.asset(AppIcons.contactMap),
+                const Icon(AppSymbols.locationOn),
                 const SizedBox(width: AppDefaults.padding),
                 Text(
                   '26/C Mohammadpur\nDhaka, Bangladesh',
                   style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                        color: Colors.black,
+                        color: Theme.of(context).textTheme.bodyLarge?.color,
                       ),
                 ),
               ],

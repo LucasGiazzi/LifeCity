@@ -1,6 +1,8 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
+import '../../../core/constants/app_symbols.dart';
+
 import '../../../core/components/skeleton.dart';
 
 class IntroLoginBackgroundWrapper extends StatelessWidget {
@@ -19,7 +21,7 @@ class IntroLoginBackgroundWrapper extends StatelessWidget {
         image: imageProvider,
       ),
       placeholder: (context, url) => const Skeleton(),
-      errorWidget: (context, url, error) => const Icon(Icons.error),
+      errorWidget: (context, url, error) => const Icon(AppSymbols.error),
     );
   }
 }

@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
-
+import 'package:provider/provider.dart';
+import '../../../core/constants/app_symbols.dart';
 import '../../../core/constants/constants.dart';
 import '../../../core/routes/app_routes.dart';
+import '../../../core/state/auth_state.dart';
 import 'profile_list_tile.dart';
 
 class ProfileMenuOptions extends StatelessWidget {
-  const ProfileMenuOptions({
-    super.key,
-  });
+  const ProfileMenuOptions({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -15,40 +15,42 @@ class ProfileMenuOptions extends StatelessWidget {
       margin: const EdgeInsets.all(AppDefaults.padding),
       padding: const EdgeInsets.all(AppDefaults.padding),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         boxShadow: AppDefaults.boxShadow,
         borderRadius: AppDefaults.borderRadius,
       ),
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
           ProfileListTile(
-            title: 'My Profile',
-            icon: AppIcons.profilePerson,
+            title: 'Editar Perfil',
+            icon: AppSymbols.person,
             onTap: () => Navigator.pushNamed(context, AppRoutes.profileEdit),
           ),
           const Divider(thickness: 0.1),
           ProfileListTile(
-            title: 'Notification',
-            icon: AppIcons.profileNotification,
+            title: 'Notificações',
+            icon: AppSymbols.notifications,
             onTap: () => Navigator.pushNamed(context, AppRoutes.notifications),
           ),
           const Divider(thickness: 0.1),
           ProfileListTile(
-            title: 'Setting',
-            icon: AppIcons.profileSetting,
+            title: 'Configurações',
+            icon: AppSymbols.settings,
             onTap: () => Navigator.pushNamed(context, AppRoutes.settings),
           ),
           const Divider(thickness: 0.1),
           ProfileListTile(
-            title: 'Payment',
-            icon: AppIcons.profilePayment,
-            onTap: () => Navigator.pushNamed(context, AppRoutes.paymentMethod),
-          ),
-          const Divider(thickness: 0.1),
-          ProfileListTile(
-            title: 'Logout',
-            icon: AppIcons.profileLogout,
-            onTap: () => Navigator.pushNamed(context, AppRoutes.loginOrSignup),
+            title: 'Sair',
+            icon: AppSymbols.logout,
+            onTap: () async {
+              final nav = Navigator.of(context);
+              await Provider.of<AuthState>(context, listen: false).logout();
+              nav.pushNamedAndRemoveUntil(
+                AppRoutes.login,
+                (route) => false,
+              );
+            },
           ),
         ],
       ),

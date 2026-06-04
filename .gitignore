@@ -45,3 +45,13 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+**/.env
+**/.env.prod
+
+# Firebase
+/android/app/google-services.json
+
+# Node
+node_modules/
+backend/node_modules/

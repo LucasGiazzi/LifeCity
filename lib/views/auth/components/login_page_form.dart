@@ -1,16 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 
-import '../../../core/constants/constants.dart';
+import '../../../core/constants/app_colors.dart';
+import '../../../core/constants/app_symbols.dart';
 import '../../../core/routes/app_routes.dart';
-import '../../../core/themes/app_themes.dart';
+import '../../../core/state/auth_state.dart';
 import '../../../core/utils/validators.dart';
-import 'login_button.dart';
 
 class LoginPageForm extends StatefulWidget {
-  const LoginPageForm({
-    super.key,
-  });
+  const LoginPageForm({super.key});
 
   @override
   State<LoginPageForm> createState() => _LoginPageFormState();
@@ -18,82 +17,236 @@ class LoginPageForm extends StatefulWidget {
 
 class _LoginPageFormState extends State<LoginPageForm> {
   final _key = GlobalKey<FormState>();
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+  bool _isPasswordObscured = true;
+  bool _keepLoggedIn = true;
 
-  bool isPasswordShown = false;
-  void onPassShowClicked() {
-    isPasswordShown = !isPasswordShown;
-    setState(() {});
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _keepLoggedIn = Provider.of<AuthState>(context, listen: false).keepLoggedIn;
   }
 
-  void onLogin() {
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
+
+  Future<void> onLogin() async {
     final bool isFormOkay = _key.currentState?.validate() ?? false;
-    if (isFormOkay) {
-      Navigator.pushNamed(context, AppRoutes.entryPoint);
+    if (!isFormOkay) return;
+
+    final authState = Provider.of<AuthState>(context, listen: false);
+    final success = await authState.login(
+      _emailController.text.trim(),
+      _passwordController.text.trim(),
+    );
+
+    if (success && mounted) {
+      Navigator.pushNamedAndRemoveUntil(
+        context,
+        AppRoutes.loginLoading,
+        (route) => false,
+      );
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Theme(
-      data: AppTheme.defaultTheme.copyWith(
-        inputDecorationTheme: AppTheme.secondaryInputDecorationTheme,
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(AppDefaults.padding),
-        child: Form(
+    return Consumer<AuthState>(
+      builder: (context, authState, _) {
+        return Form(
           key: _key,
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Phone Field
-              const Text("Phone Number"),
-              const SizedBox(height: 8),
+              // E-mail
               TextFormField(
-                keyboardType: TextInputType.number,
-                validator: Validators.requiredWithFieldName('Phone').call,
+                controller: _emailController,
+                keyboardType: TextInputType.emailAddress,
+                validator: Validators.email.call,
                 textInputAction: TextInputAction.next,
-              ),
-              const SizedBox(height: AppDefaults.padding),
-
-              // Password Field
-              const Text("Password"),
-              const SizedBox(height: 8),
-              TextFormField(
-                validator: Validators.password.call,
-                onFieldSubmitted: (v) => onLogin(),
-                textInputAction: TextInputAction.done,
-                obscureText: !isPasswordShown,
+                style: GoogleFonts.poppins(fontSize: 15, color: AppColors.dark),
                 decoration: InputDecoration(
-                  suffixIcon: Material(
-                    color: Colors.transparent,
-                    child: IconButton(
-                      onPressed: onPassShowClicked,
-                      icon: SvgPicture.asset(
-                        AppIcons.eye,
-                        width: 24,
-                      ),
+                  hintText: 'E-mail',
+                  prefixIcon: const Icon(AppSymbols.email,
+                      color: AppColors.placeholder, size: 20),
+                ),
+              ),
+              const SizedBox(height: 14),
+
+              // Senha
+              TextFormField(
+                controller: _passwordController,
+                validator: Validators.password.call,
+                textInputAction: TextInputAction.done,
+                onFieldSubmitted: (_) => onLogin(),
+                obscureText: _isPasswordObscured,
+                style: GoogleFonts.poppins(fontSize: 15, color: AppColors.dark),
+                decoration: InputDecoration(
+                  hintText: 'Senha',
+                  prefixIcon: const Icon(AppSymbols.lock,
+                      color: AppColors.placeholder, size: 20),
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      _isPasswordObscured
+                          ? AppSymbols.visibility
+                          : AppSymbols.visibilityOff,
+                      color: AppColors.placeholder,
+                      size: 20,
                     ),
+                    onPressed: () =>
+                        setState(() => _isPasswordObscured = !_isPasswordObscured),
                   ),
                 ),
               ),
 
-              // Forget Password labelLarge
-              Align(
-                alignment: Alignment.centerRight,
-                child: TextButton(
-                  onPressed: () {
-                    Navigator.pushNamed(context, AppRoutes.forgotPassword);
-                  },
-                  child: const Text('Forget Password?'),
-                ),
+              // Esqueceu a senha + Manter logado
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    children: [
+                      SizedBox(
+                        width: 24,
+                        height: 24,
+                        child: Checkbox(
+                          value: _keepLoggedIn,
+                          activeColor: AppColors.primary,
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(4)),
+                          onChanged: (val) {
+                            final v = val ?? true;
+                            setState(() => _keepLoggedIn = v);
+                            Provider.of<AuthState>(context, listen: false)
+                                .setKeepLoggedIn(v);
+                          },
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      GestureDetector(
+                        onTap: () {
+                          final v = !_keepLoggedIn;
+                          setState(() => _keepLoggedIn = v);
+                          Provider.of<AuthState>(context, listen: false)
+                              .setKeepLoggedIn(v);
+                        },
+                        child: Text(
+                          'Manter logado',
+                          style: GoogleFonts.poppins(
+                            fontSize: 13,
+                            color: AppColors.dark,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  TextButton(
+                    onPressed: () =>
+                        Navigator.pushNamed(context, AppRoutes.forgotPassword),
+                    child: Text(
+                      'Esqueceu a senha?',
+                      style: GoogleFonts.poppins(
+                        color: AppColors.primary,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                ],
               ),
 
-              // Login labelLarge
-              LoginButton(onPressed: onLogin),
+              // Erro
+              if (authState.errorMessage != null)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: Text(
+                    authState.errorMessage!,
+                    textAlign: TextAlign.center,
+                    style: GoogleFonts.poppins(color: Colors.red, fontSize: 13),
+                  ),
+                ),
+
+              const SizedBox(height: 4),
+
+              // Botão entrar
+              SizedBox(
+                height: 56,
+                child: authState.isLoading
+                    ? const Center(
+                        child: CircularProgressIndicator(color: AppColors.primary))
+                    : ElevatedButton(
+                        onPressed: onLogin,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primary,
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16)),
+                          elevation: 0,
+                        ),
+                        child: Text(
+                          'Entrar',
+                          style: GoogleFonts.poppins(
+                              fontSize: 16, fontWeight: FontWeight.w600),
+                        ),
+                      ),
+              ),
+
+              const SizedBox(height: 24),
+
+              // Criar conta
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    'Ainda não tem conta?',
+                    style: GoogleFonts.poppins(
+                        color: AppColors.placeholder, fontSize: 14),
+                  ),
+                  TextButton(
+                    onPressed: () =>
+                        Navigator.pushNamed(context, AppRoutes.signup),
+                    child: Text(
+                      'Criar conta',
+                      style: GoogleFonts.poppins(
+                        color: AppColors.primary,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 14,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+
+              // TODO: remover antes de produção
+              const SizedBox(height: 8),
+              SizedBox(
+                height: 48,
+                child: OutlinedButton.icon(
+                  onPressed: () => Navigator.pushNamedAndRemoveUntil(
+                    context,
+                    AppRoutes.entryPoint,
+                    (route) => false,
+                  ),
+                  icon: const Icon(AppSymbols.visibility, size: 18),
+                  label: Text(
+                    'Explorar visual (sem login)',
+                    style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.w500),
+                  ),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppColors.placeholder,
+                    side: const BorderSide(color: AppColors.gray),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                  ),
+                ),
+              ),
             ],
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }

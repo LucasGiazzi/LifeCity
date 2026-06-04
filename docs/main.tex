@@ -1,0 +1,100 @@
+% ============================================================
+% LifeCity – TCC PUC-Campinas 2026
+% Compilar com: pdflatex main.tex (2x para sumário correto)
+% ============================================================
+\documentclass[12pt, a4paper]{article}
+
+% ── Codificação e idioma ──────────────────────────────────────
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[brazil]{babel}
+
+% ── Layout ───────────────────────────────────────────────────
+\usepackage[top=3cm, bottom=2cm, left=3cm, right=2cm]{geometry}
+\usepackage{setspace}
+\onehalfspacing
+
+% ── Fonte ────────────────────────────────────────────────────
+\usepackage{times}
+
+% ── Gráficos e cores ─────────────────────────────────────────
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{float}
+
+% ── Tabelas ──────────────────────────────────────────────────
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{multirow}
+\usepackage{tabularx}
+
+% ── Links ────────────────────────────────────────────────────
+\usepackage[hidelinks]{hyperref}
+
+% ── Seções sem indentação de parágrafo ───────────────────────
+\usepackage{parskip}
+\setlength{\parskip}{6pt}
+
+% ── Cabeçalho/rodapé ─────────────────────────────────────────
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhf{}
+\rhead{\small LifeCity}
+\rfoot{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+
+% ── Sumário ──────────────────────────────────────────────────
+\usepackage{tocloft}
+\renewcommand{\cftsecleader}{\cftdotfill{\cftdotsep}}
+
+% ============================================================
+\begin{document}
+
+% ── Capa ─────────────────────────────────────────────────────
+\begin{titlepage}
+  \centering
+  \includegraphics[width=4cm]{images/puc_logo.png}\\[0.5cm]
+  {\large PONTIFÍCIA UNIVERSIDADE CATÓLICA DE CAMPINAS}\\[0.3cm]
+  {\large Faculdade de Engenharia de Software}\\[3cm]
+
+  Bernardo Wiemer -- 22023125\\
+  Lucas Martins Giazzi -- 22019941\\
+  João Victor Bezerra Batista Rocha -- 22020875\\
+  Yuri Viegas -- 22021857\\[2cm]
+
+  {\LARGE \textbf{LifeCity}}\\[2cm]
+
+  \begin{flushright}
+    \begin{minipage}{8cm}
+      Trabalho de conclusão de curso apresentado à Faculdade de
+      Engenharia de Software da Pontifícia Universidade Católica de
+      Campinas, como requisito para obtenção do grau de Bacharel em
+      Engenharia de Software.\\[0.5cm]
+      Orientadora: Professora Eliane F.~Y.~de Azevedo.
+    \end{minipage}
+  \end{flushright}
+
+  \vfill
+  {\large CAMPINAS}\\
+  {\large 2026}
+\end{titlepage}
+
+% ── Sumário ──────────────────────────────────────────────────
+\tableofcontents
+\newpage
+
+% ── Seções ───────────────────────────────────────────────────
+\input{sections/01_modelo_descritivo}
+\input{sections/02_casos_de_uso}
+\input{sections/03_especificacao_casos_uso}
+\input{sections/04_prototipo}
+\input{sections/05_iteracao}
+\input{sections/06_mer}
+\input{sections/07_arquitetura}
+\input{sections/08_backup_seguranca}
+\input{sections/09_casos_de_teste}
+\input{sections/10_conclusoes}
+\input{sections/11_bibliografia}
+
+\end{document}
