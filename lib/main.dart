@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'core/components/connectivity_banner.dart';
 import 'core/routes/on_generate_route.dart';
+import 'core/state/category_state.dart';
 import 'core/state/auth_state.dart';
 import 'core/state/theme_provider.dart';
 import 'core/themes/app_themes.dart';
@@ -17,6 +18,9 @@ void main() async {
   final authState = AuthState();
   await authState.initialize();
 
+  final categoryState = CategoryState();
+  await categoryState.initialize();
+
   final themeProvider = ThemeProvider();
   await themeProvider.initialize();
 
@@ -24,6 +28,7 @@ void main() async {
     MultiProvider(
       providers: [
         ChangeNotifierProvider.value(value: authState),
+        ChangeNotifierProvider.value(value: categoryState),
         ChangeNotifierProvider.value(value: themeProvider),
       ],
       child: const MyApp(),

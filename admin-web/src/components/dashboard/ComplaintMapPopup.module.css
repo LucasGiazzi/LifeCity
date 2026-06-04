@@ -1,0 +1,98 @@
+.popup {
+  position: relative;
+  width: 280px;
+  margin: -1px -1px -1px -1px;
+  overflow: hidden;
+  font-family: 'Poppins', system-ui, sans-serif;
+}
+
+.accent {
+  height: 4px;
+  width: 100%;
+}
+
+.body {
+  padding: 14px 16px 16px;
+}
+
+.topRow {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.categoryChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.2;
+  max-width: 72%;
+}
+
+.chipIcon {
+  font-size: 11px;
+  opacity: 0.9;
+}
+
+.status {
+  flex-shrink: 0;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--lc-placeholder);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding-top: 4px;
+}
+
+.meta {
+  margin: 0 0 8px;
+  font-size: 13px;
+  color: var(--lc-dark);
+}
+
+.metaLabel {
+  display: block;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--lc-placeholder);
+  margin-bottom: 2px;
+}
+
+.address {
+  margin: 0 0 14px;
+  font-size: 12px;
+  line-height: 1.45;
+  color: rgba(13, 40, 24, 0.72);
+}
+
+.cta {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: var(--lc-dark);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background 0.15s, transform 0.1s;
+}
+
+.cta:hover {
+  background: var(--lc-primary-dark);
+}
+
+.cta:active {
+  transform: scale(0.98);
+}

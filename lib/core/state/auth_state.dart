@@ -2,11 +2,13 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
 import '../services/api_service.dart';
+import '../services/location_auth_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class AuthState extends ChangeNotifier {
   final AuthService _authService = AuthService();
   final ApiService _apiService = ApiService();
+  final LocationAuthService _locationAuthService = LocationAuthService();
   bool _isLoading = false;
   bool get isLoading => _isLoading;
 
@@ -27,6 +29,12 @@ class AuthState extends ChangeNotifier {
   bool get hasSeenOnboarding => _hasSeenOnboarding;
 
   bool get isAuthenticated => _accessToken != null && _accessToken!.isNotEmpty;
+
+  bool get needsLocationConfirmation {
+    if (!isAuthenticated || _currentUser == null) return false;
+    final confirmed = _currentUser!['address_confirmed_at'];
+    return confirmed == null || (confirmed is String && confirmed.isEmpty);
+  }
 
   Future<bool> login(String email, String password) async {
     setLoading(true);
@@ -69,18 +77,70 @@ class AuthState extends ChangeNotifier {
     setErrorMessage(null);
 
     try {
-      final userCredential = await _authService.signUp(
+      final registered = await _authService.signUp(
         email: email,
         password: password,
         name: name,
         cpf: cpf,
         phone: phone,
       );
+      if (registered == null) {
+        setErrorMessage('Não foi possível concluir o cadastro.');
+        setLoading(false);
+        return false;
+      }
+
+      final loggedIn = await login(email, password);
       setLoading(false);
-      return userCredential != null;
+      return loggedIn;
     } catch (e) {
       setErrorMessage('Ocorreu um erro durante o cadastro.');
       setLoading(false);
+      return false;
+    }
+  }
+
+  Future<ResolveLocationResult?> resolveLocation(double lat, double lng) async {
+    setErrorMessage(null);
+    try {
+      return await _locationAuthService.resolveLocation(
+        latitude: lat,
+        longitude: lng,
+      );
+    } on LocationAuthException catch (e) {
+      setErrorMessage(e.message);
+      rethrow;
+    } catch (e) {
+      setErrorMessage('Erro ao identificar sua cidade.');
+      return null;
+    }
+  }
+
+  Future<bool> confirmLocation({
+    required String cdMun,
+    required String address,
+    required double latitude,
+    required double longitude,
+  }) async {
+    setErrorMessage(null);
+    try {
+      final result = await _locationAuthService.confirmLocation(
+        cdMun: cdMun,
+        address: address,
+        latitude: latitude,
+        longitude: longitude,
+      );
+      if (result != null) {
+        await loadUserData();
+        return true;
+      }
+      setErrorMessage('Erro ao confirmar localização.');
+      return false;
+    } on LocationAuthException catch (e) {
+      setErrorMessage(e.message);
+      return false;
+    } catch (e) {
+      setErrorMessage('Erro ao confirmar localização.');
       return false;
     }
   }

@@ -45,11 +45,10 @@ class _LoginPageFormState extends State<LoginPageForm> {
     );
 
     if (success && mounted) {
-      Navigator.pushNamedAndRemoveUntil(
-        context,
-        AppRoutes.entryPoint,
-        (route) => false,
-      );
+      final route = authState.needsLocationConfirmation
+          ? AppRoutes.locationConfirmation
+          : AppRoutes.entryPoint;
+      Navigator.pushNamedAndRemoveUntil(context, route, (route) => false);
     }
   }
 

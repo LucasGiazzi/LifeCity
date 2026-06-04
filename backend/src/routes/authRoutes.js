@@ -31,6 +31,10 @@ router.post('/logout', authController.logout);
 
 router.get('/me', authenticateToken, authController.getMe);
 
+router.post('/resolve-location', authenticateToken, authController.resolveLocation);
+
+router.post('/confirm-location', authenticateToken, authController.confirmLocation);
+
 router.put('/editUser', authenticateToken, upload.single('pfp'), authController.editUser);
 
 module.exports = router;

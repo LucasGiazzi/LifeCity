@@ -1,0 +1,21 @@
+-- Executar após revisão
+-- ADR-001 Fase 1: backfill idempotente de location/tenant/geo em complaints existentes (opcional)
+
+UPDATE public.complaints c
+SET
+  location = geo.point_from_latlng(c.latitude, c.longitude),
+  cd_mun   = geo.resolve_cd_mun(geo.point_from_latlng(c.latitude, c.longitude)),
+  cd_setor = geo.resolve_cd_setor(
+               geo.point_from_latlng(c.latitude, c.longitude),
+               geo.resolve_cd_mun(geo.point_from_latlng(c.latitude, c.longitude))
+             ),
+  cd_bairro = geo.resolve_cd_bairro(
+                geo.point_from_latlng(c.latitude, c.longitude),
+                geo.resolve_cd_mun(geo.point_from_latlng(c.latitude, c.longitude))
+              ),
+  tenant_id = t.id
+FROM public.tenants t
+WHERE c.location IS NULL
+  AND c.latitude IS NOT NULL
+  AND c.longitude IS NOT NULL
+  AND t.cd_mun = geo.resolve_cd_mun(geo.point_from_latlng(c.latitude, c.longitude));

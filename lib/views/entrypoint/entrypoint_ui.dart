@@ -16,6 +16,7 @@ import '../../core/services/complaint_service.dart';
 import '../../core/state/filter_controller.dart';
 import '../../core/state/filter_scope.dart';
 import '../../core/state/auth_state.dart';
+import '../../core/state/category_state.dart';
 import '../menu/menu_page.dart';
 import '../profile/profile_page.dart';
 import 'components/app_navigation_bar.dart';
@@ -142,16 +143,9 @@ class _GradientFab extends StatelessWidget {
 class _FilterBar extends StatelessWidget {
   const _FilterBar();
 
-  static const List<Map<String, dynamic>> _categories = [
-    {'key': 'infraestrutura', 'label': 'Infra', 'icon': Icons.construction, 'color': Colors.orange},
-    {'key': 'seguranca', 'label': 'Segurança', 'icon': Icons.security, 'color': Colors.red},
-    {'key': 'limpeza', 'label': 'Limpeza', 'icon': Icons.cleaning_services, 'color': Colors.teal},
-    {'key': 'transito', 'label': 'Trânsito', 'icon': Icons.traffic, 'color': Colors.amber},
-    {'key': 'outros', 'label': 'Outros', 'icon': Icons.report_problem, 'color': Colors.grey},
-  ];
-
   @override
   Widget build(BuildContext context) {
+    final categories = context.watch<CategoryState>().categories;
     final filters = FilterScope.of(context);
     return ListenableBuilder(
       listenable: filters,
@@ -161,15 +155,15 @@ class _FilterBar extends StatelessWidget {
           clipBehavior: Clip.none,
           child: Row(
             children: [
-              for (final cat in _categories)
+              for (final cat in categories)
                 Padding(
                   padding: const EdgeInsets.only(right: 8),
                   child: _FilterChip(
-                    label: cat['label'] as String,
-                    icon: cat['icon'] as IconData,
-                    color: cat['color'] as Color,
-                    isSelected: filters.isSelected(cat['key'] as String),
-                    onTap: () => filters.toggle(cat['key'] as String),
+                    label: cat.shortName,
+                    icon: cat.icon,
+                    color: cat.color,
+                    isSelected: filters.isSelected(cat.slug),
+                    onTap: () => filters.toggle(cat.slug),
                   ),
                 ),
             ],
@@ -654,25 +648,11 @@ class _ComplaintPin extends StatelessWidget {
   final String? type;
   const _ComplaintPin({this.type});
 
-  static const _cats = [
-    {'key': 'infraestrutura', 'icon': Icons.construction, 'color': Colors.orange},
-    {'key': 'seguranca', 'icon': Icons.security, 'color': Colors.red},
-    {'key': 'limpeza', 'icon': Icons.cleaning_services, 'color': Colors.teal},
-    {'key': 'transito', 'icon': Icons.traffic, 'color': Colors.amber},
-    {'key': 'outros', 'icon': Icons.report_problem, 'color': Colors.grey},
-  ];
-
   @override
   Widget build(BuildContext context) {
-    final cat = type == null
-        ? {'icon': Icons.warning, 'color': Colors.red}
-        : _cats.firstWhere(
-            (c) => c['key'] == type!.toLowerCase(),
-            orElse: () => {'icon': Icons.warning, 'color': Colors.red},
-          );
-
-    final color = cat['color'] as Color;
-    final icon = cat['icon'] as IconData;
+    final cat = context.watch<CategoryState>().resolve(type);
+    final color = cat.color;
+    final icon = cat.icon;
 
     return Container(
       decoration: BoxDecoration(
@@ -938,20 +918,12 @@ class _TypePill extends StatelessWidget {
   final String type;
   const _TypePill({required this.type});
 
-  static const _map = {
-    'infraestrutura': (Icons.construction, Colors.orange, 'Infraestrutura'),
-    'seguranca': (Icons.security, Colors.red, 'Segurança'),
-    'limpeza': (Icons.cleaning_services, Colors.teal, 'Limpeza'),
-    'transito': (Icons.traffic, Colors.amber, 'Trânsito'),
-    'outros': (Icons.report_problem, Colors.grey, 'Outros'),
-  };
-
   @override
   Widget build(BuildContext context) {
-    final entry = _map[type.toLowerCase()];
-    final icon = entry?.$1 ?? Icons.category;
-    final color = entry?.$2 ?? Colors.grey;
-    final label = entry?.$3 ?? type;
+    final cat = context.watch<CategoryState>().resolve(type);
+    final icon = cat.icon;
+    final color = cat.color;
+    final label = cat.name;
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),

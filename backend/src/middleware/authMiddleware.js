@@ -13,7 +13,12 @@ const authenticateToken = (req, res, next) => {
             return res.status(403).json({ message: 'Token inválido ou expirado.' });
         }
 
-        req.user = { id: decoded.userId };
+        req.user = {
+            id: decoded.userId,
+            tenantId: decoded.tenantId,
+            cd_mun: decoded.cd_mun,
+            tenantRole: decoded.tenantRole,
+        };
         next();
     });
 };
