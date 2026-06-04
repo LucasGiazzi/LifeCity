@@ -1,6 +1,9 @@
 import 'package:flutter/cupertino.dart';
 
+import '../../views/auth/code_verification_page.dart';
 import '../../views/auth/forget_password_page.dart';
+import '../../views/profile/friend_profile_page.dart';
+import '../../views/auth/login_loading_page.dart';
 import '../../views/auth/intro_login_page.dart';
 import '../../views/auth/login_or_signup_page.dart';
 import '../../views/auth/login_page.dart';
@@ -18,6 +21,8 @@ import '../../views/entrypoint/entrypoint_ui.dart';
 import '../../views/events/create_event_page.dart';
 import '../../views/complaints/create_complaint_page.dart';
 import '../../views/onboarding/onboarding_page.dart';
+import '../../views/missions/create_team_page.dart';
+import '../../views/missions/team_detail_page.dart';
 import '../../views/profile/notification_page.dart';
 import '../../views/profile/profile_edit_page.dart';
 import '../../views/profile/settings/change_password_page.dart';
@@ -33,6 +38,19 @@ class RouteGenerator {
     final route = settings.name;
 
     switch (route) {
+      case AppRoutes.loginLoading:
+        return CupertinoPageRoute(builder: (_) => const LoginLoadingPage());
+
+      case AppRoutes.friendProfile:
+        final args = settings.arguments as Map<String, dynamic>;
+        return CupertinoPageRoute(
+          builder: (_) => FriendProfilePage(
+            userId: args['userId'] as String,
+            userName: args['userName'] as String,
+            photoUrl: args['photoUrl'] as String?,
+          ),
+        );
+
       case AppRoutes.introLogin:
         return CupertinoPageRoute(builder: (_) => const IntroLoginPage());
 
@@ -66,8 +84,20 @@ class RouteGenerator {
       case AppRoutes.forgotPassword:
         return CupertinoPageRoute(builder: (_) => const ForgetPasswordPage());
 
+      case AppRoutes.codeVerification:
+        final email = settings.arguments as String;
+        return CupertinoPageRoute(
+          builder: (_) => CodeVerificationPage(email: email),
+        );
+
       case AppRoutes.passwordReset:
-        return CupertinoPageRoute(builder: (_) => const PasswordResetPage());
+        final args = settings.arguments as Map<String, dynamic>;
+        return CupertinoPageRoute(
+          builder: (_) => PasswordResetPage(
+            email: args['email'] as String,
+            code: args['code'] as String,
+          ),
+        );
 
       case AppRoutes.profileEdit:
         return CupertinoPageRoute(builder: (_) => const ProfileEditPage());
@@ -107,6 +137,15 @@ class RouteGenerator {
 
       case AppRoutes.contactUs:
         return CupertinoPageRoute(builder: (_) => const ContactUsPage());
+
+      case AppRoutes.createTeam:
+        return CupertinoPageRoute(builder: (_) => const CreateTeamPage());
+
+      case AppRoutes.teamDetail:
+        final teamId = settings.arguments as String;
+        return CupertinoPageRoute(
+          builder: (_) => TeamDetailPage(teamId: teamId),
+        );
 
       default:
         return errorRoute();

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_defaults.dart';
+import '../../core/constants/app_symbols.dart';
 import '../../core/models/event_model.dart';
 import '../../core/models/complaint_model.dart';
 import '../../core/services/event_service.dart';
@@ -95,8 +96,8 @@ class _MyItemsPageState extends State<MyItemsPage> with SingleTickerProviderStat
         bottom: TabBar(
           controller: _tabController,
           tabs: const [
-            Tab(text: 'Eventos', icon: Icon(Icons.event)),
-            Tab(text: 'Reclamações', icon: Icon(Icons.report_problem)),
+            Tab(text: 'Eventos', icon: Icon(Symbols.event)),
+            Tab(text: 'Reclamações', icon: Icon(AppSymbols.warning)),
           ],
         ),
       ),
@@ -118,7 +119,7 @@ class _MyItemsPageState extends State<MyItemsPage> with SingleTickerProviderStat
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.event_busy, size: 64, color: Colors.grey[400]),
+            Icon(Symbols.event_busy, size: 64, color: Colors.grey[400]),
             const SizedBox(height: 16),
             Text(
               'Você ainda não criou nenhum evento',
@@ -142,7 +143,7 @@ class _MyItemsPageState extends State<MyItemsPage> with SingleTickerProviderStat
               contentPadding: const EdgeInsets.all(16),
               leading: CircleAvatar(
                 backgroundColor: AppColors.primary.withOpacity(0.2),
-                child: Icon(Icons.event, color: AppColors.primary),
+                child: Icon(Symbols.event, color: AppColors.primary),
               ),
               title: Text(
                 event.description,
@@ -155,7 +156,7 @@ class _MyItemsPageState extends State<MyItemsPage> with SingleTickerProviderStat
                   if (event.address != null)
                     Row(
                       children: [
-                        const Icon(Icons.location_on, size: 14),
+                        const Icon(AppSymbols.locationOn, size: 14),
                         const SizedBox(width: 4),
                         Expanded(
                           child: Text(
@@ -170,7 +171,7 @@ class _MyItemsPageState extends State<MyItemsPage> with SingleTickerProviderStat
                   const SizedBox(height: 4),
                   Row(
                     children: [
-                      const Icon(Icons.access_time, size: 14),
+                      const Icon(Symbols.access_time, size: 14),
                       const SizedBox(width: 4),
                       Text(
                         _formatDateTime(event.startDate),
@@ -189,7 +190,7 @@ class _MyItemsPageState extends State<MyItemsPage> with SingleTickerProviderStat
                 ],
               ),
               trailing: IconButton(
-                icon: const Icon(Icons.delete, color: Colors.red),
+                icon: const Icon(AppSymbols.delete, color: Colors.red),
                 onPressed: () => _showDeleteEventDialog(event),
               ),
             ),
@@ -205,7 +206,7 @@ class _MyItemsPageState extends State<MyItemsPage> with SingleTickerProviderStat
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.report_problem, size: 64, color: Colors.grey[400]),
+            Icon(AppSymbols.warning, size: 64, color: Colors.grey[400]),
             const SizedBox(height: 16),
             Text(
               'Você ainda não criou nenhuma reclamação',
@@ -229,7 +230,7 @@ class _MyItemsPageState extends State<MyItemsPage> with SingleTickerProviderStat
               contentPadding: const EdgeInsets.all(16),
               leading: CircleAvatar(
                 backgroundColor: Colors.red.withOpacity(0.2),
-                child: const Icon(Icons.report_problem, color: Colors.red),
+                child: const Icon(AppSymbols.warning, color: Colors.red),
               ),
               title: Text(
                 complaint.description,
@@ -242,7 +243,7 @@ class _MyItemsPageState extends State<MyItemsPage> with SingleTickerProviderStat
                   if (complaint.address != null)
                     Row(
                       children: [
-                        const Icon(Icons.location_on, size: 14),
+                        const Icon(AppSymbols.locationOn, size: 14),
                         const SizedBox(width: 4),
                         Expanded(
                           child: Text(
@@ -257,7 +258,7 @@ class _MyItemsPageState extends State<MyItemsPage> with SingleTickerProviderStat
                   const SizedBox(height: 4),
                   Row(
                     children: [
-                      const Icon(Icons.calendar_today, size: 14),
+                      const Icon(AppSymbols.calendarToday, size: 14),
                       const SizedBox(width: 4),
                       Text(
                         _formatDate(complaint.occurrenceDate),
@@ -276,7 +277,7 @@ class _MyItemsPageState extends State<MyItemsPage> with SingleTickerProviderStat
                 ],
               ),
               trailing: IconButton(
-                icon: const Icon(Icons.delete, color: Colors.red),
+                icon: const Icon(AppSymbols.delete, color: Colors.red),
                 onPressed: () => _showDeleteComplaintDialog(complaint),
               ),
             ),
@@ -290,8 +291,9 @@ class _MyItemsPageState extends State<MyItemsPage> with SingleTickerProviderStat
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Confirmar Exclusão'),
-        content: const Text('Tem certeza que deseja excluir este evento?'),
+        backgroundColor: Colors.white,
+        title: const Text('Confirmar Exclusão', style: TextStyle(color: Colors.black87)),
+        content: const Text('Tem certeza que deseja excluir este evento?', style: TextStyle(color: Colors.black54)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -331,8 +333,9 @@ class _MyItemsPageState extends State<MyItemsPage> with SingleTickerProviderStat
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Confirmar Exclusão'),
-        content: const Text('Tem certeza que deseja excluir esta reclamação?'),
+        backgroundColor: Colors.white,
+        title: const Text('Confirmar Exclusão', style: TextStyle(color: Colors.black87)),
+        content: const Text('Tem certeza que deseja excluir esta reclamação?', style: TextStyle(color: Colors.black54)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),

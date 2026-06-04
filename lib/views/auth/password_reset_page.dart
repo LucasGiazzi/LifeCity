@@ -3,10 +3,14 @@ import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../core/constants/app_colors.dart';
+import '../../core/constants/app_symbols.dart';
 import '../../core/routes/app_routes.dart';
+import '../../core/services/auth_service.dart';
 
 class PasswordResetPage extends StatelessWidget {
-  const PasswordResetPage({super.key});
+  final String email;
+  final String code;
+  const PasswordResetPage({super.key, required this.email, required this.code});
 
   @override
   Widget build(BuildContext context) {
@@ -18,7 +22,6 @@ class PasswordResetPage extends StatelessWidget {
         backgroundColor: AppColors.dark,
         body: Column(
           children: [
-            // ── Header dark ──
             SafeArea(
               bottom: false,
               child: Padding(
@@ -29,7 +32,26 @@ class PasswordResetPage extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    SizedBox(height: screen.height * 0.01),
+                    GestureDetector(
+                      onTap: () => Navigator.pop(context),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(AppSymbols.arrowBack,
+                              color: Colors.white70, size: 16),
+                          const SizedBox(width: 4),
+                          Text(
+                            'Voltar',
+                            style: GoogleFonts.poppins(
+                              color: Colors.white70,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    SizedBox(height: screen.height * 0.025),
                     Container(
                       width: 48,
                       height: 48,
@@ -39,7 +61,7 @@ class PasswordResetPage extends StatelessWidget {
                         border: Border.all(
                             color: AppColors.primary.withValues(alpha: 0.4)),
                       ),
-                      child: const Icon(Icons.lock_outline_rounded,
+                      child: const Icon(AppSymbols.lock,
                           color: AppColors.primary, size: 26),
                     ),
                     SizedBox(height: screen.height * 0.015),
@@ -56,7 +78,7 @@ class PasswordResetPage extends StatelessWidget {
                     Text(
                       'Crie uma nova senha segura para sua conta.',
                       style: GoogleFonts.poppins(
-                        fontSize: screen.width * 0.035,
+                        fontSize: screen.width * 0.034,
                         color: Colors.white54,
                       ),
                     ),
@@ -65,8 +87,6 @@ class PasswordResetPage extends StatelessWidget {
                 ),
               ),
             ),
-
-            // ── Form ──
             Expanded(
               child: Container(
                 decoration: const BoxDecoration(
@@ -81,7 +101,7 @@ class PasswordResetPage extends StatelessWidget {
                     horizontal: MediaQuery.of(context).size.width * 0.06,
                     vertical: MediaQuery.of(context).size.height * 0.04,
                   ),
-                  child: const _ResetForm(),
+                  child: _ResetForm(email: email, code: code),
                 ),
               ),
             ),
@@ -93,7 +113,9 @@ class PasswordResetPage extends StatelessWidget {
 }
 
 class _ResetForm extends StatefulWidget {
-  const _ResetForm();
+  final String email;
+  final String code;
+  const _ResetForm({required this.email, required this.code});
 
   @override
   State<_ResetForm> createState() => _ResetFormState();
@@ -105,6 +127,8 @@ class _ResetFormState extends State<_ResetForm> {
   final _confirmController = TextEditingController();
   bool _obscurePass = true;
   bool _obscureConfirm = true;
+  bool _isLoading = false;
+  String? _error;
 
   @override
   void dispose() {
@@ -113,7 +137,36 @@ class _ResetFormState extends State<_ResetForm> {
     super.dispose();
   }
 
-  InputDecoration _fieldDecoration(String hint, IconData icon, {Widget? suffix}) =>
+  Future<void> _submit() async {
+    if (!_formKey.currentState!.validate()) return;
+    setState(() {
+      _isLoading = true;
+      _error = null;
+    });
+
+    final result = await AuthService().resetPassword(
+      email: widget.email,
+      code: widget.code,
+      newPassword: _passController.text,
+    );
+
+    if (!mounted) return;
+    setState(() => _isLoading = false);
+
+    if (result.success) {
+      Navigator.pushNamedAndRemoveUntil(
+          context, AppRoutes.login, (r) => false);
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text('Senha redefinida com sucesso!'),
+        backgroundColor: AppColors.primary,
+      ));
+    } else {
+      setState(() => _error = result.error ?? 'Erro ao redefinir senha.');
+    }
+  }
+
+  InputDecoration _fieldDecoration(String hint, IconData icon,
+          {Widget? suffix}) =>
       InputDecoration(
         hintText: hint,
         prefixIcon: Icon(icon, size: 20),
@@ -159,10 +212,15 @@ class _ResetFormState extends State<_ResetForm> {
             style: const TextStyle(color: Color(0xFF1A1A2E)),
             decoration: _fieldDecoration(
               '••••••••',
-              Icons.lock_outline_rounded,
+              AppSymbols.lock,
               suffix: IconButton(
-                icon: Icon(_obscurePass ? Icons.visibility_off_outlined : Icons.visibility_outlined, size: 20),
-                onPressed: () => setState(() => _obscurePass = !_obscurePass),
+                icon: Icon(
+                    _obscurePass
+                        ? AppSymbols.visibilityOff
+                        : AppSymbols.visibility,
+                    size: 20),
+                onPressed: () =>
+                    setState(() => _obscurePass = !_obscurePass),
               ),
             ),
             validator: (v) {
@@ -178,13 +236,19 @@ class _ResetFormState extends State<_ResetForm> {
             controller: _confirmController,
             obscureText: _obscureConfirm,
             textInputAction: TextInputAction.done,
+            onFieldSubmitted: (_) => _submit(),
             style: const TextStyle(color: Color(0xFF1A1A2E)),
             decoration: _fieldDecoration(
               '••••••••',
-              Icons.lock_outline_rounded,
+              AppSymbols.lock,
               suffix: IconButton(
-                icon: Icon(_obscureConfirm ? Icons.visibility_off_outlined : Icons.visibility_outlined, size: 20),
-                onPressed: () => setState(() => _obscureConfirm = !_obscureConfirm),
+                icon: Icon(
+                    _obscureConfirm
+                        ? AppSymbols.visibilityOff
+                        : AppSymbols.visibility,
+                    size: 20),
+                onPressed: () =>
+                    setState(() => _obscureConfirm = !_obscureConfirm),
               ),
             ),
             validator: (v) {
@@ -193,30 +257,35 @@ class _ResetFormState extends State<_ResetForm> {
               return null;
             },
           ),
+          if (_error != null) ...[
+            const SizedBox(height: 12),
+            Text(
+              _error!,
+              style: GoogleFonts.poppins(color: Colors.red, fontSize: 13),
+            ),
+          ],
           const SizedBox(height: 28),
           SizedBox(
             width: double.infinity,
             height: 52,
-            child: ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14)),
-                elevation: 0,
-              ),
-              onPressed: () {
-                if (_formKey.currentState!.validate()) {
-                  Navigator.pushNamedAndRemoveUntil(
-                      context, AppRoutes.login, (r) => false);
-                }
-              },
-              child: Text(
-                'Redefinir senha',
-                style: GoogleFonts.poppins(
-                    fontWeight: FontWeight.w600, fontSize: 15),
-              ),
-            ),
+            child: _isLoading
+                ? const Center(
+                    child: CircularProgressIndicator(color: AppColors.primary))
+                : ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14)),
+                      elevation: 0,
+                    ),
+                    onPressed: _submit,
+                    child: Text(
+                      'Redefinir senha',
+                      style: GoogleFonts.poppins(
+                          fontWeight: FontWeight.w600, fontSize: 15),
+                    ),
+                  ),
           ),
         ],
       ),

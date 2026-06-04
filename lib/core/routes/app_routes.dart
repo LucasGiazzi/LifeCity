@@ -2,6 +2,8 @@ class AppRoutes {
   /// The Initial Page
   static const introLogin = '/intro_login';
   static const onboarding = '/onboarding';
+  static const loginLoading = '/login_loading';
+  static const friendProfile = '/friendProfile';
 
   /* <---- Login, Signup -----> */
   static const login = '/login';
@@ -10,12 +12,17 @@ class AppRoutes {
   static const loginOrSignup = '/loginOrSignup';
   static const numberVerification = '/numberVerification';
   static const forgotPassword = '/forgotPassword';
+  static const codeVerification = '/codeVerification';
   static const passwordReset = '/passwordReset';
 
   /* <---- ENTRYPOINT -----> */
   static const entryPoint = '/entry_point';
   static const createEvent = '/create_event';
   static const createComplaint = '/create_complaint';
+
+  /* <---- Missions & Teams -----> */
+  static const createTeam = '/createTeam';
+  static const teamDetail = '/teamDetail';
 
   /* <---- Profile & Settings -----> */
   static const profile = 'profile';

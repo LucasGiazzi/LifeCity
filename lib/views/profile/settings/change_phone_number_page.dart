@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/constants/app_colors.dart';
+import '../../../core/constants/app_symbols.dart';
 import '../../../core/services/auth_service.dart';
 
 class ChangePhoneNumberPage extends StatefulWidget {
@@ -86,7 +87,7 @@ class _ChangePhoneNumberPageState extends State<ChangePhoneNumberPage> {
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Icon(Icons.arrow_back_ios_new_rounded,
+                          const Icon(AppSymbols.arrowBack,
                               color: Colors.white70, size: 16),
                           const SizedBox(width: 4),
                           Text(
@@ -110,7 +111,7 @@ class _ChangePhoneNumberPageState extends State<ChangePhoneNumberPage> {
                         border: Border.all(
                             color: AppColors.primary.withValues(alpha: 0.4)),
                       ),
-                      child: const Icon(Icons.phone_outlined,
+                      child: const Icon(AppSymbols.phone,
                           color: AppColors.primary, size: 26),
                     ),
                     SizedBox(height: screen.height * 0.015),
@@ -204,7 +205,7 @@ class _ChangePhoneNumberPageState extends State<ChangePhoneNumberPage> {
                                 fontSize: 15, color: AppColors.dark),
                             decoration: const InputDecoration(
                               hintText: '(XX) XXXXX-XXXX',
-                              prefixIcon: Icon(Icons.phone_outlined,
+                              prefixIcon: Icon(AppSymbols.phone,
                                   color: AppColors.placeholder, size: 20),
                             ),
                             validator: (v) {
@@ -233,7 +234,7 @@ class _ChangePhoneNumberPageState extends State<ChangePhoneNumberPage> {
                                 fontSize: 15, color: AppColors.dark),
                             decoration: const InputDecoration(
                               hintText: '(XX) XXXXX-XXXX',
-                              prefixIcon: Icon(Icons.phone_callback_outlined,
+                              prefixIcon: Icon(AppSymbols.phone,
                                   color: AppColors.placeholder, size: 20),
                             ),
                             validator: (v) {
@@ -257,7 +258,7 @@ class _ChangePhoneNumberPageState extends State<ChangePhoneNumberPage> {
                               ),
                               child: Row(
                                 children: [
-                                  Icon(Icons.error_outline,
+                                  Icon(AppSymbols.error,
                                       color: Colors.red.shade600, size: 18),
                                   const SizedBox(width: 8),
                                   Expanded(

@@ -37,4 +37,8 @@ router.post('/confirm-location', authenticateToken, authController.confirmLocati
 
 router.put('/editUser', authenticateToken, upload.single('pfp'), authController.editUser);
 
+router.post('/forgot-password', authController.forgotPassword);
+router.post('/verify-reset-code', authController.verifyResetCode);
+router.post('/reset-password', authController.resetPassword);
+
 module.exports = router;

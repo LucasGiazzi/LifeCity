@@ -1,0 +1,614 @@
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+
+import '../../core/components/report_sheet.dart';
+import '../../core/constants/app_colors.dart';
+import '../../core/constants/app_symbols.dart';
+import '../../core/models/complaint_model.dart';
+import '../../core/services/complaint_service.dart';
+import '../complaints/complaint_sheet.dart';
+
+class FriendProfilePage extends StatefulWidget {
+  final String userId;
+  final String userName;
+  final String? photoUrl;
+
+  const FriendProfilePage({
+    super.key,
+    required this.userId,
+    required this.userName,
+    this.photoUrl,
+  });
+
+  @override
+  State<FriendProfilePage> createState() => _FriendProfilePageState();
+}
+
+class _FriendProfilePageState extends State<FriendProfilePage>
+    with SingleTickerProviderStateMixin {
+  late final TabController _tabController;
+  final _complaintService = ComplaintService();
+
+  List<ComplaintModel> _complaints = [];
+  List<Map<String, dynamic>> _interactions = [];
+  Map<String, dynamic>? _xpData;
+  bool _isLoading = true;
+  bool _isLoadingInteractions = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 2, vsync: this);
+    _loadComplaints();
+    _loadXp();
+    _tabController.addListener(() {
+      if (_tabController.index == 1 &&
+          _interactions.isEmpty &&
+          !_isLoadingInteractions) {
+        _loadInteractions();
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _loadXp() async {
+    final data = await _complaintService.getUserXp(widget.userId);
+    if (mounted && data != null) setState(() => _xpData = data);
+  }
+
+  Future<void> _loadComplaints() async {
+    setState(() => _isLoading = true);
+    try {
+      final data = await _complaintService.getAllComplaints();
+      if (mounted) {
+        setState(() {
+          _complaints = data
+              .map((c) => ComplaintModel.fromJson(c))
+              .where((c) => c.createdBy == widget.userId)
+              .toList();
+          _isLoading = false;
+        });
+      }
+    } catch (_) {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _loadInteractions() async {
+    setState(() => _isLoadingInteractions = true);
+    try {
+      final data = await _complaintService.getFriendInteractions(widget.userId);
+      if (mounted) {
+        setState(() {
+          _interactions = data;
+          _isLoadingInteractions = false;
+        });
+      }
+    } catch (_) {
+      if (mounted) setState(() => _isLoadingInteractions = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      body: NestedScrollView(
+        headerSliverBuilder: (_, __) => [
+          SliverToBoxAdapter(
+            child: _FriendHeader(
+              userId: widget.userId,
+              userName: widget.userName,
+              photoUrl: widget.photoUrl,
+              complaintCount: _complaints.length,
+              xpData: _xpData,
+            ),
+          ),
+        ],
+        body: Column(
+          children: [
+            TabBar(
+              controller: _tabController,
+              labelColor: AppColors.primary,
+              unselectedLabelColor: AppColors.placeholder,
+              indicatorColor: AppColors.primary,
+              labelStyle: GoogleFonts.poppins(
+                  fontWeight: FontWeight.w600, fontSize: 13),
+              unselectedLabelStyle: GoogleFonts.poppins(fontSize: 13),
+              tabs: const [
+                Tab(
+                    text: 'Reclamações',
+                    icon: Icon(AppSymbols.warning, size: 18)),
+                Tab(
+                    text: 'Interações',
+                    icon: Icon(AppSymbols.favorite, size: 18)),
+              ],
+            ),
+            Expanded(
+              child: _isLoading
+                  ? const Center(child: CircularProgressIndicator())
+                  : TabBarView(
+                      controller: _tabController,
+                      children: [
+                        _buildComplaintsList(),
+                        _buildInteractionsList(),
+                      ],
+                    ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildComplaintsList() {
+    if (_complaints.isEmpty) {
+      return _EmptyState(
+        icon: AppSymbols.checkCircle,
+        message: '${widget.userName} ainda não\nfez nenhuma reclamação',
+      );
+    }
+    return RefreshIndicator(
+      onRefresh: _loadComplaints,
+      child: ListView.builder(
+        padding: const EdgeInsets.all(16),
+        itemCount: _complaints.length,
+        itemBuilder: (context, i) {
+          final c = _complaints[i];
+          return _ComplaintCard(
+            complaint: c,
+            onTap: () => showComplaintSheet(context, c),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildInteractionsList() {
+    if (_isLoadingInteractions) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    if (_interactions.isEmpty) {
+      return _EmptyState(
+        icon: AppSymbols.favorite,
+        message: '${widget.userName} ainda não\ncurtiu nem comentou nenhuma reclamação',
+      );
+    }
+    return RefreshIndicator(
+      onRefresh: _loadInteractions,
+      child: ListView.builder(
+        padding: const EdgeInsets.all(16),
+        itemCount: _interactions.length,
+        itemBuilder: (context, i) => _InteractionCard(data: _interactions[i]),
+      ),
+    );
+  }
+}
+
+// ─── Header ──────────────────────────────────────────────────────────────────
+
+class _FriendHeader extends StatelessWidget {
+  final String userId;
+  final String userName;
+  final String? photoUrl;
+  final int complaintCount;
+  final Map<String, dynamic>? xpData;
+
+  const _FriendHeader({
+    required this.userId,
+    required this.userName,
+    this.photoUrl,
+    required this.complaintCount,
+    this.xpData,
+  });
+
+  static const _levelIcons = <int, IconData>{
+    1: Symbols.home,
+    2: Symbols.people,
+    3: Symbols.shield,
+    4: Symbols.campaign,
+    5: Symbols.star,
+  };
+
+  @override
+  Widget build(BuildContext context) {
+    final xp = (xpData?['xp'] as num?)?.toInt() ?? 0;
+    final level = (xpData?['level'] as num?)?.toInt() ?? 1;
+    final levelName = xpData?['name'] as String? ?? 'Morador';
+    final currentMin = (xpData?['currentMin'] as num?)?.toInt() ?? 0;
+    final nextMin = (xpData?['nextMin'] as num?)?.toInt();
+    final icon = _levelIcons[level] ?? AppSymbols.person;
+    final progress = nextMin != null && nextMin > currentMin
+        ? ((xp - currentMin) / (nextMin - currentMin)).clamp(0.0, 1.0)
+        : 1.0;
+
+    return Container(
+      width: double.infinity,
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          colors: [Color(0xFF00B37E), Color(0xFF00A36C)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+      ),
+      child: SafeArea(
+        bottom: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(8, 8, 20, 24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  IconButton(
+                    icon: const Icon(AppSymbols.arrowBack,
+                        color: Colors.white, size: 20),
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                  IconButton(
+                    icon: const Icon(AppSymbols.flag,
+                        color: Colors.white70, size: 20),
+                    tooltip: 'Denunciar usuário',
+                    onPressed: () =>
+                        showReportUserSheet(context, userId, userName),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 4),
+              Padding(
+                padding: const EdgeInsets.only(left: 12),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    CircleAvatar(
+                      radius: 38,
+                      backgroundColor: Colors.white,
+                      child: (photoUrl != null && photoUrl!.isNotEmpty)
+                          ? ClipOval(
+                              child: CachedNetworkImage(
+                                imageUrl: photoUrl!,
+                                width: 76,
+                                height: 76,
+                                fit: BoxFit.cover,
+                              ),
+                            )
+                          : const Icon(AppSymbols.person, size: 44, color: Colors.grey),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            userName,
+                            style: GoogleFonts.poppins(
+                              color: Colors.white,
+                              fontSize: 20,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Row(
+                            children: [
+                              const Icon(AppSymbols.warning,
+                                  color: Colors.white70, size: 14),
+                              const SizedBox(width: 4),
+                              Text(
+                                '$complaintCount reclamação${complaintCount != 1 ? 'ões' : ''}',
+                                style: GoogleFonts.poppins(
+                                    color: Colors.white70, fontSize: 12),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          // Badge de nível
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.2),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(icon, color: Colors.white, size: 13),
+                                const SizedBox(width: 5),
+                                Text(
+                                  'Nível $level — $levelName',
+                                  style: GoogleFonts.poppins(
+                                    color: Colors.white,
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          // Barra de progresso
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text('$xp XP',
+                                      style: GoogleFonts.poppins(
+                                          color: Colors.white70, fontSize: 10)),
+                                  Text(
+                                    nextMin != null ? '$nextMin XP' : 'Nível máximo!',
+                                    style: GoogleFonts.poppins(
+                                        color: Colors.white70, fontSize: 10),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 4),
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(4),
+                                child: LinearProgressIndicator(
+                                  value: progress,
+                                  minHeight: 5,
+                                  backgroundColor: Colors.white.withValues(alpha: 0.25),
+                                  valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ─── Complaint Card ───────────────────────────────────────────────────────────
+
+class _ComplaintCard extends StatelessWidget {
+  final ComplaintModel complaint;
+  final VoidCallback onTap;
+
+  const _ComplaintCard({required this.complaint, required this.onTap});
+
+  static const _catColors = <String, Color>{
+    'infraestrutura': Colors.orange,
+    'seguranca': Colors.red,
+    'limpeza': Colors.teal,
+    'transito': Colors.amber,
+    'outros': Colors.grey,
+  };
+
+  static const _catIcons = <String, IconData>{
+    'infraestrutura': AppSymbols.construction,
+    'seguranca': AppSymbols.security,
+    'limpeza': AppSymbols.cleaningServices,
+    'transito': AppSymbols.traffic,
+    'outros': AppSymbols.warning,
+  };
+
+  @override
+  Widget build(BuildContext context) {
+    final type = complaint.type?.toLowerCase() ?? 'outros';
+    final color = _catColors[type] ?? Colors.grey;
+    final icon = _catIcons[type] ?? AppSymbols.warning;
+    final date =
+        '${complaint.occurrenceDate.day.toString().padLeft(2, '0')}/${complaint.occurrenceDate.month.toString().padLeft(2, '0')}/${complaint.occurrenceDate.year}';
+
+    return Card(
+      margin: const EdgeInsets.only(bottom: 12),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(14),
+        child: Padding(
+          padding: const EdgeInsets.all(14),
+          child: Row(
+            children: [
+              Container(
+                width: 42,
+                height: 42,
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(icon, color: color, size: 22),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      complaint.description,
+                      style: GoogleFonts.poppins(
+                          fontWeight: FontWeight.w600, fontSize: 14),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    if (complaint.address != null) ...[
+                      const SizedBox(height: 2),
+                      Text(
+                        complaint.address!,
+                        style: GoogleFonts.poppins(
+                            fontSize: 12, color: AppColors.placeholder),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                    const SizedBox(height: 2),
+                    Text(date,
+                        style: GoogleFonts.poppins(
+                            fontSize: 11, color: AppColors.placeholder)),
+                  ],
+                ),
+              ),
+              const Icon(AppSymbols.chevronRight,
+                  color: AppColors.placeholder),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ─── Interaction Card ─────────────────────────────────────────────────────────
+
+class _InteractionCard extends StatelessWidget {
+  final Map<String, dynamic> data;
+  const _InteractionCard({required this.data});
+
+  @override
+  Widget build(BuildContext context) {
+    final isLike = data['type'] == 'like';
+    final iconColor = isLike ? Colors.red : AppColors.primary;
+    final icon = isLike ? AppSymbols.favorite : AppSymbols.chatBubble;
+    final title = data['description'] as String? ?? '';
+    final address = data['address'] as String?;
+    final commentText = data['comment_text'] as String?;
+    final createdAt = data['created_at'] as String?;
+
+    return Card(
+      margin: const EdgeInsets.only(bottom: 12),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+      child: Padding(
+        padding: const EdgeInsets.all(14),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    color: iconColor.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(icon, color: iconColor, size: 18),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        isLike ? 'Curtiu uma reclamação' : 'Comentou em uma reclamação',
+                        style: GoogleFonts.poppins(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: iconColor),
+                      ),
+                      if (createdAt != null)
+                        Text(
+                          _formatDate(createdAt),
+                          style: GoogleFonts.poppins(
+                              fontSize: 11, color: AppColors.placeholder),
+                        ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            Text(
+              title,
+              style: GoogleFonts.poppins(
+                  fontSize: 13, fontWeight: FontWeight.w500),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+            if (address != null) ...[
+              const SizedBox(height: 2),
+              Row(
+                children: [
+                  const Icon(AppSymbols.locationOn,
+                      size: 13, color: AppColors.placeholder),
+                  const SizedBox(width: 2),
+                  Expanded(
+                    child: Text(
+                      address,
+                      style: GoogleFonts.poppins(
+                          fontSize: 11, color: AppColors.placeholder),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+            if (commentText != null && commentText.isNotEmpty) ...[
+              const SizedBox(height: 8),
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.07),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  '"$commentText"',
+                  style: GoogleFonts.poppins(
+                      fontSize: 12,
+                      fontStyle: FontStyle.italic,
+                      color: AppColors.placeholder),
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  String _formatDate(String iso) {
+    try {
+      final dt = DateTime.parse(iso).toLocal();
+      final diff = DateTime.now().difference(dt).inDays;
+      if (diff == 0) return 'Hoje';
+      if (diff == 1) return 'Ontem';
+      return 'Há $diff dias';
+    } catch (_) {
+      return '';
+    }
+  }
+}
+
+// ─── Empty State ──────────────────────────────────────────────────────────────
+
+class _EmptyState extends StatelessWidget {
+  final IconData icon;
+  final String message;
+  const _EmptyState({required this.icon, required this.message});
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(icon, size: 64, color: AppColors.placeholder),
+          const SizedBox(height: 16),
+          Text(
+            message,
+            style: GoogleFonts.poppins(
+                color: AppColors.placeholder, fontSize: 15),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    );
+  }
+}

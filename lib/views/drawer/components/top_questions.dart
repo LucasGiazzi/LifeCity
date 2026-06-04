@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 
 import '../../../core/components/app_settings_tile.dart';
+import '../../../core/constants/app_symbols.dart';
 import '../../../core/constants/constants.dart';
 
 class TopQuestions extends StatelessWidget {
@@ -25,23 +25,23 @@ class TopQuestions extends StatelessWidget {
         const SizedBox(height: AppDefaults.padding / 2),
         AppSettingsListTile(
           label: 'How do I return my Items',
-          trailing: SvgPicture.asset(AppIcons.right),
+          trailing: const Icon(AppSymbols.chevronRight),
         ),
         AppSettingsListTile(
           label: 'How to use collection point?',
-          trailing: SvgPicture.asset(AppIcons.right),
+          trailing: const Icon(AppSymbols.chevronRight),
         ),
         AppSettingsListTile(
           label: 'What is Grocery?',
-          trailing: SvgPicture.asset(AppIcons.right),
+          trailing: const Icon(AppSymbols.chevronRight),
         ),
         AppSettingsListTile(
           label: 'How can i add new delivery address?',
-          trailing: SvgPicture.asset(AppIcons.right),
+          trailing: const Icon(AppSymbols.chevronRight),
         ),
         AppSettingsListTile(
           label: 'How can i avail Sticker Price?',
-          trailing: SvgPicture.asset(AppIcons.right),
+          trailing: const Icon(AppSymbols.chevronRight),
         ),
       ],
     );

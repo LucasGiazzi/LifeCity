@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../core/constants/app_colors.dart';
+import '../../core/constants/app_symbols.dart';
 import 'components/sign_up_form.dart';
 
 class SignUpPage extends StatelessWidget {
@@ -37,7 +38,7 @@ class SignUpPage extends StatelessWidget {
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Icon(Icons.arrow_back_ios_new_rounded,
+                          const Icon(AppSymbols.arrowBack,
                               color: Colors.white70, size: 16),
                           const SizedBox(width: 4),
                           Text(

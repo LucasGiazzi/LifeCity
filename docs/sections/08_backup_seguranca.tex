@@ -38,6 +38,8 @@ proteção:
   \item Criptografia em trânsito (TLS 1.2+);
   \item Criptografia em repouso (AES-256) no Supabase;
   \item Senhas armazenadas com hash + salt no banco de dados;
+  \item Recuperação de senha via código de 6 dígitos enviado por e-mail: o código é armazenado apenas como hash SHA-256 com validade de 15 minutos e invalidado após uso;
+  \item Moderação comunitária: sistema de denúncias com thresholds automáticos (5 denúncias ocultam uma reclamação; 10 denúncias restringem uma conta);
   \item Políticas de acesso granular (Row-Level Security) no banco PostgreSQL;
   \item Auditorias e logs transacionais.
 \end{itemize}

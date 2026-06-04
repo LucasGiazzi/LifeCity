@@ -107,6 +107,47 @@ class AuthService {
     }
   }
 
+  Future<({bool success, String? error})> sendPasswordResetCode(String email) async {
+    try {
+      await _api.post('/api/auth/forgot-password', {'email': email});
+      return (success: true, error: null);
+    } on ApiException catch (e) {
+      return (success: false, error: e.message);
+    }
+  }
+
+  Future<({bool success, String? error})> verifyResetCode({
+    required String email,
+    required String code,
+  }) async {
+    try {
+      await _api.post('/api/auth/verify-reset-code', {
+        'email': email,
+        'code': code,
+      });
+      return (success: true, error: null);
+    } on ApiException catch (e) {
+      return (success: false, error: e.message);
+    }
+  }
+
+  Future<({bool success, String? error})> resetPassword({
+    required String email,
+    required String code,
+    required String newPassword,
+  }) async {
+    try {
+      await _api.post('/api/auth/reset-password', {
+        'email': email,
+        'code': code,
+        'newPassword': newPassword,
+      });
+      return (success: true, error: null);
+    } on ApiException catch (e) {
+      return (success: false, error: e.message);
+    }
+  }
+
   Future<void> signOut(String refreshToken) async {
     try {
       if (refreshToken.isNotEmpty) {

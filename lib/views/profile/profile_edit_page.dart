@@ -8,6 +8,7 @@ import 'package:provider/provider.dart';
 
 import '../../core/components/network_image.dart';
 import '../../core/constants/app_colors.dart';
+import '../../core/constants/app_symbols.dart';
 import '../../core/state/auth_state.dart';
 
 class ProfileEditPage extends StatefulWidget {
@@ -129,7 +130,7 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
                 ),
               ),
               ListTile(
-                leading: const Icon(Icons.photo_library_outlined),
+                leading: const Icon(Symbols.photo_library),
                 title: Text('Galeria', style: GoogleFonts.poppins()),
                 onTap: () {
                   Navigator.pop(context);
@@ -137,7 +138,7 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
                 },
               ),
               ListTile(
-                leading: const Icon(Icons.camera_alt_outlined),
+                leading: const Icon(Symbols.camera_alt),
                 title: Text('Câmera', style: GoogleFonts.poppins()),
                 onTap: () {
                   Navigator.pop(context);
@@ -248,7 +249,7 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Icon(Icons.arrow_back_ios_new_rounded,
+                          const Icon(AppSymbols.arrowBack,
                               color: Colors.white70, size: 16),
                           const SizedBox(width: 4),
                           Text(
@@ -285,8 +286,8 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
                                       : Container(
                                           color: AppColors.primary
                                               .withValues(alpha: 0.15),
-                                          child: const Icon(Icons.person_rounded,
-                                              size: 50, color: AppColors.primary),
+                                          child: const Icon(AppSymbols.person,
+                                              size: 50, color: AppColors.primary, fill: 1.0),
                                         ),
                             ),
                           ),
@@ -304,7 +305,7 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
                                   border:
                                       Border.all(color: Colors.white, width: 2),
                                 ),
-                                child: const Icon(Icons.camera_alt_rounded,
+                                child: const Icon(Symbols.camera_alt,
                                     color: Colors.white, size: 15),
                               ),
                             ),
@@ -401,7 +402,7 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
                                 fontSize: 15, color: AppColors.dark),
                             decoration: const InputDecoration(
                               hintText: 'Seu nome completo',
-                              prefixIcon: Icon(Icons.person_outline_rounded,
+                              prefixIcon: Icon(AppSymbols.person,
                                   color: AppColors.placeholder, size: 20),
                             ),
                             validator: (v) => (v == null || v.trim().isEmpty)
@@ -424,7 +425,7 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
                                 fontSize: 15, color: AppColors.dark),
                             decoration: const InputDecoration(
                               hintText: '(XX) XXXXX-XXXX',
-                              prefixIcon: Icon(Icons.phone_outlined,
+                              prefixIcon: Icon(AppSymbols.phone,
                                   color: AppColors.placeholder, size: 20),
                             ),
                           ),
@@ -444,7 +445,7 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
                                 fontSize: 15, color: AppColors.dark),
                             decoration: const InputDecoration(
                               hintText: '000.000.000-00',
-                              prefixIcon: Icon(Icons.badge_outlined,
+                              prefixIcon: Icon(AppSymbols.badge,
                                   color: AppColors.placeholder, size: 20),
                             ),
                           ),
@@ -460,9 +461,9 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
                                 fontSize: 15, color: AppColors.dark),
                             decoration: const InputDecoration(
                               hintText: 'dd/mm/aaaa',
-                              prefixIcon: Icon(Icons.cake_outlined,
+                              prefixIcon: Icon(Symbols.cake,
                                   color: AppColors.placeholder, size: 20),
-                              suffixIcon: Icon(Icons.calendar_today_outlined,
+                              suffixIcon: Icon(AppSymbols.calendarToday,
                                   color: AppColors.placeholder, size: 18),
                             ),
                           ),
@@ -480,7 +481,7 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
                               ),
                               child: Row(
                                 children: [
-                                  Icon(Icons.error_outline,
+                                  Icon(AppSymbols.error,
                                       color: Colors.red.shade600, size: 18),
                                   const SizedBox(width: 8),
                                   Expanded(

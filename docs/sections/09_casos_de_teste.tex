@@ -134,7 +134,155 @@ categoria selecionada.
   \hline
 \end{longtable}
 
-\subsection*{Caso de teste \#5 – Alternância de tema (modo claro/escuro)}
+\subsection*{Caso de teste \#5 – Desbloqueio de conquista}
+
+\textbf{Propósito:} Verificar se o sistema desbloqueia conquistas automaticamente
+ao atingir marcos predefinidos e emite a notificação correspondente.
+
+\textbf{Pré-condições:}
+\begin{itemize}
+  \item Usuário logado, sem nenhuma conquista desbloqueada.
+\end{itemize}
+
+\begin{longtable}{|c|p{4cm}|p{3.5cm}|p{4.5cm}|}
+  \hline
+  \textbf{\#} & \textbf{Ação} & \textbf{Estado esperado} & \textbf{Saída esperada} \\
+  \hline
+  \endfirsthead
+  \hline
+  \textbf{\#} & \textbf{Ação} & \textbf{Estado esperado} & \textbf{Saída esperada} \\
+  \hline
+  \endhead
+  1 & Usuário cria sua primeira reclamação & Conquista ``Primeira Voz'' ainda não desbloqueada & Conquista desbloqueada; notificação \texttt{achievement\_unlocked} emitida; 25 XP adicionados. \\
+  \hline
+  2 & Usuário cria a primeira reclamação uma segunda vez (mesmo usuário) & Conquista ``Primeira Voz'' já desbloqueada & Conquista não duplicada; sem nova notificação. \\
+  \hline
+  3 & Usuário recebe 10 curtidas em reclamações & Conquista ``Popular'' ainda não desbloqueada & Conquista desbloqueada; notificação emitida; 50 XP adicionados. \\
+  \hline
+\end{longtable}
+
+\subsection*{Caso de teste \#6 – Criar equipe e convidar membro}
+
+\textbf{Propósito:} Verificar o fluxo completo de criação de equipe e gerenciamento de membros.
+
+\textbf{Pré-condições:}
+\begin{itemize}
+  \item Dois usuários cadastrados (criador e convidado).
+  \item Usuário criador logado.
+\end{itemize}
+
+\begin{longtable}{|c|p{4cm}|p{2.5cm}|p{5cm}|}
+  \hline
+  \textbf{\#} & \textbf{Ação} & \textbf{Entrada} & \textbf{Saída esperada} \\
+  \hline
+  \endfirsthead
+  \hline
+  \textbf{\#} & \textbf{Ação} & \textbf{Entrada} & \textbf{Saída esperada} \\
+  \hline
+  \endhead
+  1 & Criar equipe com nome válido & ``Guardiões do Bairro'' & Equipe criada; criador redirecionado para tela de detalhes. \\
+  \hline
+  2 & Criar equipe com nome vazio & (vazio) & ``Informe um nome para a equipe.''; não cria. \\
+  \hline
+  3 & Convidar usuário amigo para a equipe & ID do convidado & Convite enviado; convidado recebe notificação \texttt{team\_invite}. \\
+  \hline
+  4 & Convidado aceita o convite & — & Status do membro muda para \texttt{active}; equipe com 2 membros ativos. \\
+  \hline
+  5 & Convidado recusa o convite & — & Status do membro muda para \texttt{rejected}; equipe permanece com 1 membro ativo. \\
+  \hline
+  6 & Tentar adicionar 8\textordmasculine{} membro & ID do 8\textordmasculine{} usuário & ``Equipe já atingiu o limite de 7 membros.''; não adiciona. \\
+  \hline
+\end{longtable}
+
+\subsection*{Caso de teste \#7 – Progresso de missão diária}
+
+\textbf{Propósito:} Verificar se o progresso da missão diária é atualizado corretamente e se o XP é concedido ao concluir.
+
+\textbf{Pré-condições:}
+\begin{itemize}
+  \item Usuário logado com missão diária ativa (meta: 1 reclamação).
+\end{itemize}
+
+\begin{longtable}{|c|p{4.5cm}|p{3cm}|p{4cm}|}
+  \hline
+  \textbf{\#} & \textbf{Ação} & \textbf{Estado anterior} & \textbf{Saída esperada} \\
+  \hline
+  \endfirsthead
+  \hline
+  \textbf{\#} & \textbf{Ação} & \textbf{Estado anterior} & \textbf{Saída esperada} \\
+  \hline
+  \endhead
+  1 & Usuário cria uma reclamação dentro do período da missão & Progresso: 0/1 & Progresso atualizado para 1/1; missão concluída; XP adicionado; notificação \texttt{mission\_completed}. \\
+  \hline
+  2 & Usuário cria reclamação após a expiração da missão & Missão expirada & Progresso não é contabilizado; missão permanece não concluída. \\
+  \hline
+  3 & Usuário abre a aba de missões sem missão atribuída & Sem missão no período & Backend sorteia e atribui nova missão automaticamente; tela exibe a missão. \\
+  \hline
+\end{longtable}
+
+\subsection*{Caso de teste \#8 – Recuperação de senha via e-mail}
+
+\textbf{Propósito:} Verificar se o usuário consegue redefinir sua senha por
+meio do código de verificação enviado ao e-mail cadastrado.
+
+\textbf{Pré-condições:}
+\begin{itemize}
+  \item Usuário cadastrado com e-mail válido.
+  \item Backend configurado com \texttt{EMAIL\_USER} e \texttt{EMAIL\_PASS}.
+\end{itemize}
+
+\begin{longtable}{|c|p{3.5cm}|p{3cm}|p{5cm}|}
+  \hline
+  \textbf{\#} & \textbf{Ação} & \textbf{Entrada} & \textbf{Saída esperada} \\
+  \hline
+  \endfirsthead
+  \hline
+  \textbf{\#} & \textbf{Ação} & \textbf{Entrada} & \textbf{Saída esperada} \\
+  \hline
+  \endhead
+  1 & Solicitar código com e-mail cadastrado & ana@email.com & Código enviado ao e-mail; usuário encaminhado para tela de redefinição. \\
+  \hline
+  2 & Solicitar código com e-mail não cadastrado & naoexiste@email.com & Mesmo retorno do caso 1 (sem revelar quais e-mails existem). \\
+  \hline
+  3 & Inserir código correto + nova senha válida & Código de 6 dígitos correto & Senha redefinida; usuário redirecionado para o login. \\
+  \hline
+  4 & Inserir código errado & Código incorreto & ``Código inválido ou expirado.''; não redefine. \\
+  \hline
+  5 & Inserir código após 15 minutos & Código expirado & ``Código inválido ou expirado.''; não redefine. \\
+  \hline
+  6 & Inserir nova senha com menos de 6 caracteres & ``123'' & ``Mínimo 6 caracteres''; não envia ao backend. \\
+  \hline
+\end{longtable}
+
+\subsection*{Caso de teste \#10 – Denúncia de reclamação}
+
+\textbf{Propósito:} Verificar se um usuário consegue denunciar uma reclamação de outro usuário e se o sistema aplica a moderação automática ao atingir o threshold.
+
+\textbf{Pré-condições:}
+\begin{itemize}
+  \item Usuário autenticado visualizando uma reclamação de outro usuário.
+\end{itemize}
+
+\begin{longtable}{|c|p{4cm}|p{3cm}|p{4.5cm}|}
+  \hline
+  \textbf{\#} & \textbf{Ação} & \textbf{Motivo} & \textbf{Saída esperada} \\
+  \hline
+  \endfirsthead
+  \hline
+  \textbf{\#} & \textbf{Ação} & \textbf{Motivo} & \textbf{Saída esperada} \\
+  \hline
+  \endhead
+  1 & Denunciar reclamação de outro usuário & Informação falsa & Denúncia registrada; snackbar ``Denúncia enviada''. \\
+  \hline
+  2 & Tentar denunciar a mesma reclamação novamente & Spam & ``Você já denunciou este conteúdo.''; não registra duplicata. \\
+  \hline
+  3 & 5 usuários distintos denunciam a mesma reclamação & Qualquer motivo & Reclamação ocultada automaticamente (\texttt{is\_hidden = TRUE}); não aparece mais no mapa nem nos destaques. \\
+  \hline
+  4 & Autor da reclamação tenta denunciá-la & — & Botão de denúncia não exibido para o autor. \\
+  \hline
+\end{longtable}
+
+\subsection*{Caso de teste \#9 – Alternância de tema (modo claro/escuro)}
 
 \textbf{Propósito:} Verificar se o usuário consegue alternar entre modo claro
 e modo escuro pelas configurações e se o tema é aplicado em toda a interface.

@@ -8,12 +8,12 @@ import 'core/state/category_state.dart';
 import 'core/state/auth_state.dart';
 import 'core/state/theme_provider.dart';
 import 'core/themes/app_themes.dart';
-import 'wrapper.dart';
+import 'views/wrapper.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load(fileName: 'backend/.env');
-  GoogleFonts.config.allowRuntimeFetching = false;
+  GoogleFonts.config.allowRuntimeFetching = true;
 
   final authState = AuthState();
   await authState.initialize();
@@ -45,8 +45,8 @@ class MyApp extends StatelessWidget {
 
     return MaterialApp(
       title: 'LifeCity',
-      theme: AppTheme.defaultTheme,
-      darkTheme: AppTheme.darkTheme,
+      theme: AppTheme.light(accent: themeProvider.accentColor),
+      darkTheme: AppTheme.dark(accent: themeProvider.accentColor),
       themeMode: themeProvider.mode,
       builder: (context, child) => ConnectivityBanner(child: child!),
       home: const Wrapper(),

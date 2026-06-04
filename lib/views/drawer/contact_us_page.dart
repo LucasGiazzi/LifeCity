@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/svg.dart';
 
 import '../../core/components/app_back_button.dart';
 import '../../core/components/network_image.dart';
+import '../../core/constants/app_symbols.dart';
 import '../../core/constants/constants.dart';
 
 class ContactUsPage extends StatelessWidget {
@@ -44,7 +44,7 @@ class ContactUsPage extends StatelessWidget {
             /// Number
             Row(
               children: [
-                SvgPicture.asset(AppIcons.contactPhone),
+                const Icon(AppSymbols.phone),
                 const SizedBox(width: AppDefaults.padding),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -69,7 +69,7 @@ class ContactUsPage extends StatelessWidget {
             const SizedBox(height: AppDefaults.padding),
             Row(
               children: [
-                SvgPicture.asset(AppIcons.contactEmail),
+                const Icon(AppSymbols.email),
                 const SizedBox(width: AppDefaults.padding),
                 Text(
                   'jonarban45@gmail.com',
@@ -83,7 +83,7 @@ class ContactUsPage extends StatelessWidget {
             const SizedBox(height: AppDefaults.padding),
             Row(
               children: [
-                SvgPicture.asset(AppIcons.contactMap),
+                const Icon(AppSymbols.locationOn),
                 const SizedBox(width: AppDefaults.padding),
                 Text(
                   '26/C Mohammadpur\nDhaka, Bangladesh',

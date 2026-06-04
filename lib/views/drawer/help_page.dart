@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 
 import '../../core/components/app_back_button.dart';
+import '../../core/constants/app_symbols.dart';
 import '../../core/constants/constants.dart';
 import '../../core/themes/app_themes.dart';
 import 'components/help_topics.dart';
@@ -56,14 +56,7 @@ class _SearchBar extends StatelessWidget {
           decoration: InputDecoration(
             labelText: 'Search',
             suffixIcon: IconButton(
-              icon: SvgPicture.asset(
-                AppIcons.search,
-                width: 24,
-                colorFilter: const ColorFilter.mode(
-                  AppColors.placeholder,
-                  BlendMode.srcIn,
-                ),
-              ),
+              icon: const Icon(AppSymbols.search),
               onPressed: () {},
             ),
           ),

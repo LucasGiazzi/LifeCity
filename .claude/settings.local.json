@@ -23,7 +23,10 @@
       "Bash(node src/server.js)",
       "Bash(curl -s http://localhost:3000/)",
       "Bash(kill %1)",
-      "PowerShell(Get-NetTCPConnection -LocalPort 3000 -State Listen | Select-Object -ExpandProperty OwningProcess | ForEach-Object { Stop-Process -Id $_ -Force; \"Processo $_ encerrado\" })"
+      "PowerShell(Get-NetTCPConnection -LocalPort 3000 -State Listen | Select-Object -ExpandProperty OwningProcess | ForEach-Object { Stop-Process -Id $_ -Force; \"Processo $_ encerrado\" })",
+      "Bash(rtk git *)",
+      "Bash(rtk grep *)",
+      "Bash(Get-ChildItem \"c:\\\\LifeCity\\\\assets\\\\icons\\\\\" -ErrorAction SilentlyContinue | Select-Object Name | head -50)"
     ]
   }
 }

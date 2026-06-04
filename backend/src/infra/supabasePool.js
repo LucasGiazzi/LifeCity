@@ -5,18 +5,21 @@ let pool;
 function createPool() {
   const newPool = new Pool({
     host: process.env.SUPABASE_DB_SERVER,
-    port: 5432,
+    port: 6543,
     user: process.env.SUPABASE_DB_USER,
     password: process.env.SUPABASE_DB_PASSWORD,
     database: process.env.SUPABASE_DB_NAME,
-    max: 20, // máximo de conexões
-    idleTimeoutMillis: 30000, // fecha conexões inativas
-    connectionTimeoutMillis: 10000 // falha se não conectar em 10s
+    ssl: { rejectUnauthorized: false },
+    max: 10,
+    idleTimeoutMillis: 60000,
+    connectionTimeoutMillis: 10000,
+    keepAlive: true,
+    keepAliveInitialDelayMillis: 10000,
   });
 
-  // Loga erros do pool
   newPool.on("error", (err) => {
     console.error("Erro no pool do Postgres:", err);
+    pool = null; // força recriação no próximo getPgPool()
   });
 
   console.log("Pool do Postgres criado");

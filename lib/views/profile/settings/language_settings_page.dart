@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/svg.dart';
 
 import '../../../core/components/app_back_button.dart';
 import '../../../core/components/app_settings_tile.dart';
+import '../../../core/constants/app_symbols.dart';
 import '../../../core/constants/constants.dart';
 import '../../../core/themes/app_themes.dart';
 
@@ -81,7 +81,7 @@ class _SuggestedLanguage extends StatelessWidget {
         AppSettingsListTile(
           label: 'United States',
           trailing: Icon(
-            Icons.check,
+            AppSymbols.check,
             color: Colors.green,
           ),
         ),
@@ -103,10 +103,7 @@ class _SearchField extends StatelessWidget {
         decoration: InputDecoration(
           labelText: 'Search',
           hintText: 'Type a word',
-          suffixIcon: Padding(
-            padding: const EdgeInsets.all(AppDefaults.padding),
-            child: SvgPicture.asset(AppIcons.search),
-          ),
+          suffixIcon: const Icon(AppSymbols.search),
           suffixIconConstraints: const BoxConstraints(),
         ),
       ),

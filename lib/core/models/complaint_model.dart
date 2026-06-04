@@ -10,6 +10,11 @@ class ComplaintModel {
   final String? createdBy;
   final String? createdByName;
   final String? createdByEmail;
+  final String? createdByPhotoUrl;
+  final int likesCount;
+  final int commentsCount;
+  final int witnessCount;
+  final String status;
 
   ComplaintModel({
     required this.id,
@@ -23,6 +28,11 @@ class ComplaintModel {
     this.createdBy,
     this.createdByName,
     this.createdByEmail,
+    this.createdByPhotoUrl,
+    this.likesCount = 0,
+    this.commentsCount = 0,
+    this.witnessCount = 0,
+    this.status = 'pending',
   });
 
   factory ComplaintModel.fromJson(Map<String, dynamic> json) {
@@ -42,6 +52,11 @@ class ComplaintModel {
       createdBy: json['created_by']?.toString(),
       createdByName: json['created_by_name'] as String?,
       createdByEmail: json['created_by_email'] as String?,
+      createdByPhotoUrl: json['created_by_photo_url'] as String?,
+      likesCount: int.tryParse(json['likes_count']?.toString() ?? '0') ?? 0,
+      commentsCount: int.tryParse(json['comments_count']?.toString() ?? '0') ?? 0,
+      witnessCount: int.tryParse(json['witness_count']?.toString() ?? '0') ?? 0,
+      status: json['status'] as String? ?? 'pending',
     );
   }
 

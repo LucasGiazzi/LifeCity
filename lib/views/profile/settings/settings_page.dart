@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
 import '../../../core/constants/app_colors.dart';
+import '../../../core/constants/app_symbols.dart';
 import '../../../core/routes/app_routes.dart';
 import '../../../core/state/auth_state.dart';
 import '../../../core/state/theme_provider.dart';
@@ -21,7 +22,7 @@ class SettingsPage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
+          icon: const Icon(AppSymbols.arrowBack, size: 20),
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
@@ -51,21 +52,21 @@ class SettingsPage extends StatelessWidget {
             cardBg: cardBg,
             children: [
               _NavTile(
-                icon: Icons.person_outline_rounded,
+                icon: AppSymbols.person,
                 label: 'Editar perfil',
                 textColor: textColor,
                 onTap: () => Navigator.pushNamed(context, AppRoutes.profileEdit),
               ),
               _Divider(),
               _NavTile(
-                icon: Icons.lock_outline_rounded,
+                icon: AppSymbols.lock,
                 label: 'Alterar senha',
                 textColor: textColor,
                 onTap: () => Navigator.pushNamed(context, AppRoutes.changePassword),
               ),
               _Divider(),
               _NavTile(
-                icon: Icons.phone_outlined,
+                icon: AppSymbols.phone,
                 label: 'Alterar telefone',
                 textColor: textColor,
                 onTap: () => Navigator.pushNamed(context, AppRoutes.changePhoneNumber),
@@ -82,7 +83,7 @@ class SettingsPage extends StatelessWidget {
             cardBg: cardBg,
             children: [
               _NavTile(
-                icon: Icons.notifications_outlined,
+                icon: AppSymbols.notifications,
                 label: 'Preferências de notificação',
                 textColor: textColor,
                 onTap: () => Navigator.pushNamed(context, AppRoutes.settingsNotifications),
@@ -97,7 +98,7 @@ class SettingsPage extends StatelessWidget {
             cardBg: cardBg,
             children: [
               _NavTile(
-                icon: Icons.logout_rounded,
+                icon: AppSymbols.logout,
                 label: 'Sair',
                 textColor: Colors.red,
                 onTap: () async {
@@ -186,7 +187,7 @@ class _ThemeToggleTile extends StatelessWidget {
               borderRadius: BorderRadius.circular(10),
             ),
             child: Icon(
-              themeProvider.isDark ? Icons.dark_mode_rounded : Icons.light_mode_rounded,
+              themeProvider.isDark ? Symbols.dark_mode : Symbols.light_mode,
               color: AppColors.primary,
               size: 20,
             ),
@@ -257,7 +258,7 @@ class _NavTile extends StatelessWidget {
                 style: GoogleFonts.poppins(fontSize: 15, fontWeight: FontWeight.w500, color: textColor),
               ),
             ),
-            Icon(Icons.arrow_forward_ios_rounded, size: 14, color: AppColors.placeholder),
+            Icon(AppSymbols.arrowForward, size: 14, color: AppColors.placeholder),
           ],
         ),
       ),

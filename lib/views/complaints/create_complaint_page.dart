@@ -7,6 +7,7 @@ import 'package:provider/provider.dart';
 import '../../core/components/app_back_button.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_defaults.dart';
+import '../../core/constants/app_symbols.dart';
 import '../../core/services/complaint_service.dart';
 import '../../core/services/geocoding_service.dart';
 import '../../core/state/category_state.dart';
@@ -44,6 +45,14 @@ class _CreateComplaintPageState extends State<CreateComplaintPage> {
   List<Map<String, dynamic>> _addressSuggestions = [];
   OverlayEntry? _overlayEntry;
   Timer? _debounceTimer;
+  
+  final List<Map<String, dynamic>> _complaintTypes = [
+    {'value': 'infraestrutura', 'label': 'Infraestrutura', 'icon': AppSymbols.construction},
+    {'value': 'seguranca', 'label': 'Segurança', 'icon': AppSymbols.security},
+    {'value': 'limpeza', 'label': 'Limpeza', 'icon': AppSymbols.cleaningServices},
+    {'value': 'transito', 'label': 'Trânsito', 'icon': AppSymbols.traffic},
+    {'value': 'outros', 'label': 'Outros', 'icon': AppSymbols.warning},
+  ];
 
   @override
   void initState() {
@@ -474,16 +483,7 @@ class _CreateComplaintPageState extends State<CreateComplaintPage> {
               backgroundColor: Colors.green,
             ),
           );
-          Navigator.of(context).pop(true); // Retorna true para indicar que reclamação foi criada
-        } else {
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Erro ao criar reclamação. Tente novamente.'),
-                backgroundColor: Colors.red,
-              ),
-            );
-          }
+          Navigator.of(context).pop(true);
         }
       } catch (e) {
         setState(() {
@@ -494,6 +494,7 @@ class _CreateComplaintPageState extends State<CreateComplaintPage> {
             SnackBar(
               content: Text('Erro: ${e.toString()}'),
               backgroundColor: Colors.red,
+              duration: const Duration(seconds: 6),
             ),
           );
         }
@@ -600,7 +601,7 @@ class _CreateComplaintPageState extends State<CreateComplaintPage> {
                           },
                           decoration: InputDecoration(
                             hintText: 'Digite o endereço (autocomplete ativo)',
-                            prefixIcon: const Icon(Icons.location_on),
+                            prefixIcon: const Icon(AppSymbols.locationOn),
                             suffixIcon: _isReverseGeocoding
                                 ? const SizedBox(
                                     width: 20,
@@ -632,7 +633,7 @@ class _CreateComplaintPageState extends State<CreateComplaintPage> {
                                 height: 20,
                                 child: CircularProgressIndicator(strokeWidth: 2),
                               )
-                            : const Icon(Icons.my_location),
+                            : const Icon(Symbols.my_location),
                         color: AppColors.primary,
                         onPressed: _isGettingLocation ? null : _getCurrentLocation,
                       ),
@@ -649,8 +650,8 @@ class _CreateComplaintPageState extends State<CreateComplaintPage> {
                               )
                             : Icon(
                                 _latitude != null && _longitude != null
-                                    ? Icons.check_circle
-                                    : Icons.search,
+                                    ? AppSymbols.checkCircle
+                                    : AppSymbols.search,
                                 color: _latitude != null && _longitude != null
                                     ? Colors.green
                                     : AppColors.primary,
@@ -713,7 +714,7 @@ class _CreateComplaintPageState extends State<CreateComplaintPage> {
                                       shape: BoxShape.circle,
                                     ),
                                     child: const Icon(
-                                      Icons.close,
+                                      AppSymbols.close,
                                       color: Colors.white,
                                       size: 16,
                                     ),
@@ -739,7 +740,7 @@ class _CreateComplaintPageState extends State<CreateComplaintPage> {
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 ListTile(
-                                  leading: const Icon(Icons.photo_library),
+                                  leading: const Icon(Symbols.photo_library),
                                   title: const Text('Galeria'),
                                   onTap: () {
                                     Navigator.pop(context);
@@ -747,7 +748,7 @@ class _CreateComplaintPageState extends State<CreateComplaintPage> {
                                   },
                                 ),
                                 ListTile(
-                                  leading: const Icon(Icons.camera_alt),
+                                  leading: const Icon(Symbols.camera_alt),
                                   title: const Text('Câmera'),
                                   onTap: () {
                                     Navigator.pop(context);
@@ -759,7 +760,7 @@ class _CreateComplaintPageState extends State<CreateComplaintPage> {
                           ),
                         );
                       },
-                      icon: const Icon(Icons.add_photo_alternate),
+                      icon: const Icon(Symbols.add_photo_alternate),
                       label: const Text('Adicionar Foto'),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.primary,
@@ -779,7 +780,7 @@ class _CreateComplaintPageState extends State<CreateComplaintPage> {
                   onTap: _selectDate,
                   decoration: const InputDecoration(
                     hintText: 'Selecione a data',
-                    suffixIcon: Icon(Icons.calendar_today),
+                    suffixIcon: Icon(AppSymbols.calendarToday),
                   ),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
