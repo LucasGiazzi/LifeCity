@@ -94,6 +94,8 @@ class TeamMember {
 class TeamModel {
   final String id;
   final String name;
+  final String? description;
+  final String? photoUrl;
   final String? creatorId;
   final int totalXp;
   final DateTime createdAt;
@@ -107,6 +109,8 @@ class TeamModel {
   const TeamModel({
     required this.id,
     required this.name,
+    this.description,
+    this.photoUrl,
     this.creatorId,
     this.totalXp = 0,
     required this.createdAt,
@@ -114,6 +118,30 @@ class TeamModel {
     this.myStatus,
     this.members = const [],
   });
+
+  TeamModel copyWith({
+    String? name,
+    String? description,
+    String? photoUrl,
+    String? creatorId,
+    int? totalXp,
+    int? memberCount,
+    String? myStatus,
+    List<TeamMember>? members,
+  }) {
+    return TeamModel(
+      id: id,
+      name: name ?? this.name,
+      description: description ?? this.description,
+      photoUrl: photoUrl ?? this.photoUrl,
+      creatorId: creatorId ?? this.creatorId,
+      totalXp: totalXp ?? this.totalXp,
+      createdAt: createdAt,
+      memberCount: memberCount ?? this.memberCount,
+      myStatus: myStatus ?? this.myStatus,
+      members: members ?? this.members,
+    );
+  }
 
   factory TeamModel.fromJson(Map<String, dynamic> json) {
     final membersList = (json['members'] as List?)
@@ -123,12 +151,43 @@ class TeamModel {
     return TeamModel(
       id: json['id'] as String,
       name: json['name'] as String,
+      description: json['description'] as String?,
+      photoUrl: json['photo_url'] as String?,
       creatorId: json['creator_id'] as String?,
       totalXp: (json['total_xp'] as num?)?.toInt() ?? 0,
       createdAt: DateTime.parse(json['created_at'] as String),
       memberCount: (json['member_count'] as num?)?.toInt() ?? membersList.length,
       myStatus: json['my_status'] as String?,
       members: membersList,
+    );
+  }
+}
+
+class TeamMessage {
+  final String id;
+  final String content;
+  final DateTime createdAt;
+  final String userId;
+  final String? userName;
+  final String? userPhotoUrl;
+
+  const TeamMessage({
+    required this.id,
+    required this.content,
+    required this.createdAt,
+    required this.userId,
+    this.userName,
+    this.userPhotoUrl,
+  });
+
+  factory TeamMessage.fromJson(Map<String, dynamic> json) {
+    return TeamMessage(
+      id: json['id'] as String,
+      content: json['content'] as String,
+      createdAt: DateTime.parse(json['created_at'] as String),
+      userId: json['user_id'] as String,
+      userName: json['user_name'] as String?,
+      userPhotoUrl: json['user_photo_url'] as String?,
     );
   }
 }

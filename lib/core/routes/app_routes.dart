@@ -22,6 +22,8 @@ class AppRoutes {
   /* <---- Missions & Teams -----> */
   static const createTeam = '/createTeam';
   static const teamDetail = '/teamDetail';
+  static const teamEdit = '/teamEdit';
+  static const teamChat = '/teamChat';
 
   /* <---- Profile & Settings -----> */
   static const profile = 'profile';

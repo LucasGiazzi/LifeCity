@@ -294,6 +294,44 @@ async function runMigrations() {
         SET cpf = REGEXP_REPLACE(cpf, '[^0-9]', '', 'g')
         WHERE cpf IS NOT NULL AND cpf ~ '[^0-9]'
     `);
+
+    // ── Verificação de cidade ─────────────────────────────────────────────────
+
+    await runMigration(pool, 'users_cep', `
+        ALTER TABLE users ADD COLUMN IF NOT EXISTS cep VARCHAR(8)
+    `);
+
+    await runMigration(pool, 'users_low_trust', `
+        ALTER TABLE users ADD COLUMN IF NOT EXISTS low_trust BOOLEAN NOT NULL DEFAULT FALSE
+    `);
+
+    await runMigration(pool, 'complaints_is_within_city', `
+        ALTER TABLE complaints ADD COLUMN IF NOT EXISTS is_within_city BOOLEAN
+    `);
+
+    // ── Equipes: foto, descrição e chat ──────────────────────────────────────
+
+    await runMigration(pool, 'teams_description_photo', `
+        ALTER TABLE teams
+        ADD COLUMN IF NOT EXISTS description TEXT,
+        ADD COLUMN IF NOT EXISTS photo_url TEXT,
+        ADD COLUMN IF NOT EXISTS photo_path TEXT
+    `);
+
+    await runMigration(pool, 'team_messages', `
+        CREATE TABLE IF NOT EXISTS team_messages (
+            id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+            team_id UUID REFERENCES teams(id) ON DELETE CASCADE,
+            user_id UUID REFERENCES users(id) ON DELETE SET NULL,
+            content TEXT NOT NULL,
+            created_at TIMESTAMP DEFAULT NOW()
+        )
+    `);
+
+    await runMigration(pool, 'team_messages_index', `
+        CREATE INDEX IF NOT EXISTS idx_team_messages_team
+        ON team_messages(team_id, created_at DESC)
+    `);
 }
 
 const server = http.createServer(app);

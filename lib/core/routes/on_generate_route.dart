@@ -22,6 +22,8 @@ import '../../views/complaints/create_complaint_page.dart';
 import '../../views/onboarding/onboarding_page.dart';
 import '../../views/missions/create_team_page.dart';
 import '../../views/missions/team_detail_page.dart';
+import '../../views/missions/team_edit_page.dart';
+import '../../views/missions/team_chat_page.dart';
 import '../../views/profile/notification_page.dart';
 import '../../views/profile/profile_edit_page.dart';
 import '../../views/profile/settings/change_password_page.dart';
@@ -141,6 +143,26 @@ class RouteGenerator {
         final teamId = settings.arguments as String;
         return CupertinoPageRoute(
           builder: (_) => TeamDetailPage(teamId: teamId),
+        );
+
+      case AppRoutes.teamEdit:
+        final team = settings.arguments as Map<String, dynamic>;
+        return CupertinoPageRoute(
+          builder: (_) => TeamEditPage(
+            teamId: team['teamId'] as String,
+            initialName: team['name'] as String,
+            initialDescription: team['description'] as String?,
+            initialPhotoUrl: team['photoUrl'] as String?,
+          ),
+        );
+
+      case AppRoutes.teamChat:
+        final args = settings.arguments as Map<String, dynamic>;
+        return CupertinoPageRoute(
+          builder: (_) => TeamChatPage(
+            teamId: args['teamId'] as String,
+            teamName: args['teamName'] as String,
+          ),
         );
 
       default:

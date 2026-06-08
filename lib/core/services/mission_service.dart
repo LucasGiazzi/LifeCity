@@ -1,3 +1,5 @@
+import 'package:dio/dio.dart';
+
 import '../models/mission_model.dart';
 import 'api_service.dart';
 
@@ -59,6 +61,32 @@ class MissionService {
     }
   }
 
+  Future<TeamModel?> editTeam(
+    String teamId, {
+    String? name,
+    String? description,
+    String? photoPath,
+  }) async {
+    try {
+      final formData = FormData.fromMap({
+        if (name != null) 'name': name,
+        if (description != null) 'description': description,
+        if (photoPath != null)
+          'photo': await MultipartFile.fromFile(
+            photoPath,
+            filename: 'team_photo.jpg',
+          ),
+      });
+      final response =
+          await _api.putMultipart('/api/missions/teams/$teamId', formData);
+      final data = response.data['team'] as Map<String, dynamic>?;
+      return data != null ? TeamModel.fromJson(data) : null;
+    } on ApiException catch (e) {
+      print('Erro ao editar equipe: ${e.message}');
+      return null;
+    }
+  }
+
   Future<bool> inviteToTeam(String teamId, String userId) async {
     try {
       await _api.post('/api/missions/teams/$teamId/invite', {'user_id': userId});
@@ -86,6 +114,39 @@ class MissionService {
     } on ApiException catch (e) {
       print('Erro ao recusar convite: ${e.message}');
       return false;
+    }
+  }
+
+  Future<List<TeamMessage>> getTeamMessages(String teamId,
+      {String? before}) async {
+    try {
+      final params = <String, dynamic>{'limit': 50};
+      if (before != null) params['before'] = before;
+      final response = await _api.get(
+        '/api/missions/teams/$teamId/messages',
+        params: params,
+      );
+      final list = response.data['messages'] as List? ?? [];
+      return list
+          .map((e) => TeamMessage.fromJson(e as Map<String, dynamic>))
+          .toList();
+    } on ApiException catch (e) {
+      print('Erro ao buscar mensagens: ${e.message}');
+      return [];
+    }
+  }
+
+  Future<TeamMessage?> sendTeamMessage(String teamId, String content) async {
+    try {
+      final response = await _api.post(
+        '/api/missions/teams/$teamId/messages',
+        {'content': content},
+      );
+      final data = response.data['message'] as Map<String, dynamic>?;
+      return data != null ? TeamMessage.fromJson(data) : null;
+    } on ApiException catch (e) {
+      print('Erro ao enviar mensagem: ${e.message}');
+      return null;
     }
   }
 }

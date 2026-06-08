@@ -64,7 +64,7 @@ class AuthState extends ChangeNotifier {
   }
 
   Future<bool> signUp(
-      {required String email, required String password, required String name, required String cpf, required String phone}) async {
+      {required String email, required String password, required String name, required String cpf, required String phone, required String cep}) async {
     setLoading(true);
     setErrorMessage(null);
 
@@ -75,6 +75,7 @@ class AuthState extends ChangeNotifier {
         name: name,
         cpf: cpf,
         phone: phone,
+        cep: cep,
       );
       setLoading(false);
       return userCredential != null;

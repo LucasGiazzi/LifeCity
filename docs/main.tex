@@ -29,6 +29,10 @@
 \usepackage{multirow}
 \usepackage{tabularx}
 
+% ── Sumário ──────────────────────────────────────────────────
+\usepackage{tocloft}
+\renewcommand{\cftsecleader}{\cftdotfill{\cftdotsep}}
+
 % ── Links ────────────────────────────────────────────────────
 \usepackage[hidelinks]{hyperref}
 
@@ -38,15 +42,12 @@
 
 % ── Cabeçalho/rodapé ─────────────────────────────────────────
 \usepackage{fancyhdr}
+\setlength{\headheight}{13.6pt}
 \pagestyle{fancy}
 \fancyhf{}
 \rhead{\small LifeCity}
 \rfoot{\thepage}
 \renewcommand{\headrulewidth}{0.4pt}
-
-% ── Sumário ──────────────────────────────────────────────────
-\usepackage{tocloft}
-\renewcommand{\cftsecleader}{\cftdotfill{\cftdotsep}}
 
 % ============================================================
 \begin{document}

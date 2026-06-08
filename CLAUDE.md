@@ -52,6 +52,56 @@ INSERT INTO ... (expires_at) VALUES (NOW() + INTERVAL '15 minutes')
 ```
 **Onde se aplica:** qualquer `INSERT`/`UPDATE` com valor de timestamp calculado no Node.js.
 
+### Tela de detalhe da equipe — chat integrado
+O chat da equipe foi integrado diretamente na `TeamDetailPage`, ocupando a parte inferior da tela (abaixo do card de cabeçalho). O ícone de chat que existia na AppBar foi substituído por um ícone de membros (`Symbols.group`) que abre um `ModalBottomSheet` com a lista de membros.
+- Polling automático a cada 5 s via `Timer.periodic` — só inicia quando `myStatus == 'active'`
+- `TeamChatPage` permanece no projeto mas não é mais navegada diretamente
+
+### ARMADILHA: my_status ausente em getTeamById
+**Sintoma:** botão de chat não aparecia para membros ativos da equipe.
+**Causa:** `getTeamById` fazia `SELECT * FROM teams` (sem `my_status`) e retornava o objeto puro. Flutter recebia `my_status: null`, `isActiveMember` ficava `false`.
+**Fix:** `res.json({ team: { ...team, my_status: membership.status }, members })` — injeta o status do usuário logado no objeto da equipe antes de retornar.
+
+### Filtro inteligente de reclamações no mapa
+Pins são filtrados por distância da **localização atual do usuário** (GPS, atualiza conforme o usuário se move):
+- **≤ 5 km:** todas as reclamações visíveis — tamanho 44 px, opacidade total
+- **> 5 km:** apenas reclamações com score de relevância `>= 3`, onde `score = likesCount + commentsCount + witnessCount`; exibidas menores (36 px) e com 65 % de opacidade para sinalizar distância
+- Fallback quando GPS não disponível: usa centro padrão de Campinas (`-22.9099, -47.0626`)
+- O `_positionStream` já chama `setState` a cada atualização de posição — filtro recalcula automaticamente
+- Distância calculada via fórmula de Haversine em `_MapBodyState._haversineKm`
+
+### ARMADILHA: --read-only=false inválido no MCP Supabase
+O servidor `@supabase/mcp-server-supabase` não aceita `--read-only=false` — encerra com `ERR_PARSE_ARGS_INVALID_OPTION_VALUE`. Para habilitar escrita, basta omitir o flag. O token deve ser passado via `--access-token` como argumento explícito no `.mcp.json` (não via campo `env`), pois o Claude Code no Windows pode não repassar variáveis de ambiente corretamente para subprocessos MCP.
+
+### Verificação de cidade — CEP + geofencing passivo
+Dois mecanismos combinados para garantir que usuários pertencem à cidade:
+
+**1. CEP no cadastro (barreira de entrada)**
+- Campo CEP obrigatório no sign-up com máscara `#####-###`
+- Backend valida se o CEP pertence à cidade via `isValidCityCep()` em `backend/src/infra/cityValidator.js`
+- Prefixos configurados em `CITY_CEP_PREFIXES` (comma-separated). Se não configurado, validação é pulada (sem quebrar)
+- CEP armazenado como 8 dígitos (sem hífen) na coluna `users.cep`
+
+**2. Geofencing passivo (sinal comportamental)**
+- Cada reclamação criada salva `is_within_city BOOLEAN` calculado por `isWithinCityBounds(lat, lng)`
+- Após ≥ 5 reclamações geolocalizadas, se nenhuma for dentro dos limites → `users.low_trust = TRUE`
+- A checagem roda em background (não bloqueia a resposta de criação da reclamação)
+- Se os bounds não estiverem configurados ou a reclamação não tiver GPS, `is_within_city = NULL` (não penalizado)
+
+**Configuração atual (Campinas-SP):**
+```
+CITY_CEP_PREFIXES=130,1310,1311,1312,1313,1314   # 13000–13149
+CITY_LAT_MIN=-23.15
+CITY_LAT_MAX=-22.65
+CITY_LNG_MIN=-47.40
+CITY_LNG_MAX=-46.90
+```
+
+**Arquivos relevantes:**
+- `backend/src/infra/cityValidator.js` — funções `isValidCityCep` e `isWithinCityBounds`
+- `backend/src/controllers/authController.js` → `register` — valida CEP
+- `backend/src/controllers/complaintController.js` → `create` — salva `is_within_city`, chama `checkUserTrust`
+
 ### Variáveis de ambiente do backend (.env)
 ```
 DATABASE_URL
@@ -59,8 +109,13 @@ JWT_SECRET
 JWT_REFRESH_SECRET
 SUPABASE_URL
 SUPABASE_SERVICE_KEY
-EMAIL_USER       # endereço Gmail para envio
-EMAIL_PASS       # senha de app gerada em myaccount.google.com → Segurança → Senhas de app
+EMAIL_USER            # endereço Gmail para envio
+EMAIL_PASS            # senha de app gerada em myaccount.google.com → Segurança → Senhas de app
+CITY_CEP_PREFIXES     # prefixos de CEP válidos da cidade (ex: 130,1310,1311)
+CITY_LAT_MIN          # limite sul do município
+CITY_LAT_MAX          # limite norte do município
+CITY_LNG_MIN          # limite oeste do município
+CITY_LNG_MAX          # limite leste do município
 ```
 
 ### Migrations
@@ -158,6 +213,7 @@ ALTER TABLE users ADD COLUMN featured_achievements UUID[] DEFAULT '{}';
 - **Semanais:** individuais também, mais complexas, sorteadas aleatoriamente por usuário toda semana
 - **Bônus de equipe (semanais):** se o usuário pertence a uma equipe, o progresso é colaborativo e cada membro ganha XP bônus proporcional ao desempenho dos outros membros da equipe
 - **Equipes:** criadas por um usuário que convida amigos — mínimo 2, máximo 7 integrantes. Persistem ao longo do tempo (estilo equipe permanente)
+- **Limite por usuário:** cada usuário pode criar no máximo 1 equipe e entrar em no máximo 1 equipe criada por outra pessoa (total: 2 equipes)
 
 #### `mission_templates` (pool de missões — gerenciado por admin)
 ```sql
