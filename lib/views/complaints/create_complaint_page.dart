@@ -36,7 +36,7 @@ class _CreateComplaintPageState extends State<CreateComplaintPage> {
   double? _longitude;
   
   // Fotos
-  List<File> _selectedImages = [];
+  final List<File> _selectedImages = [];
   final ImagePicker _picker = ImagePicker();
   
   // Autocomplete
@@ -339,6 +339,36 @@ class _CreateComplaintPageState extends State<CreateComplaintPage> {
     setState(() => _isGeocoding = true);
 
     try {
+      /* Usando Nominatim (OpenStreetMap) para geocoding gratuito
+      final address = Uri.encodeComponent('${_addressController.text.trim()}, Campinas, SP, Brasil');
+      final url = 'https://nominatim.openstreetmap.org/search?q=$address&format=json&limit=1';
+      
+      final response = await http.get(
+        Uri.parse(url),
+        headers: {'User-Agent': 'LifeCityApp/1.0'},
+      ).timeout(const Duration(seconds: 10));
+
+      if (response.statusCode == 200) {
+        final List<dynamic> data = json.decode(response.body);
+        if (data.isNotEmpty) {
+          final lat = double.tryParse(data[0]['lat'] ?? '');
+          final lon = double.tryParse(data[0]['lon'] ?? '');
+          if (lat != null && lon != null) {
+            setState(() {
+              _latitude = lat;
+              _longitude = lon;
+              _isGeocoding = false;
+            });
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Localização encontrada!'),
+                backgroundColor: Colors.green,
+                duration: Duration(seconds: 2),
+              ),
+            );
+            return;
+          }
+        }*/
       final coords = await _geocodingService.geocodeAddress(
         _addressController.text.trim(),
         regionSuffix: ', Campinas, SP, Brasil',

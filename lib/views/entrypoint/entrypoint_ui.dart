@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math';
 import 'package:animations/animations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
@@ -309,6 +310,9 @@ class _MapBodyState extends State<_MapBody> {
   bool _isLoading = true;
   _MapLayerKind _mapLayer = _MapLayerKind.streets;
 
+  static const double _nearRadiusKm = 5.0;
+  static const int _relevanceThreshold = 3;
+
   @override
   void initState() {
     super.initState();
@@ -382,6 +386,20 @@ class _MapBodyState extends State<_MapBody> {
 
   void reload() => _loadComplaints();
 
+  double _haversineKm(LatLng a, LatLng b) {
+    const r = 6371.0;
+    final dLat = (b.latitude - a.latitude) * pi / 180;
+    final dLng = (b.longitude - a.longitude) * pi / 180;
+    final lat1 = a.latitude * pi / 180;
+    final lat2 = b.latitude * pi / 180;
+    final h = sin(dLat / 2) * sin(dLat / 2) +
+        cos(lat1) * cos(lat2) * sin(dLng / 2) * sin(dLng / 2);
+    return 2 * r * asin(sqrt(h));
+  }
+
+  int _relevanceScore(ComplaintModel c) =>
+      c.likesCount + c.commentsCount + c.witnessCount;
+
   void _zoomBy(double delta) {
     final cam = _mapController.camera;
     final next = (cam.zoom + delta).clamp(2.0, 22.0);
@@ -444,15 +462,20 @@ class _MapBodyState extends State<_MapBody> {
                 return filters.contains(c.type!.toLowerCase());
               }).toList();
 
-        final markers = visible.map((c) => Marker(
-              point: LatLng(c.latitude!, c.longitude!),
-              width: 44,
-              height: 44,
-              child: GestureDetector(
-                onTap: () => _openSheet(c),
-                child: _ComplaintPin(type: c.type),
-              ),
-            )).toList();
+        final markers = visible.map((c) {
+          final dist = _haversineKm(_userLocation ?? _center, LatLng(c.latitude!, c.longitude!));
+          final nearby = dist <= _nearRadiusKm;
+          if (!nearby && _relevanceScore(c) < _relevanceThreshold) return null;
+          return Marker(
+            point: LatLng(c.latitude!, c.longitude!),
+            width: nearby ? 44 : 36,
+            height: nearby ? 44 : 36,
+            child: GestureDetector(
+              onTap: () => _openSheet(c),
+              child: _ComplaintPin(type: c.type, nearby: nearby),
+            ),
+          );
+        }).whereType<Marker>().toList();
 
         final tileSpec = _tileSpec(_mapLayer);
 
@@ -655,7 +678,8 @@ class _LocationButton extends StatelessWidget {
 
 class _ComplaintPin extends StatelessWidget {
   final String? type;
-  const _ComplaintPin({this.type});
+  final bool nearby;
+  const _ComplaintPin({this.type, this.nearby = true});
 
   @override
   Widget build(BuildContext context) {
@@ -684,7 +708,7 @@ class _ComplaintPin extends StatelessWidget {
     final icon = cat['icon'] as IconData;
     */
 
-    return Container(
+    final pin = Container(
       decoration: BoxDecoration(
         color: color,
         shape: BoxShape.circle,
@@ -696,8 +720,10 @@ class _ComplaintPin extends StatelessWidget {
           ),
         ],
       ),
-      child: Center(child: Icon(icon, color: Colors.white, size: 20)),
+      child: Center(child: Icon(icon, color: Colors.white, size: nearby ? 20 : 16)),
     );
+
+    return nearby ? pin : Opacity(opacity: 0.65, child: pin);
   }
 }
 

@@ -24,6 +24,7 @@ class AuthService {
     required String name,
     required String cpf,
     required String phone,
+    required String cep,
   }) async {
     try {
       final response = await _api.post('/api/auth/register', {
@@ -32,6 +33,7 @@ class AuthService {
         'name': name,
         'cpf': cpf,
         'phone': phone,
+        'cep': cep,
       });
 
       return response.data;

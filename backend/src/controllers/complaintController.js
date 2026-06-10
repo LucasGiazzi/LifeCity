@@ -3,6 +3,27 @@ const { uploadToSupabase, listBlobs, removeFolder } = require('../infra/supabase
 const { INSERT_COMPLAINT_WITH_GEO } = require('../services/complaintGeoService');
 const { checkAchievements } = require('../infra/achievementChecker');
 const { checkMissionProgress, checkMissionResolution } = require('../infra/missionProgressChecker');
+const { isWithinCityBounds } = require('../infra/cityValidator');
+
+async function checkUserTrust(pool, userId) {
+    try {
+        const { rows } = await pool.query(`
+            SELECT
+                COUNT(*) FILTER (WHERE is_within_city IS NOT NULL) AS with_location,
+                COUNT(*) FILTER (WHERE is_within_city = TRUE)      AS within_city
+            FROM complaints
+            WHERE created_by = $1
+        `, [userId]);
+
+        const { with_location, within_city } = rows[0];
+        if (parseInt(with_location) < 5) return;
+
+        const isLowTrust = parseInt(within_city) === 0;
+        await pool.query('UPDATE users SET low_trust = $1 WHERE id = $2', [isLowTrust, userId]);
+    } catch (err) {
+        console.error('[trustChecker] erro:', err.message);
+    }
+}
 
 exports.create = async (req, res) => {
     const { description, occurrence_date, address, latitude, longitude, type } = req.body;
@@ -21,6 +42,13 @@ exports.create = async (req, res) => {
 
         const pool = await supabasePool.getPgPool();
 
+        /*
+        const withinCity = isWithinCityBounds(latitude, longitude);
+
+        const result = await pool.query(
+            'INSERT INTO complaints (description, occurrence_date, created_by, category, address, latitude, longitude, is_within_city) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *',
+            [description, occurrence_date, created_by, type || null, address || null, latitude || null, longitude || null, withinCity]
+        );*/
         // created_at será preenchido automaticamente pelo banco (default: now())
         // location, cd_mun, setor/bairro e tenant_id derivados de lat/lng via geo.* (ADR-001)
         const result = await pool.query(INSERT_COMPLAINT_WITH_GEO, [
@@ -76,6 +104,7 @@ exports.create = async (req, res) => {
         // Verificações em background (não bloqueiam a resposta)
         checkAchievements(created_by, 'complaint_created');
         checkMissionProgress(pool, created_by);
+        checkUserTrust(pool, created_by);
     } catch (error) {
         console.error('Erro ao criar reclamação:', error);
         res.status(500).json({ message: 'Erro ao criar reclamação.' });

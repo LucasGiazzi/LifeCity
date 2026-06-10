@@ -299,7 +299,7 @@ class _CreateEventPageState extends State<CreateEventPage> {
 
     try {
       // Buscar endereços usando Nominatim Search API (gratuito)
-      final encodedQuery = Uri.encodeComponent(query + ', Campinas, SP, Brasil');
+      final encodedQuery = Uri.encodeComponent('$query, Campinas, SP, Brasil');
       final url = 'https://nominatim.openstreetmap.org/search?q=$encodedQuery&format=json&limit=5&addressdetails=1';
       
       final response = await http.get(
@@ -421,7 +421,7 @@ class _CreateEventPageState extends State<CreateEventPage> {
 
     try {
       // Usando Nominatim (OpenStreetMap) para geocoding gratuito
-      final address = Uri.encodeComponent(_addressController.text.trim() + ', Campinas, SP, Brasil');
+      final address = Uri.encodeComponent('${_addressController.text.trim()}, Campinas, SP, Brasil');
       final url = 'https://nominatim.openstreetmap.org/search?q=$address&format=json&limit=1';
       
       final response = await http.get(

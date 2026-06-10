@@ -102,9 +102,16 @@ Missões sorteadas e atribuídas a cada usuário: \texttt{id},
 \texttt{expires\_at}, \texttt{created\_at}.
 
 \paragraph{teams}
-Equipes permanentes: \texttt{id}, \texttt{name},
+Equipes permanentes: \texttt{id}, \texttt{name}, \texttt{description},
+\texttt{photo\_url}, \texttt{photo\_path},
 \texttt{creator\_id} (FK $\to$ users), \texttt{total\_xp},
 \texttt{created\_at}.
+
+\paragraph{team\_messages}
+Mensagens do chat interno de cada equipe: \texttt{id},
+\texttt{team\_id} (FK $\to$ teams), \texttt{user\_id} (FK $\to$ users),
+\texttt{content}, \texttt{created\_at}. Apenas membros com
+\texttt{status = active} podem ler e enviar mensagens.
 
 \paragraph{team\_members}
 Membros das equipes: \texttt{id}, \texttt{team\_id} (FK $\to$ teams),

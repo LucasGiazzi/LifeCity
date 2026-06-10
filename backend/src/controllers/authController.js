@@ -9,6 +9,7 @@ const {
     buildRefreshToken,
 } = require('../services/tenantService');
 const { isValidCpf } = require('../infra/cpfValidator');
+const { isValidCityCep } = require('../infra/cityValidator');
 const { sendPasswordResetEmail } = require('../infra/mailer');
 const jwt = require('jsonwebtoken')
 
@@ -123,7 +124,7 @@ exports.logout = async (req, res) => {
 }
 
 exports.register = async (req, res) => {
-    const { email, password, name, cpf, phone } = req.body;
+    const { email, password, name, cpf, phone, cep } = req.body;
 
     try {
 
@@ -131,6 +132,10 @@ exports.register = async (req, res) => {
 
         if (!isValidCpf(cpf)) {
             return res.status(400).json({ message: 'CPF inválido.' });
+        }
+
+        if (cep && !isValidCityCep(cep)) {
+            return res.status(400).json({ message: 'CEP não pertence à cidade atendida pelo LifeCity.' });
         }
 
         const user = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
@@ -147,8 +152,12 @@ exports.register = async (req, res) => {
 
         const salt = generateSalt();
         const hashedPassword = encryptPassword(password, salt);
+        const cleanCep = cep ? cep.replace(/\D/g, '') : null;
 
-        await pool.query('INSERT INTO users (email, password, name, cpf, phone, salt) VALUES ($1, $2, $3, $4, $5, $6)', [email, hashedPassword, name, cpf.replace(/\D/g, ''), phone, salt]);
+        await pool.query(
+            'INSERT INTO users (email, password, name, cpf, phone, salt, cep) VALUES ($1, $2, $3, $4, $5, $6, $7)',
+            [email, hashedPassword, name, cpf.replace(/\D/g, ''), phone, salt, cleanCep]
+        );
 
         return res.status(200).json({
             message: 'Registrado com sucesso',

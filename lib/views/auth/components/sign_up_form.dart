@@ -19,6 +19,11 @@ final phoneFormatter = MaskTextInputFormatter(
   filter: {"#": RegExp(r'[0-9]')},
 );
 
+final cepFormatter = MaskTextInputFormatter(
+  mask: '#####-###',
+  filter: {"#": RegExp(r'[0-9]')},
+);
+
 class SignUpForm extends StatefulWidget {
   const SignUpForm({super.key});
 
@@ -33,6 +38,7 @@ class _SignUpFormState extends State<SignUpForm> {
   final _cpfController = TextEditingController();
   final _emailController = TextEditingController();
   final _phoneController = TextEditingController();
+  final _cepController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
 
@@ -45,6 +51,7 @@ class _SignUpFormState extends State<SignUpForm> {
     _cpfController.dispose();
     _emailController.dispose();
     _phoneController.dispose();
+    _cepController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
     super.dispose();
@@ -63,6 +70,7 @@ class _SignUpFormState extends State<SignUpForm> {
       name: _nameController.text.trim(),
       cpf: _cpfController.text,
       phone: _phoneController.text,
+      cep: _cepController.text,
     );
 
     if (success && mounted) {
@@ -118,6 +126,20 @@ class _SignUpFormState extends State<SignUpForm> {
             keyboardType: TextInputType.phone,
             formatters: [phoneFormatter],
             validator: Validators.required.call,
+            action: TextInputAction.next,
+          ),
+          const SizedBox(height: 12),
+          _Field(
+            controller: _cepController,
+            hint: 'CEP',
+            icon: AppSymbols.locationOn,
+            keyboardType: TextInputType.number,
+            formatters: [cepFormatter],
+            validator: (value) {
+              if (value == null || value.isEmpty) return 'CEP é obrigatório';
+              if (value.length != 9) return 'CEP inválido';
+              return null;
+            },
             action: TextInputAction.next,
           ),
 

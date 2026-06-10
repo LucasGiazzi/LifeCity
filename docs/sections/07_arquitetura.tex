@@ -31,17 +31,21 @@ seguindo o padrão de separação de responsabilidades:
           \item \texttt{/api/achievements} — conquistas do usuário;
           \item \texttt{/api/notifications} — listagem e marcação como lida;
           \item \texttt{/api/missions} — missões ativas, detalhes;
-          \item \texttt{/api/missions/teams} — criar equipe, convidar, aceitar/recusar convite;
+          \item \texttt{/api/missions/teams} — criar equipe, convidar, aceitar/recusar convite, editar equipe;
+          \item \texttt{/api/missions/teams/:id/messages} — listar mensagens do chat da equipe (GET) e enviar nova mensagem (POST); acesso restrito a membros ativos;
           \item \texttt{/api/reports} — denúncias de reclamações e usuários com moderação automática por threshold;
           \item \texttt{/api/auth/forgot-password} e \texttt{/api/auth/reset-password} — recuperação de senha por e-mail com código de verificação de uso único.
         \end{itemize}
         Gerencia tokens JWT (access token de curta duração + refresh token de
         longa duração), incluindo renovação automática de sessão e invalidação
-        no logout. Checadores de conquistas (\texttt{achievementChecker.js}) e
-        de progresso de missões (\texttt{missionProgressChecker.js}) são
-        disparados de forma assíncrona após ações do usuário. O envio de e-mails
+        no logout. Checadores de conquistas (\texttt{achievementChecker.js}),
+        de progresso de missões (\texttt{missionProgressChecker.js}) e de
+        confiabilidade do usuário (\texttt{cityValidator.js}) são disparados
+        de forma assíncrona após ações do usuário. O envio de e-mails
         transacionais (recuperação de senha) é feito via \texttt{Nodemailer}
-        integrado ao Gmail com autenticação por senha de aplicativo.
+        integrado ao Gmail com autenticação por senha de aplicativo. O
+        módulo \texttt{cityValidator.js} também é invocado de forma síncrona
+        no cadastro para validar o CEP informado pelo usuário.
 
   \item \textbf{Camada de dados — PostgreSQL via Supabase:} Responsável pelo
         armazenamento persistente dos dados. O banco PostgreSQL é gerenciado
@@ -52,3 +56,20 @@ seguindo o padrão de separação de responsabilidades:
 O aplicativo Flutter nunca acessa o banco de dados diretamente; toda
 comunicação passa obrigatoriamente pelo backend Node.js, garantindo
 controle de acesso e segurança centralizada.
+
+\subsection*{Filtro inteligente de reclamações no mapa}
+
+Para evitar a poluição visual do mapa em cidades com grande volume de
+reclamações, o aplicativo aplica um filtro de relevância baseado na
+distância entre cada reclamação e a posição GPS atual do usuário.
+Reclamações a até 5\,km são exibidas normalmente (tamanho completo).
+Reclamações além desse raio são exibidas apenas se possuírem
+pontuação de relevância igual ou superior a 3, onde a pontuação é
+calculada como a soma de curtidas, comentários e testemunhos
+(\texttt{likesCount + commentsCount + witnessCount}).
+Pins de alta relevância exibidos fora do raio próximo aparecem
+levemente menores e com opacidade reduzida, comunicando visualmente
+a diferença. O filtro é recalculado automaticamente sempre que a
+posição do usuário é atualizada pelo GPS, sem necessidade de
+interação. A distância é calculada pelo algoritmo de Haversine
+diretamente no cliente Flutter, sem requisições adicionais ao backend.
