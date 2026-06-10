@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../core/constants/app_colors.dart';
+import '../../core/constants/app_symbols.dart';
 import 'components/login_page_form.dart';
 
 class LoginPage extends StatelessWidget {
@@ -37,7 +38,7 @@ class LoginPage extends StatelessWidget {
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            const Icon(Icons.arrow_back_ios_new_rounded,
+                            const Icon(AppSymbols.arrowBack,
                                 color: Colors.white70, size: 16),
                             const SizedBox(width: 4),
                             Text(
@@ -63,7 +64,7 @@ class LoginPage extends StatelessWidget {
                         border: Border.all(
                             color: AppColors.primary.withValues(alpha: 0.4)),
                       ),
-                      child: const Icon(Icons.location_city_rounded,
+                      child: const Icon(Symbols.location_city,
                           color: AppColors.primary, size: 26),
                     ),
                     SizedBox(height: screen.height * 0.015),

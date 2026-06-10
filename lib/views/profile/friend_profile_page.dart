@@ -2,7 +2,9 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../../core/components/report_sheet.dart';
 import '../../core/constants/app_colors.dart';
+import '../../core/constants/app_symbols.dart';
 import '../../core/models/complaint_model.dart';
 import '../../core/services/complaint_service.dart';
 import '../complaints/complaint_sheet.dart';
@@ -101,6 +103,7 @@ class _FriendProfilePageState extends State<FriendProfilePage>
         headerSliverBuilder: (_, __) => [
           SliverToBoxAdapter(
             child: _FriendHeader(
+              userId: widget.userId,
               userName: widget.userName,
               photoUrl: widget.photoUrl,
               complaintCount: _complaints.length,
@@ -121,10 +124,10 @@ class _FriendProfilePageState extends State<FriendProfilePage>
               tabs: const [
                 Tab(
                     text: 'Reclamações',
-                    icon: Icon(Icons.report_problem_rounded, size: 18)),
+                    icon: Icon(AppSymbols.warning, size: 18)),
                 Tab(
                     text: 'Interações',
-                    icon: Icon(Icons.favorite_border_rounded, size: 18)),
+                    icon: Icon(AppSymbols.favorite, size: 18)),
               ],
             ),
             Expanded(
@@ -147,7 +150,7 @@ class _FriendProfilePageState extends State<FriendProfilePage>
   Widget _buildComplaintsList() {
     if (_complaints.isEmpty) {
       return _EmptyState(
-        icon: Icons.check_circle_outline_rounded,
+        icon: AppSymbols.checkCircle,
         message: '${widget.userName} ainda não\nfez nenhuma reclamação',
       );
     }
@@ -173,7 +176,7 @@ class _FriendProfilePageState extends State<FriendProfilePage>
     }
     if (_interactions.isEmpty) {
       return _EmptyState(
-        icon: Icons.favorite_border_rounded,
+        icon: AppSymbols.favorite,
         message: '${widget.userName} ainda não\ncurtiu nem comentou nenhuma reclamação',
       );
     }
@@ -191,12 +194,14 @@ class _FriendProfilePageState extends State<FriendProfilePage>
 // ─── Header ──────────────────────────────────────────────────────────────────
 
 class _FriendHeader extends StatelessWidget {
+  final String userId;
   final String userName;
   final String? photoUrl;
   final int complaintCount;
   final Map<String, dynamic>? xpData;
 
   const _FriendHeader({
+    required this.userId,
     required this.userName,
     this.photoUrl,
     required this.complaintCount,
@@ -204,11 +209,11 @@ class _FriendHeader extends StatelessWidget {
   });
 
   static const _levelIcons = <int, IconData>{
-    1: Icons.home_rounded,
-    2: Icons.people_rounded,
-    3: Icons.shield_rounded,
-    4: Icons.campaign_rounded,
-    5: Icons.star_rounded,
+    1: Symbols.home,
+    2: Symbols.people,
+    3: Symbols.shield,
+    4: Symbols.campaign,
+    5: Symbols.star,
   };
 
   @override
@@ -218,7 +223,7 @@ class _FriendHeader extends StatelessWidget {
     final levelName = xpData?['name'] as String? ?? 'Morador';
     final currentMin = (xpData?['currentMin'] as num?)?.toInt() ?? 0;
     final nextMin = (xpData?['nextMin'] as num?)?.toInt();
-    final icon = _levelIcons[level] ?? Icons.person_rounded;
+    final icon = _levelIcons[level] ?? AppSymbols.person;
     final progress = nextMin != null && nextMin > currentMin
         ? ((xp - currentMin) / (nextMin - currentMin)).clamp(0.0, 1.0)
         : 1.0;
@@ -239,10 +244,22 @@ class _FriendHeader extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              IconButton(
-                icon: const Icon(Icons.arrow_back_ios_new_rounded,
-                    color: Colors.white, size: 20),
-                onPressed: () => Navigator.pop(context),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  IconButton(
+                    icon: const Icon(AppSymbols.arrowBack,
+                        color: Colors.white, size: 20),
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                  IconButton(
+                    icon: const Icon(AppSymbols.flag,
+                        color: Colors.white70, size: 20),
+                    tooltip: 'Denunciar usuário',
+                    onPressed: () =>
+                        showReportUserSheet(context, userId, userName),
+                  ),
+                ],
               ),
               const SizedBox(height: 4),
               Padding(
@@ -262,7 +279,7 @@ class _FriendHeader extends StatelessWidget {
                                 fit: BoxFit.cover,
                               ),
                             )
-                          : const Icon(Icons.person, size: 44, color: Colors.grey),
+                          : const Icon(AppSymbols.person, size: 44, color: Colors.grey),
                     ),
                     const SizedBox(width: 16),
                     Expanded(
@@ -280,7 +297,7 @@ class _FriendHeader extends StatelessWidget {
                           const SizedBox(height: 4),
                           Row(
                             children: [
-                              const Icon(Icons.report_problem_rounded,
+                              const Icon(AppSymbols.warning,
                                   color: Colors.white70, size: 14),
                               const SizedBox(width: 4),
                               Text(
@@ -375,18 +392,18 @@ class _ComplaintCard extends StatelessWidget {
   };
 
   static const _catIcons = <String, IconData>{
-    'infraestrutura': Icons.construction,
-    'seguranca': Icons.security,
-    'limpeza': Icons.cleaning_services,
-    'transito': Icons.traffic,
-    'outros': Icons.report_problem,
+    'infraestrutura': AppSymbols.construction,
+    'seguranca': AppSymbols.security,
+    'limpeza': AppSymbols.cleaningServices,
+    'transito': AppSymbols.traffic,
+    'outros': AppSymbols.warning,
   };
 
   @override
   Widget build(BuildContext context) {
     final type = complaint.type?.toLowerCase() ?? 'outros';
     final color = _catColors[type] ?? Colors.grey;
-    final icon = _catIcons[type] ?? Icons.report_problem;
+    final icon = _catIcons[type] ?? AppSymbols.warning;
     final date =
         '${complaint.occurrenceDate.day.toString().padLeft(2, '0')}/${complaint.occurrenceDate.month.toString().padLeft(2, '0')}/${complaint.occurrenceDate.year}';
 
@@ -438,7 +455,7 @@ class _ComplaintCard extends StatelessWidget {
                   ],
                 ),
               ),
-              const Icon(Icons.chevron_right_rounded,
+              const Icon(AppSymbols.chevronRight,
                   color: AppColors.placeholder),
             ],
           ),
@@ -458,8 +475,7 @@ class _InteractionCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final isLike = data['type'] == 'like';
     final iconColor = isLike ? Colors.red : AppColors.primary;
-    final icon =
-        isLike ? Icons.favorite_rounded : Icons.chat_bubble_rounded;
+    final icon = isLike ? AppSymbols.favorite : AppSymbols.chatBubble;
     final title = data['description'] as String? ?? '';
     final address = data['address'] as String?;
     final commentText = data['comment_text'] as String?;
@@ -519,7 +535,7 @@ class _InteractionCard extends StatelessWidget {
               const SizedBox(height: 2),
               Row(
                 children: [
-                  const Icon(Icons.location_on_outlined,
+                  const Icon(AppSymbols.locationOn,
                       size: 13, color: AppColors.placeholder),
                   const SizedBox(width: 2),
                   Expanded(

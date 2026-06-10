@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../../core/components/app_back_button.dart';
 import '../../core/constants/app_defaults.dart';
+import '../../core/constants/app_symbols.dart';
 import '../../core/routes/app_routes.dart';
 import '../../core/components/app_settings_tile.dart';
 import '../../core/state/auth_state.dart';
@@ -10,7 +11,7 @@ import '../../core/state/auth_state.dart';
 class DrawerPage extends StatelessWidget {
   const DrawerPage({super.key});
 
-  static const _chevron = Icon(Icons.arrow_forward_ios_rounded, size: 14);
+  static const _chevron = Icon(AppSymbols.arrowForward, size: 14);
 
   @override
   Widget build(BuildContext context) {

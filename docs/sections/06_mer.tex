@@ -102,12 +102,49 @@ Missões sorteadas e atribuídas a cada usuário: \texttt{id},
 \texttt{expires\_at}, \texttt{created\_at}.
 
 \paragraph{teams}
-Equipes permanentes: \texttt{id}, \texttt{name},
+Equipes permanentes: \texttt{id}, \texttt{name}, \texttt{description},
+\texttt{photo\_url}, \texttt{photo\_path},
 \texttt{creator\_id} (FK $\to$ users), \texttt{total\_xp},
 \texttt{created\_at}.
+
+\paragraph{team\_messages}
+Mensagens do chat interno de cada equipe: \texttt{id},
+\texttt{team\_id} (FK $\to$ teams), \texttt{user\_id} (FK $\to$ users),
+\texttt{content}, \texttt{created\_at}. Apenas membros com
+\texttt{status = active} podem ler e enviar mensagens.
 
 \paragraph{team\_members}
 Membros das equipes: \texttt{id}, \texttt{team\_id} (FK $\to$ teams),
 \texttt{user\_id} (FK $\to$ users), \texttt{status} (active | pending |
 rejected), \texttt{joined\_at}. Chave única em
 (\texttt{team\_id}, \texttt{user\_id}).
+
+% ── Moderação e Segurança ─────────────────────────────────────────
+\subsection*{Moderação e Segurança}
+
+\paragraph{reports}
+Denúncias de reclamações e usuários: \texttt{id}, \texttt{reporter\_id}
+(FK $\to$ users), \texttt{target\_type} (complaint | user),
+\texttt{target\_id}, \texttt{reason}, \texttt{details},
+\texttt{status} (pending | reviewed | dismissed), \texttt{reviewed\_by}
+(FK $\to$ users), \texttt{reviewed\_at}, \texttt{created\_at}.
+Chave única em (\texttt{reporter\_id}, \texttt{target\_type},
+\texttt{target\_id}) — impede denúncia duplicada do mesmo usuário.
+Ao atingir 5 denúncias pendentes, a reclamação é ocultada automaticamente
+(\texttt{is\_hidden = TRUE}); ao atingir 10, o usuário é restringido
+(\texttt{is\_restricted = TRUE}).
+
+\paragraph{password\_reset\_tokens}
+Tokens de recuperação de senha: \texttt{id}, \texttt{user\_id}
+(FK $\to$ users), \texttt{code\_hash} (SHA-256 do código de 6 dígitos),
+\texttt{expires\_at} (15 minutos após criação), \texttt{used\_at},
+\texttt{created\_at}. Tokens anteriores do mesmo usuário são apagados ao
+gerar um novo.
+
+\paragraph{Colunas adicionadas}
+\begin{itemize}
+  \item \textbf{complaints}: \texttt{report\_count} (INTEGER DEFAULT 0),
+        \texttt{is\_hidden} (BOOLEAN DEFAULT FALSE).
+  \item \textbf{users}: \texttt{report\_count} (INTEGER DEFAULT 0),
+        \texttt{is\_restricted} (BOOLEAN DEFAULT FALSE).
+\end{itemize}

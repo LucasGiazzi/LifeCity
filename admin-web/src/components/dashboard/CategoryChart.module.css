@@ -1,0 +1,147 @@
+.wrap {
+  background: #fff;
+  border: 1px solid rgba(13, 40, 24, 0.08);
+  border-radius: 14px;
+  padding: 16px;
+}
+
+.title {
+  margin: 0 0 14px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--lc-dark);
+}
+
+.empty {
+  margin: 0;
+  font-size: 13px;
+  color: var(--lc-placeholder);
+}
+
+.layout {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.pieWrap {
+  flex-shrink: 0;
+}
+
+.pie {
+  width: 160px;
+  height: 160px;
+  display: block;
+}
+
+.slice {
+  transition: opacity 0.15s, transform 0.15s;
+  transform-origin: center;
+  cursor: pointer;
+}
+
+.slice:hover {
+  opacity: 0.92;
+}
+
+.sliceDimmed {
+  opacity: 0.35;
+}
+
+.sliceSelected {
+  stroke: var(--lc-dark);
+  stroke-width: 2px;
+}
+
+.pieHole {
+  fill: #fff;
+}
+
+.pieTotal {
+  font-size: 18px;
+  font-weight: 700;
+  fill: var(--lc-dark);
+  font-family: 'Poppins', system-ui, sans-serif;
+}
+
+.pieTotalLabel {
+  font-size: 9px;
+  font-weight: 600;
+  fill: var(--lc-placeholder);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-family: 'Poppins', system-ui, sans-serif;
+}
+
+.legend {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.legendItem {
+  display: grid;
+  grid-template-columns: 10px 16px 1fr auto;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--lc-dark);
+  transition: opacity 0.15s;
+  cursor: pointer;
+  border-radius: 8px;
+  padding: 4px 6px;
+  margin: -4px -6px;
+}
+
+.legendItem:hover {
+  background: rgba(13, 40, 24, 0.04);
+}
+
+.legendSelected {
+  background: rgba(13, 40, 24, 0.06);
+  font-weight: 600;
+}
+
+.legendDimmed {
+  opacity: 0.4;
+}
+
+.legendSwatch {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.legendLabel {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 500;
+}
+
+.legendValue {
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.legendPercent {
+  font-weight: 500;
+  color: var(--lc-placeholder);
+}
+
+@media (max-width: 560px) {
+  .layout {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .pieWrap {
+    display: flex;
+    justify-content: center;
+  }
+}

@@ -23,7 +23,16 @@
       "Bash(node src/server.js)",
       "Bash(curl -s http://localhost:3000/)",
       "Bash(kill %1)",
-      "PowerShell(Get-NetTCPConnection -LocalPort 3000 -State Listen | Select-Object -ExpandProperty OwningProcess | ForEach-Object { Stop-Process -Id $_ -Force; \"Processo $_ encerrado\" })"
+      "PowerShell(Get-NetTCPConnection -LocalPort 3000 -State Listen | Select-Object -ExpandProperty OwningProcess | ForEach-Object { Stop-Process -Id $_ -Force; \"Processo $_ encerrado\" })",
+      "Bash(rtk git *)",
+      "Bash(rtk grep *)",
+      "Bash(Get-ChildItem \"c:\\\\LifeCity\\\\assets\\\\icons\\\\\" -ErrorAction SilentlyContinue | Select-Object Name | head -50)",
+      "Bash(Get-ChildItem -Name)",
+      "PowerShell(Get-ChildItem \"C:\\\\LifeCity\\\\lib\\\\core\" -Recurse | Select-Object -Property FullName, @{Name=\"Type\";Expression={if \\($_.PSIsContainer\\) {\"Dir\"} else {\"File\"}}} | Format-Table -AutoSize)",
+      "PowerShell(Get-ChildItem \"C:\\\\LifeCity\\\\lib\\\\views\" -Recurse | Select-Object -Property FullName, @{Name=\"Type\";Expression={if \\($_.PSIsContainer\\) {\"Dir\"} else {\"File\"}}} | Format-Table -AutoSize)",
+      "PowerShell(Get-ChildItem \"C:\\\\LifeCity\\\\backend\" -Recurse -Depth 3 | Where-Object {$_.PSIsContainer -or $_.Extension -eq \".js\"} | Select-Object -Property FullName | Format-Table -AutoSize)",
+      "PowerShell(Get-ChildItem \"C:\\\\LifeCity\\\\backend\\\\src\" -Recurse | Where-Object {$_.Extension -eq \".js\"} | Select-Object -Property FullName)",
+      "Bash(Get-ChildItem -Path \"c:\\\\LifeCity\" -Directory)"
     ]
   }
 }

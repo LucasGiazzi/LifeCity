@@ -1,10 +1,12 @@
+const dotenv = require('dotenv');
+dotenv.config();
+
+const fs = require('fs');
+const path = require('path');
 const app = require('./app');
 const http = require('http');
-const dotenv = require('dotenv');
 const jwt = require('jsonwebtoken');
 const supabasePool = require('./infra/supabasePool');
-
-dotenv.config();
 
 const PORT = process.env.PORT || 3000;
 
@@ -215,20 +217,151 @@ async function runMigrations() {
         ON user_missions(user_id, expires_at DESC)
     `);
 
+    await runMigration(pool, 'mission_templates_fix_seguranca', `
+        UPDATE mission_templates SET complaint_category = 'seguranca' WHERE complaint_category = 'segurança'
+    `);
+
+    await runMigration(pool, 'mission_templates_fix_transito', `
+        UPDATE mission_templates SET complaint_category = 'transito' WHERE complaint_category = 'trânsito'
+    `);
+
     await runMigration(pool, 'mission_templates_seed', `
         INSERT INTO mission_templates (title, description, frequency, goal_type, goal_count, complaint_category, base_xp_reward)
         VALUES
-            ('Olho da Rua',            'Registre 1 reclamação hoje',                          'daily',  'count',              1, NULL,             30),
-            ('Alerta de Trânsito',     'Registre 1 ocorrência de trânsito hoje',               'daily',  'count',              1, 'trânsito',       35),
-            ('Vigilante da Limpeza',   'Reporte 1 problema de limpeza pública hoje',            'daily',  'count',              1, 'limpeza',        35),
-            ('Fiscal da Infraestrutura','Registre 1 problema de infraestrutura hoje',           'daily',  'count',              1, 'infraestrutura', 35),
-            ('Guardião da Segurança',  'Reporte 1 ocorrência de segurança hoje',               'daily',  'count',              1, 'segurança',      35),
-            ('Semana Ativa',           'Registre 5 reclamações nesta semana',                  'weekly', 'count',              5, NULL,             100),
-            ('Fiscal Semanal',         'Registre 3 problemas de infraestrutura na semana',     'weekly', 'count',              3, 'infraestrutura', 120),
-            ('Patrulha Semanal',       'Registre 4 reclamações nesta semana',                  'weekly', 'count',              4, NULL,             110),
-            ('Defensor da Cidade',     'Registre 3 ocorrências de segurança na semana',        'weekly', 'count',              3, 'segurança',      120),
-            ('Cidadão Engajado',       'Registre 5 reclamações com 40% delas resolvidas',      'weekly', 'count_and_resolved', 5, NULL,             150)
+            ('Olho da Rua',             'Registre 1 reclamação hoje',                          'daily',  'count',              1, NULL,             30),
+            ('Alerta de Trânsito',      'Registre 1 ocorrência de trânsito hoje',               'daily',  'count',              1, 'transito',       35),
+            ('Vigilante da Limpeza',    'Reporte 1 problema de limpeza pública hoje',            'daily',  'count',              1, 'limpeza',        35),
+            ('Fiscal da Infraestrutura','Registre 1 problema de infraestrutura hoje',            'daily',  'count',              1, 'infraestrutura', 35),
+            ('Guardião da Segurança',   'Reporte 1 ocorrência de segurança hoje',               'daily',  'count',              1, 'seguranca',      35),
+            ('Semana Ativa',            'Registre 5 reclamações nesta semana',                  'weekly', 'count',              5, NULL,             100),
+            ('Fiscal Semanal',          'Registre 3 problemas de infraestrutura na semana',     'weekly', 'count',              3, 'infraestrutura', 120),
+            ('Patrulha Semanal',        'Registre 4 reclamações nesta semana',                  'weekly', 'count',              4, NULL,             110),
+            ('Defensor da Cidade',      'Registre 3 ocorrências de segurança na semana',        'weekly', 'count',              3, 'seguranca',      120),
+            ('Cidadão Engajado',        'Registre 5 reclamações com 40% delas resolvidas',      'weekly', 'count_and_resolved', 5, NULL,             150)
         ON CONFLICT (title) DO NOTHING
+    `);
+
+    // ── Fase 3: Sistema de denúncias ─────────────────────────────────────────
+
+    await runMigration(pool, 'complaints_report_fields', `
+        ALTER TABLE complaints
+        ADD COLUMN IF NOT EXISTS report_count INTEGER NOT NULL DEFAULT 0,
+        ADD COLUMN IF NOT EXISTS is_hidden    BOOLEAN NOT NULL DEFAULT FALSE
+    `);
+
+    await runMigration(pool, 'users_report_fields', `
+        ALTER TABLE users
+        ADD COLUMN IF NOT EXISTS report_count  INTEGER NOT NULL DEFAULT 0,
+        ADD COLUMN IF NOT EXISTS is_restricted BOOLEAN NOT NULL DEFAULT FALSE
+    `);
+
+    await runMigration(pool, 'reports', `
+        CREATE TABLE IF NOT EXISTS reports (
+            id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+            reporter_id  UUID REFERENCES users(id) ON DELETE CASCADE,
+            target_type  VARCHAR(20) NOT NULL,
+            target_id    UUID NOT NULL,
+            reason       VARCHAR(50) NOT NULL,
+            details      TEXT,
+            status       VARCHAR(20) NOT NULL DEFAULT 'pending',
+            reviewed_by  UUID REFERENCES users(id) ON DELETE SET NULL,
+            reviewed_at  TIMESTAMP,
+            created_at   TIMESTAMP DEFAULT NOW(),
+            UNIQUE(reporter_id, target_type, target_id)
+        )
+    `);
+
+    await runMigration(pool, 'reports_index', `
+        CREATE INDEX IF NOT EXISTS idx_reports_target
+        ON reports(target_type, target_id, status)
+    `);
+
+    // ── Recuperação de senha ─────────────────────────────────────────────────
+
+    await runMigration(pool, 'password_reset_tokens', `
+        CREATE TABLE IF NOT EXISTS password_reset_tokens (
+            id         UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+            user_id    UUID REFERENCES users(id) ON DELETE CASCADE,
+            code_hash  VARCHAR(64) NOT NULL,
+            expires_at TIMESTAMP NOT NULL,
+            used_at    TIMESTAMP,
+            created_at TIMESTAMP DEFAULT NOW()
+        )
+    `);
+
+    // ── Padronização de CPF (remove formatação) ──────────────────────────────
+
+    await runMigration(pool, 'normalize_cpf', `
+        UPDATE users
+        SET cpf = REGEXP_REPLACE(cpf, '[^0-9]', '', 'g')
+        WHERE cpf IS NOT NULL AND cpf ~ '[^0-9]'
+    `);
+
+    // ── ADR-003 Fase 4a: gestão operacional ─────────────────────────────────
+
+    const phase4Migrations = [
+        ['014_ops_teams', '014_ops_teams.sql'],
+        ['015_complaint_events', '015_complaint_events.sql'],
+        ['016_complaints_operational_columns', '016_complaints_operational_columns.sql'],
+        ['017_tenant_sla_policies', '017_tenant_sla_policies.sql'],
+        ['018_seed_campinas_ops', '018_seed_campinas_ops.sql'],
+        ['019_reports_target_id_text', '019_reports_target_id_text.sql'],
+    ];
+
+    for (const [name, file] of phase4Migrations) {
+        const filePath = path.join(__dirname, '../migrations', file);
+        if (fs.existsSync(filePath)) {
+            const sql = fs.readFileSync(filePath, 'utf8');
+            //await runMigration(pool, name, sql);
+        } else {
+            console.warn(`[migration] SKIP: ${name} — arquivo não encontrado`);
+        }
+    }
+
+    // ── Malhas staging + demografia Campinas ────────────────────────────────────
+
+    const malhasMigrationPath = path.join(__dirname, '../migrations/020_malhas_staging_demografia.sql');
+    if (fs.existsSync(malhasMigrationPath)) {
+        const sql = fs.readFileSync(malhasMigrationPath, 'utf8');
+        await runMigration(pool, '020_malhas_staging_demografia', sql);
+    }
+
+    // ── Verificação de cidade ─────────────────────────────────────────────────
+
+    await runMigration(pool, 'users_cep', `
+        ALTER TABLE users ADD COLUMN IF NOT EXISTS cep VARCHAR(8)
+    `);
+
+    await runMigration(pool, 'users_low_trust', `
+        ALTER TABLE users ADD COLUMN IF NOT EXISTS low_trust BOOLEAN NOT NULL DEFAULT FALSE
+    `);
+
+    await runMigration(pool, 'complaints_is_within_city', `
+        ALTER TABLE complaints ADD COLUMN IF NOT EXISTS is_within_city BOOLEAN
+    `);
+
+    // ── Equipes: foto, descrição e chat ──────────────────────────────────────
+
+    await runMigration(pool, 'teams_description_photo', `
+        ALTER TABLE teams
+        ADD COLUMN IF NOT EXISTS description TEXT,
+        ADD COLUMN IF NOT EXISTS photo_url TEXT,
+        ADD COLUMN IF NOT EXISTS photo_path TEXT
+    `);
+
+    await runMigration(pool, 'team_messages', `
+        CREATE TABLE IF NOT EXISTS team_messages (
+            id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+            team_id UUID REFERENCES teams(id) ON DELETE CASCADE,
+            user_id UUID REFERENCES users(id) ON DELETE SET NULL,
+            content TEXT NOT NULL,
+            created_at TIMESTAMP DEFAULT NOW()
+        )
+    `);
+
+    await runMigration(pool, 'team_messages_index', `
+        CREATE INDEX IF NOT EXISTS idx_team_messages_team
+        ON team_messages(team_id, created_at DESC)
     `);
 }
 

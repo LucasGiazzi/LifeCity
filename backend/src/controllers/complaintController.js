@@ -1,7 +1,29 @@
 const supabasePool = require('../infra/supabasePool');
 const { uploadToSupabase, listBlobs, removeFolder } = require('../infra/supabaseStorageClient');
+const { INSERT_COMPLAINT_WITH_GEO } = require('../services/complaintGeoService');
 const { checkAchievements } = require('../infra/achievementChecker');
 const { checkMissionProgress, checkMissionResolution } = require('../infra/missionProgressChecker');
+const { isWithinCityBounds } = require('../infra/cityValidator');
+
+async function checkUserTrust(pool, userId) {
+    try {
+        const { rows } = await pool.query(`
+            SELECT
+                COUNT(*) FILTER (WHERE is_within_city IS NOT NULL) AS with_location,
+                COUNT(*) FILTER (WHERE is_within_city = TRUE)      AS within_city
+            FROM complaints
+            WHERE created_by = $1
+        `, [userId]);
+
+        const { with_location, within_city } = rows[0];
+        if (parseInt(with_location) < 5) return;
+
+        const isLowTrust = parseInt(within_city) === 0;
+        await pool.query('UPDATE users SET low_trust = $1 WHERE id = $2', [isLowTrust, userId]);
+    } catch (err) {
+        console.error('[trustChecker] erro:', err.message);
+    }
+}
 
 exports.create = async (req, res) => {
     const { description, occurrence_date, address, latitude, longitude, type } = req.body;
@@ -20,12 +42,24 @@ exports.create = async (req, res) => {
 
         const pool = await supabasePool.getPgPool();
 
-        // Inserir a reclamação na tabela
-        // created_at será preenchido automaticamente pelo banco (default: now())
+        /*
+        const withinCity = isWithinCityBounds(latitude, longitude);
+
         const result = await pool.query(
-            'INSERT INTO complaints (description, occurrence_date, created_by, category, address, latitude, longitude) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *',
-            [description, occurrence_date, created_by, type || null, address || null, latitude || null, longitude || null]
-        );
+            'INSERT INTO complaints (description, occurrence_date, created_by, category, address, latitude, longitude, is_within_city) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *',
+            [description, occurrence_date, created_by, type || null, address || null, latitude || null, longitude || null, withinCity]
+        );*/
+        // created_at será preenchido automaticamente pelo banco (default: now())
+        // location, cd_mun, setor/bairro e tenant_id derivados de lat/lng via geo.* (ADR-001)
+        const result = await pool.query(INSERT_COMPLAINT_WITH_GEO, [
+            description,
+            occurrence_date,
+            created_by,
+            type || null,
+            address || null,
+            latitude != null ? String(latitude) : null,
+            longitude != null ? String(longitude) : null,
+        ]);
 
         const complaintId = result.rows[0].id;
 
@@ -69,7 +103,8 @@ exports.create = async (req, res) => {
 
         // Verificações em background (não bloqueiam a resposta)
         checkAchievements(created_by, 'complaint_created');
-        checkMissionProgress(pool, complaintId);
+        checkMissionProgress(pool, created_by);
+        checkUserTrust(pool, created_by);
     } catch (error) {
         console.error('Erro ao criar reclamação:', error);
         res.status(500).json({ message: 'Erro ao criar reclamação.' });
@@ -88,15 +123,42 @@ exports.updateStatus = async (req, res) => {
 
     try {
         const pool = await supabasePool.getPgPool();
-        const check = await pool.query('SELECT created_by FROM complaints WHERE id = $1', [id]);
-        if (check.rows.length === 0) return res.status(404).json({ message: 'Reclamação não encontrada.' });
-        if (check.rows[0].created_by !== userId) return res.status(403).json({ message: 'Sem permissão.' });
+        const check = await pool.query(
+            `SELECT created_by, status, assigned_ops_team_id
+             FROM complaints WHERE id = $1`,
+            [id]
+        );
+        if (check.rows.length === 0) {
+            return res.status(404).json({ message: 'Reclamação não encontrada.' });
+        }
 
-        await pool.query('UPDATE complaints SET status = $1 WHERE id = $2', [status, id]);
+        const row = check.rows[0];
+        if (row.created_by !== userId) {
+            return res.status(403).json({ message: 'Sem permissão.' });
+        }
+
+        const complaintStatus = row.status || 'pending';
+        const underMunicipalManagement =
+            row.assigned_ops_team_id != null ||
+            ['assigned', 'in_progress', 'closed', 'cancelled'].includes(complaintStatus);
+
+        if (underMunicipalManagement) {
+            return res.status(403).json({
+                message: 'Ocorrência em gestão pela prefeitura.',
+            });
+        }
+
+        await pool.query(
+            `UPDATE complaints
+             SET status = $1,
+                 resolved_at = CASE WHEN $1 = 'resolved' THEN NOW() ELSE resolved_at END
+             WHERE id = $2`,
+            [status, id]
+        );
         res.status(200).json({ status });
 
         if (status === 'resolved') {
-            checkMissionResolution(pool, id);
+            checkMissionResolution(pool, userId);
         }
     } catch (error) {
         console.error('Erro ao atualizar status:', error);
@@ -129,6 +191,7 @@ exports.getAll = async (req, res) => {
                 (SELECT COUNT(*)::int FROM complaint_witnesses WHERE complaint_id = c.id) AS witness_count
             FROM complaints c
             LEFT JOIN users u ON c.created_by = u.id
+            WHERE c.is_hidden = FALSE
             ORDER BY c.occurrence_date DESC, c.created_at DESC
         `);
 
@@ -432,6 +495,7 @@ exports.getHighlights = async (req, res) => {
                 ON cm.complaint_id = c.id
                 AND cm.created_at >= NOW() - CASE WHEN $1 = 'week' THEN INTERVAL '7 days' ELSE INTERVAL '1 day' END
             LEFT JOIN complaint_witnesses cw ON cw.complaint_id = c.id
+            WHERE c.is_hidden = FALSE
             GROUP BY c.id, u.name, u.photo_url
             HAVING (COUNT(DISTINCT cl.id) + COUNT(DISTINCT cm.id)) > 0
             ORDER BY engagement_score DESC, c.created_at DESC
@@ -483,6 +547,9 @@ exports.delete = async (req, res) => {
         res.status(200).json({
             message: 'Reclamação excluída com sucesso'
         });
+
+        // Recalcula progresso das missões (deleção pode reduzir contribution_count)
+        checkMissionProgress(pool, userId);
     } catch (error) {
         console.error('Erro ao excluir reclamação:', error);
         res.status(500).json({ message: 'Erro ao excluir reclamação.' });

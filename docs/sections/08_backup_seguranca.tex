@@ -38,8 +38,63 @@ proteção:
   \item Criptografia em trânsito (TLS 1.2+);
   \item Criptografia em repouso (AES-256) no Supabase;
   \item Senhas armazenadas com hash + salt no banco de dados;
+  \item Recuperação de senha via código de 6 dígitos enviado por e-mail: o código é armazenado apenas como hash SHA-256 com validade de 15 minutos e invalidado após uso;
+  \item Moderação comunitária: sistema de denúncias com thresholds automáticos (5 denúncias ocultam uma reclamação; 10 denúncias restringem uma conta);
+  \item Verificação de vínculo com a cidade: mecanismo duplo para garantir que os usuários cadastrados pertencem ao município atendido pelo aplicativo, descrito em detalhe na subseção a seguir;
   \item Políticas de acesso granular (Row-Level Security) no banco PostgreSQL;
   \item Auditorias e logs transacionais.
+\end{itemize}
+
+\subsection{Verificação de vínculo com a cidade}
+
+Uma das premissas do LifeCity é que os dados gerados pelos usuários reflitam
+problemas reais do município. Para reduzir o risco de cadastros fraudulentos ou
+de usuários externos à cidade poluírem a base de dados, o sistema adota dois
+mecanismos complementares:
+
+\begin{enumerate}
+  \item \textbf{Validação de CEP no cadastro (barreira de entrada):}
+        Durante o processo de criação de conta, o usuário é obrigado a informar
+        seu CEP. O backend valida se o CEP informado pertence à faixa de códigos
+        postais do município configurado. Caso o CEP não corresponda à cidade,
+        o cadastro é rejeitado com mensagem explicativa. A faixa de CEPs válidos
+        é configurada por variável de ambiente (\texttt{CITY\_CEP\_PREFIXES}),
+        tornando o sistema reutilizável para qualquer município. Para
+        Campinas-SP, a faixa configurada abrange os prefixos 130 e 1310--1314,
+        correspondentes aos CEPs 13000--13149.
+
+  \item \textbf{Geofencing passivo por comportamento (barreira contínua):}
+        A cada reclamação registrada, o backend verifica se as coordenadas
+        GPS da ocorrência estão dentro dos limites geográficos do município,
+        definidos por um \textit{bounding box} configurável
+        (\texttt{CITY\_LAT\_MIN}, \texttt{CITY\_LAT\_MAX},
+        \texttt{CITY\_LNG\_MIN}, \texttt{CITY\_LNG\_MAX}). O resultado
+        (\texttt{is\_within\_city}) é armazenado junto à reclamação.
+        Após o usuário acumular cinco ou mais reclamações geolocalizadas,
+        o sistema verifica automaticamente o padrão: se nenhuma delas foi
+        registrada dentro dos limites da cidade, a conta recebe o marcador
+        \texttt{low\_trust = TRUE} no banco de dados, sinalizando ao sistema
+        que aquele usuário provavelmente não pertence ao município. Essa
+        verificação ocorre de forma assíncrona, sem impacto no tempo de
+        resposta da criação da reclamação. Reclamações sem coordenadas GPS
+        não são penalizadas.
+\end{enumerate}
+
+A combinação das duas abordagens cobre os principais vetores de abuso: o CEP
+filtra no momento do cadastro com atrito mínimo para o usuário legítimo, enquanto
+o geofencing passivo detecta padrões suspeitos ao longo do uso, sem exigir
+verificações invasivas como documentos ou SMS. Ambos os mecanismos são
+totalmente configuráveis via variáveis de ambiente, permitindo adaptar o
+aplicativo a qualquer município sem alterações no código.
+
+\bigskip
+
+\noindent\textbf{Configuração para Campinas-SP:}
+\begin{itemize}
+  \item CEPs válidos: prefixos \texttt{130}, \texttt{1310}--\texttt{1314}
+        (faixa 13000--13149)
+  \item Limites geográficos: latitude $-23{,}15°$ a $-22{,}65°$\,S,
+        longitude $-47{,}40°$ a $-46{,}90°$\,O
 \end{itemize}
 
 O plano de contingência está estruturado com base nos mecanismos nativos das

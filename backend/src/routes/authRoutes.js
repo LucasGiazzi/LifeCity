@@ -31,6 +31,14 @@ router.post('/logout', authController.logout);
 
 router.get('/me', authenticateToken, authController.getMe);
 
+router.post('/resolve-location', authenticateToken, authController.resolveLocation);
+
+router.post('/confirm-location', authenticateToken, authController.confirmLocation);
+
 router.put('/editUser', authenticateToken, upload.single('pfp'), authController.editUser);
+
+router.post('/forgot-password', authController.forgotPassword);
+router.post('/verify-reset-code', authController.verifyResetCode);
+router.post('/reset-password', authController.resetPassword);
 
 module.exports = router;

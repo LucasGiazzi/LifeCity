@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 
+import '../../views/auth/code_verification_page.dart';
 import '../../views/auth/forget_password_page.dart';
 import '../../views/profile/friend_profile_page.dart';
 import '../../views/auth/login_loading_page.dart';
@@ -9,6 +10,7 @@ import '../../views/auth/login_page.dart';
 import '../../views/auth/number_verification_page.dart';
 import '../../views/auth/password_reset_page.dart';
 import '../../views/auth/sign_up_page.dart';
+import '../../views/auth/location_confirmation_page.dart';
 import '../../views/drawer/about_us_page.dart';
 import '../../views/drawer/contact_us_page.dart';
 import '../../views/drawer/drawer_page.dart';
@@ -21,6 +23,8 @@ import '../../views/complaints/create_complaint_page.dart';
 import '../../views/onboarding/onboarding_page.dart';
 import '../../views/missions/create_team_page.dart';
 import '../../views/missions/team_detail_page.dart';
+import '../../views/missions/team_edit_page.dart';
+import '../../views/missions/team_chat_page.dart';
 import '../../views/profile/notification_page.dart';
 import '../../views/profile/profile_edit_page.dart';
 import '../../views/profile/settings/change_password_page.dart';
@@ -70,6 +74,9 @@ class RouteGenerator {
       case AppRoutes.signup:
         return CupertinoPageRoute(builder: (_) => const SignUpPage());
 
+      case AppRoutes.locationConfirmation:
+        return CupertinoPageRoute(builder: (_) => const LocationConfirmationPage());
+
       case AppRoutes.loginOrSignup:
         return CupertinoPageRoute(builder: (_) => const LoginOrSignUpPage());
 
@@ -79,8 +86,20 @@ class RouteGenerator {
       case AppRoutes.forgotPassword:
         return CupertinoPageRoute(builder: (_) => const ForgetPasswordPage());
 
+      case AppRoutes.codeVerification:
+        final email = settings.arguments as String;
+        return CupertinoPageRoute(
+          builder: (_) => CodeVerificationPage(email: email),
+        );
+
       case AppRoutes.passwordReset:
-        return CupertinoPageRoute(builder: (_) => const PasswordResetPage());
+        final args = settings.arguments as Map<String, dynamic>;
+        return CupertinoPageRoute(
+          builder: (_) => PasswordResetPage(
+            email: args['email'] as String,
+            code: args['code'] as String,
+          ),
+        );
 
       case AppRoutes.profileEdit:
         return CupertinoPageRoute(builder: (_) => const ProfileEditPage());
@@ -128,6 +147,26 @@ class RouteGenerator {
         final teamId = settings.arguments as String;
         return CupertinoPageRoute(
           builder: (_) => TeamDetailPage(teamId: teamId),
+        );
+
+      case AppRoutes.teamEdit:
+        final team = settings.arguments as Map<String, dynamic>;
+        return CupertinoPageRoute(
+          builder: (_) => TeamEditPage(
+            teamId: team['teamId'] as String,
+            initialName: team['name'] as String,
+            initialDescription: team['description'] as String?,
+            initialPhotoUrl: team['photoUrl'] as String?,
+          ),
+        );
+
+      case AppRoutes.teamChat:
+        final args = settings.arguments as Map<String, dynamic>;
+        return CupertinoPageRoute(
+          builder: (_) => TeamChatPage(
+            teamId: args['teamId'] as String,
+            teamName: args['teamName'] as String,
+          ),
         );
 
       default:

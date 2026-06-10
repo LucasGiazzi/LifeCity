@@ -17,7 +17,7 @@ class ApiService {
   ApiService._internal()
       : _dio = Dio(
           BaseOptions(
-            baseUrl: 'http://10.0.1.104:3000',
+            baseUrl: 'http://10.0.1.109:3000',
             connectTimeout: const Duration(seconds: 30),
             receiveTimeout: const Duration(seconds: 30),
             headers: {
@@ -33,8 +33,10 @@ class ApiService {
       }
       handler.next(options);
     }, onError: (error, handler) async {
-      // Se receber 403 (token expirado), tenta fazer refresh
-      if (error.response?.statusCode == 403 && _refreshTokenCallback != null) {
+      final statusCode = error.response?.statusCode;
+      // Token expirado ou inválido — tenta refresh (401/403)
+      if ((statusCode == 401 || statusCode == 403) &&
+          _refreshTokenCallback != null) {
         print('Token expirado');
         try {
           // Evita loop infinito: não faz refresh em requisições de refresh

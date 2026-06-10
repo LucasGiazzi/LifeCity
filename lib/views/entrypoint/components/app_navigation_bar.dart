@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../../core/constants/constants.dart';
+import '../../../core/constants/app_symbols.dart';
 import 'bottom_app_bar_item.dart';
 
 class AppBottomNavigationBar extends StatelessWidget {
@@ -35,35 +35,31 @@ class AppBottomNavigationBar extends StatelessWidget {
             children: [
               BottomAppBarItem(
                 name: 'Mapa',
-                iconLocation: AppIcons.home,
+                icon: AppSymbols.map,
                 isActive: currentIndex == 0,
                 onTap: () => onNavTap(0),
               ),
               BottomAppBarItem(
                 name: 'Amigos',
-                iconLocation: AppIcons.userGroup,
+                icon: AppSymbols.group,
                 isActive: currentIndex == 1,
                 onTap: () => onNavTap(1),
               ),
-
-              // Espaço para o FAB
-              const SizedBox(width: 56),
-
               BottomAppBarItem(
                 name: 'Destaques',
-                iconLocation: AppIcons.heart,
+                icon: AppSymbols.favorite,
                 isActive: currentIndex == 2,
                 onTap: () => onNavTap(2),
               ),
               BottomAppBarItem(
                 name: 'Missões',
-                iconData: Icons.flag_rounded,
+                icon: AppSymbols.flag,
                 isActive: currentIndex == 3,
                 onTap: () => onNavTap(3),
               ),
               BottomAppBarItem(
                 name: 'Perfil',
-                iconLocation: AppIcons.profile,
+                icon: AppSymbols.person,
                 isActive: currentIndex == 4,
                 onTap: () => onNavTap(4),
               ),

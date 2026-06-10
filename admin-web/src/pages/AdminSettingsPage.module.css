@@ -1,0 +1,172 @@
+.page {
+  padding: 24px clamp(20px, 3vw, 36px) 40px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.title {
+  margin: 0 0 4px;
+  font-size: clamp(1.35rem, 2.5vw, 1.75rem);
+  font-weight: 700;
+  color: var(--lc-dark);
+}
+
+.subtitle {
+  margin: 0;
+  font-size: 14px;
+  color: var(--lc-placeholder);
+}
+
+.error {
+  margin: 0 0 12px;
+  color: #dc2626;
+  font-size: 14px;
+}
+
+.card {
+  background: #fff;
+  border-radius: 16px;
+  border: 1px solid rgba(13, 40, 24, 0.08);
+  padding: 20px;
+  margin-bottom: 16px;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.table th,
+.table td {
+  text-align: left;
+  padding: 10px 12px;
+  border-bottom: 1px solid rgba(13, 40, 24, 0.08);
+}
+
+.table th {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--lc-placeholder);
+}
+
+.btn {
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 8px 14px;
+  border-radius: 10px;
+  border: 1px solid rgba(13, 40, 24, 0.15);
+  background: #fff;
+  cursor: pointer;
+}
+
+.btnPrimary {
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 8px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--lc-primary-dark);
+  background: var(--lc-primary-dark);
+  color: #fff;
+  cursor: pointer;
+}
+
+.btnPrimary:hover {
+  opacity: 0.92;
+}
+
+.btnDanger {
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 8px 14px;
+  border-radius: 10px;
+  border: 1px solid rgba(220, 38, 38, 0.35);
+  background: #fff;
+  color: #dc2626;
+  cursor: pointer;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--lc-placeholder);
+}
+
+.input,
+.select,
+.textarea {
+  font-family: inherit;
+  font-size: 14px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(13, 40, 24, 0.15);
+}
+
+.textarea {
+  min-height: 72px;
+  resize: vertical;
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.badgeInactive {
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(107, 114, 128, 0.15);
+  color: #6b7280;
+}
+
+.modalBackdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  padding: 16px;
+}
+
+.modal {
+  background: #fff;
+  border-radius: 16px;
+  padding: 24px;
+  width: min(480px, 100%);
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.modalTitle {
+  margin: 0 0 16px;
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.muted {
+  color: var(--lc-placeholder);
+  font-size: 14px;
+}

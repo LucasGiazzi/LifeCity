@@ -3,7 +3,9 @@ import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../core/constants/app_colors.dart';
+import '../../core/constants/app_symbols.dart';
 import '../../core/routes/app_routes.dart';
+import '../../core/services/auth_service.dart';
 
 class ForgetPasswordPage extends StatelessWidget {
   const ForgetPasswordPage({super.key});
@@ -18,7 +20,6 @@ class ForgetPasswordPage extends StatelessWidget {
         backgroundColor: AppColors.dark,
         body: Column(
           children: [
-            // ── Header dark ──
             SafeArea(
               bottom: false,
               child: Padding(
@@ -34,7 +35,7 @@ class ForgetPasswordPage extends StatelessWidget {
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Icon(Icons.arrow_back_ios_new_rounded,
+                          const Icon(AppSymbols.arrowBack,
                               color: Colors.white70, size: 16),
                           const SizedBox(width: 4),
                           Text(
@@ -58,7 +59,7 @@ class ForgetPasswordPage extends StatelessWidget {
                         border: Border.all(
                             color: AppColors.primary.withValues(alpha: 0.4)),
                       ),
-                      child: const Icon(Icons.lock_reset_rounded,
+                      child: const Icon(Symbols.lock_reset,
                           color: AppColors.primary, size: 26),
                     ),
                     SizedBox(height: screen.height * 0.015),
@@ -73,7 +74,7 @@ class ForgetPasswordPage extends StatelessWidget {
                     ),
                     SizedBox(height: screen.height * 0.006),
                     Text(
-                      'Digite seu e-mail e enviaremos as instruções de recuperação.',
+                      'Digite seu e-mail e enviaremos um código de verificação.',
                       style: GoogleFonts.poppins(
                         fontSize: screen.width * 0.035,
                         color: Colors.white54,
@@ -84,8 +85,6 @@ class ForgetPasswordPage extends StatelessWidget {
                 ),
               ),
             ),
-
-            // ── Form ──
             Expanded(
               child: Container(
                 decoration: const BoxDecoration(
@@ -100,7 +99,7 @@ class ForgetPasswordPage extends StatelessWidget {
                     horizontal: screen.width * 0.06,
                     vertical: screen.height * 0.04,
                   ),
-                  child: _ForgotForm(),
+                  child: const _ForgotForm(),
                 ),
               ),
             ),
@@ -112,6 +111,8 @@ class ForgetPasswordPage extends StatelessWidget {
 }
 
 class _ForgotForm extends StatefulWidget {
+  const _ForgotForm();
+
   @override
   State<_ForgotForm> createState() => _ForgotFormState();
 }
@@ -119,11 +120,37 @@ class _ForgotForm extends StatefulWidget {
 class _ForgotFormState extends State<_ForgotForm> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
+  bool _isLoading = false;
+  String? _error;
 
   @override
   void dispose() {
     _emailController.dispose();
     super.dispose();
+  }
+
+  Future<void> _submit() async {
+    if (!_formKey.currentState!.validate()) return;
+    setState(() {
+      _isLoading = true;
+      _error = null;
+    });
+
+    final result = await AuthService()
+        .sendPasswordResetCode(_emailController.text.trim());
+
+    if (!mounted) return;
+    setState(() => _isLoading = false);
+
+    if (result.success) {
+      Navigator.pushNamed(
+        context,
+        AppRoutes.codeVerification,
+        arguments: _emailController.text.trim(),
+      );
+    } else {
+      setState(() => _error = result.error ?? 'Erro ao enviar código.');
+    }
   }
 
   @override
@@ -146,10 +173,11 @@ class _ForgotFormState extends State<_ForgotForm> {
             controller: _emailController,
             keyboardType: TextInputType.emailAddress,
             textInputAction: TextInputAction.done,
+            onFieldSubmitted: (_) => _submit(),
             style: const TextStyle(color: Color(0xFF1A1A2E)),
             decoration: InputDecoration(
               hintText: 'seu@email.com',
-              prefixIcon: const Icon(Icons.email_outlined, size: 20),
+              prefixIcon: const Icon(AppSymbols.email, size: 20),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
                 borderSide: BorderSide(color: Colors.grey.shade300),
@@ -160,7 +188,8 @@ class _ForgotFormState extends State<_ForgotForm> {
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(color: AppColors.primary, width: 2),
+                borderSide:
+                    const BorderSide(color: AppColors.primary, width: 2),
               ),
               filled: true,
               fillColor: Colors.grey.shade50,
@@ -173,29 +202,36 @@ class _ForgotFormState extends State<_ForgotForm> {
               return null;
             },
           ),
+          if (_error != null) ...[
+            const SizedBox(height: 12),
+            Text(
+              _error!,
+              style: GoogleFonts.poppins(color: Colors.red, fontSize: 13),
+            ),
+          ],
           const SizedBox(height: 28),
           SizedBox(
             width: double.infinity,
             height: 52,
-            child: ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14)),
-                elevation: 0,
-              ),
-              onPressed: () {
-                if (_formKey.currentState!.validate()) {
-                  Navigator.pushNamed(context, AppRoutes.passwordReset);
-                }
-              },
-              child: Text(
-                'Enviar instruções',
-                style: GoogleFonts.poppins(
-                    fontWeight: FontWeight.w600, fontSize: 15),
-              ),
-            ),
+            child: _isLoading
+                ? const Center(
+                    child:
+                        CircularProgressIndicator(color: AppColors.primary))
+                : ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14)),
+                      elevation: 0,
+                    ),
+                    onPressed: _submit,
+                    child: Text(
+                      'Enviar código',
+                      style: GoogleFonts.poppins(
+                          fontWeight: FontWeight.w600, fontSize: 15),
+                    ),
+                  ),
           ),
         ],
       ),

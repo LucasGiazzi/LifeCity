@@ -6,6 +6,7 @@ import 'package:geolocator/geolocator.dart';
 import '../../core/components/app_back_button.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_defaults.dart';
+import '../../core/constants/app_symbols.dart';
 import '../../core/services/event_service.dart';
 
 class CreateEventPage extends StatefulWidget {
@@ -41,10 +42,10 @@ class _CreateEventPageState extends State<CreateEventPage> {
   Timer? _debounceTimer;
   
   final List<Map<String, dynamic>> _eventTypes = [
-    {'value': 'festas', 'label': 'Festas', 'icon': Icons.celebration},
-    {'value': 'eventos', 'label': 'Eventos', 'icon': Icons.event},
-    {'value': 'esportes', 'label': 'Esportes', 'icon': Icons.sports},
-    {'value': 'educacao', 'label': 'Educação', 'icon': Icons.school},
+    {'value': 'festas', 'label': 'Festas', 'icon': Symbols.celebration},
+    {'value': 'eventos', 'label': 'Eventos', 'icon': Symbols.event},
+    {'value': 'esportes', 'label': 'Esportes', 'icon': Symbols.sports},
+    {'value': 'educacao', 'label': 'Educação', 'icon': Symbols.school},
   ];
 
   @override
@@ -298,7 +299,7 @@ class _CreateEventPageState extends State<CreateEventPage> {
 
     try {
       // Buscar endereços usando Nominatim Search API (gratuito)
-      final encodedQuery = Uri.encodeComponent(query + ', Campinas, SP, Brasil');
+      final encodedQuery = Uri.encodeComponent('$query, Campinas, SP, Brasil');
       final url = 'https://nominatim.openstreetmap.org/search?q=$encodedQuery&format=json&limit=5&addressdetails=1';
       
       final response = await http.get(
@@ -420,7 +421,7 @@ class _CreateEventPageState extends State<CreateEventPage> {
 
     try {
       // Usando Nominatim (OpenStreetMap) para geocoding gratuito
-      final address = Uri.encodeComponent(_addressController.text.trim() + ', Campinas, SP, Brasil');
+      final address = Uri.encodeComponent('${_addressController.text.trim()}, Campinas, SP, Brasil');
       final url = 'https://nominatim.openstreetmap.org/search?q=$address&format=json&limit=1';
       
       final response = await http.get(
@@ -662,7 +663,7 @@ class _CreateEventPageState extends State<CreateEventPage> {
                           },
                           decoration: InputDecoration(
                             hintText: 'Digite o endereço (autocomplete ativo)',
-                            prefixIcon: const Icon(Icons.location_on),
+                            prefixIcon: const Icon(AppSymbols.locationOn),
                             suffixIcon: _isReverseGeocoding
                                 ? const SizedBox(
                                     width: 20,
@@ -694,7 +695,7 @@ class _CreateEventPageState extends State<CreateEventPage> {
                                 height: 20,
                                 child: CircularProgressIndicator(strokeWidth: 2),
                               )
-                            : const Icon(Icons.my_location),
+                            : const Icon(Symbols.my_location),
                         color: AppColors.primary,
                         onPressed: _isGettingLocation ? null : _getCurrentLocation,
                       ),
@@ -711,8 +712,8 @@ class _CreateEventPageState extends State<CreateEventPage> {
                               )
                             : Icon(
                                 _latitude != null && _longitude != null
-                                    ? Icons.check_circle
-                                    : Icons.search,
+                                    ? AppSymbols.checkCircle
+                                    : AppSymbols.search,
                                 color: _latitude != null && _longitude != null
                                     ? Colors.green
                                     : AppColors.primary,
@@ -748,7 +749,7 @@ class _CreateEventPageState extends State<CreateEventPage> {
                             onTap: _selectDate,
                             decoration: const InputDecoration(
                               hintText: 'Selecione a data',
-                              suffixIcon: Icon(Icons.calendar_today),
+                              suffixIcon: Icon(AppSymbols.calendarToday),
                             ),
                             validator: (value) {
                               if (value == null || value.isEmpty) {
@@ -773,7 +774,7 @@ class _CreateEventPageState extends State<CreateEventPage> {
                             onTap: _selectTime,
                             decoration: const InputDecoration(
                               hintText: 'Selecione a hora',
-                              suffixIcon: Icon(Icons.access_time),
+                              suffixIcon: Icon(Symbols.access_time),
                             ),
                             validator: (value) {
                               if (value == null || value.isEmpty) {
@@ -801,7 +802,7 @@ class _CreateEventPageState extends State<CreateEventPage> {
                         onTap: _selectEndDate,
                         decoration: const InputDecoration(
                           hintText: 'Data fim',
-                          suffixIcon: Icon(Icons.calendar_today),
+                          suffixIcon: Icon(AppSymbols.calendarToday),
                         ),
                       ),
                     ),
@@ -813,7 +814,7 @@ class _CreateEventPageState extends State<CreateEventPage> {
                         onTap: _selectEndTime,
                         decoration: const InputDecoration(
                           hintText: 'Hora fim',
-                          suffixIcon: Icon(Icons.access_time),
+                          suffixIcon: Icon(Symbols.access_time),
                         ),
                       ),
                     ),

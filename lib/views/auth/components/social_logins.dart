@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/svg.dart';
-import 'package:provider/provider.dart';
 
 import '../../../core/constants/constants.dart';
-import '../../../core/state/auth_state.dart';
 
 class SocialLogins extends StatelessWidget {
   const SocialLogins({

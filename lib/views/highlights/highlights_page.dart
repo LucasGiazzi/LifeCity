@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../core/constants/app_colors.dart';
+import '../../core/constants/app_symbols.dart';
 import '../../core/models/complaint_model.dart';
 import '../../core/services/complaint_service.dart';
 import '../complaints/complaint_card.dart';
@@ -112,7 +113,7 @@ class _HighlightsHeader extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  const Icon(Icons.emoji_events_rounded,
+                  const Icon(AppSymbols.emojiEvents,
                       color: Colors.white, size: 26),
                   const SizedBox(width: 10),
                   Text(
@@ -202,7 +203,7 @@ class _EmptyState extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.emoji_events_outlined,
+          const Icon(AppSymbols.emojiEvents,
               size: 64, color: AppColors.placeholder),
           const SizedBox(height: 16),
           Text(

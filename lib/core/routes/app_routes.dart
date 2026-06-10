@@ -8,9 +8,11 @@ class AppRoutes {
   /* <---- Login, Signup -----> */
   static const login = '/login';
   static const signup = '/signup';
+  static const locationConfirmation = '/location_confirmation';
   static const loginOrSignup = '/loginOrSignup';
   static const numberVerification = '/numberVerification';
   static const forgotPassword = '/forgotPassword';
+  static const codeVerification = '/codeVerification';
   static const passwordReset = '/passwordReset';
 
   /* <---- ENTRYPOINT -----> */
@@ -21,6 +23,8 @@ class AppRoutes {
   /* <---- Missions & Teams -----> */
   static const createTeam = '/createTeam';
   static const teamDetail = '/teamDetail';
+  static const teamEdit = '/teamEdit';
+  static const teamChat = '/teamChat';
 
   /* <---- Profile & Settings -----> */
   static const profile = 'profile';

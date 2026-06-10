@@ -1,0 +1,65 @@
+.wrap {
+  overflow-x: auto;
+  border: 1px solid rgba(13, 40, 24, 0.08);
+  border-radius: 14px;
+  background: #fff;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.table th,
+.table td {
+  padding: 12px 14px;
+  text-align: left;
+  border-bottom: 1px solid rgba(13, 40, 24, 0.06);
+}
+
+.table th {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--lc-placeholder);
+  font-weight: 600;
+  background: rgba(13, 40, 24, 0.02);
+}
+
+.table tbody tr.row {
+  cursor: pointer;
+}
+
+.table tbody tr:hover {
+  background: rgba(0, 200, 150, 0.04);
+}
+
+.table tbody tr.row:focus-visible {
+  outline: 2px solid var(--lc-primary);
+  outline-offset: -2px;
+}
+
+.idText {
+  color: var(--lc-primary-dark);
+  font-weight: 600;
+}
+
+.categoryCell {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.muted {
+  margin: 0;
+  color: var(--lc-placeholder);
+  font-size: 14px;
+}

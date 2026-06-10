@@ -2,6 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
 import '../constants/app_defaults.dart';
+import '../constants/app_symbols.dart';
 import 'skeleton.dart';
 
 class NetworkImageWithLoader extends StatelessWidget {
@@ -36,7 +37,7 @@ class NetworkImageWithLoader extends StatelessWidget {
           ),
         ),
         placeholder: (context, url) => const Skeleton(),
-        errorWidget: (context, url, error) => const Icon(Icons.error),
+        errorWidget: (context, url, error) => const Icon(AppSymbols.error),
       ),
     );
   }

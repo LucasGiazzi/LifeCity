@@ -1,17 +1,21 @@
 import 'dart:async';
+import 'dart:math';
 import 'package:animations/animations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:provider/provider.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_defaults.dart';
+import '../../core/constants/app_symbols.dart';
 import '../../core/models/complaint_model.dart';
 import '../../core/routes/app_routes.dart';
 import '../../core/services/complaint_service.dart';
 import '../../core/state/filter_controller.dart';
 import '../../core/state/filter_scope.dart';
+import '../../core/state/category_state.dart';
 import '../complaints/complaint_sheet.dart';
 import '../highlights/highlights_page.dart';
 import '../menu/menu_page.dart';
@@ -131,7 +135,7 @@ class _GradientFab extends StatelessWidget {
         child: InkWell(
           customBorder: const CircleBorder(),
           onTap: onPressed,
-          child: const Icon(Icons.add_rounded, color: Colors.white, size: 30),
+          child: const Icon(Symbols.add, color: Colors.white, size: 30, fill: 1.0),
         ),
       ),
     );
@@ -143,16 +147,9 @@ class _GradientFab extends StatelessWidget {
 class _FilterBar extends StatelessWidget {
   const _FilterBar();
 
-  static const List<Map<String, dynamic>> _categories = [
-    {'key': 'infraestrutura', 'label': 'Infra', 'icon': Icons.construction, 'color': Colors.orange},
-    {'key': 'seguranca', 'label': 'Segurança', 'icon': Icons.security, 'color': Colors.red},
-    {'key': 'limpeza', 'label': 'Limpeza', 'icon': Icons.cleaning_services, 'color': Colors.teal},
-    {'key': 'transito', 'label': 'Trânsito', 'icon': Icons.traffic, 'color': Colors.amber},
-    {'key': 'outros', 'label': 'Outros', 'icon': Icons.report_problem, 'color': Colors.grey},
-  ];
-
   @override
   Widget build(BuildContext context) {
+    final categories = context.watch<CategoryState>().categories;
     final filters = FilterScope.of(context);
     return ListenableBuilder(
       listenable: filters,
@@ -162,15 +159,15 @@ class _FilterBar extends StatelessWidget {
           clipBehavior: Clip.none,
           child: Row(
             children: [
-              for (final cat in _categories)
+              for (final cat in categories)
                 Padding(
                   padding: const EdgeInsets.only(right: 8),
                   child: _FilterChip(
-                    label: cat['label'] as String,
-                    icon: cat['icon'] as IconData,
-                    color: cat['color'] as Color,
-                    isSelected: filters.isSelected(cat['key'] as String),
-                    onTap: () => filters.toggle(cat['key'] as String),
+                    label: cat.shortName,
+                    icon: cat.icon,
+                    color: cat.color,
+                    isSelected: filters.isSelected(cat.slug),
+                    onTap: () => filters.toggle(cat.slug),
                   ),
                 ),
             ],
@@ -252,10 +249,10 @@ extension on _MapLayerKind {
       };
 
   IconData get pickerIcon => switch (this) {
-        _MapLayerKind.streets => Icons.map_rounded,
-        _MapLayerKind.satellite => Icons.satellite_alt_rounded,
-        _MapLayerKind.terrain => Icons.terrain_rounded,
-        _MapLayerKind.dark => Icons.dark_mode_rounded,
+        _MapLayerKind.streets => Symbols.map,
+        _MapLayerKind.satellite => Symbols.satellite_alt,
+        _MapLayerKind.terrain => Symbols.terrain,
+        _MapLayerKind.dark => Symbols.dark_mode,
       };
 }
 
@@ -304,6 +301,9 @@ class _MapBodyState extends State<_MapBody> {
   List<ComplaintModel> _complaints = [];
   bool _isLoading = true;
   _MapLayerKind _mapLayer = _MapLayerKind.streets;
+
+  static const double _nearRadiusKm = 5.0;
+  static const int _relevanceThreshold = 3;
 
   @override
   void initState() {
@@ -378,6 +378,20 @@ class _MapBodyState extends State<_MapBody> {
 
   void reload() => _loadComplaints();
 
+  double _haversineKm(LatLng a, LatLng b) {
+    const r = 6371.0;
+    final dLat = (b.latitude - a.latitude) * pi / 180;
+    final dLng = (b.longitude - a.longitude) * pi / 180;
+    final lat1 = a.latitude * pi / 180;
+    final lat2 = b.latitude * pi / 180;
+    final h = sin(dLat / 2) * sin(dLat / 2) +
+        cos(lat1) * cos(lat2) * sin(dLng / 2) * sin(dLng / 2);
+    return 2 * r * asin(sqrt(h));
+  }
+
+  int _relevanceScore(ComplaintModel c) =>
+      c.likesCount + c.commentsCount + c.witnessCount;
+
   void _zoomBy(double delta) {
     final cam = _mapController.camera;
     final next = (cam.zoom + delta).clamp(2.0, 22.0);
@@ -411,7 +425,7 @@ class _MapBodyState extends State<_MapBody> {
                 leading: Icon(kind.pickerIcon, color: AppColors.primary),
                 title: Text(kind.label, style: GoogleFonts.poppins(fontSize: 15)),
                 trailing: kind == _mapLayer
-                    ? const Icon(Icons.check_rounded, color: AppColors.primary)
+                    ? const Icon(AppSymbols.check, color: AppColors.primary)
                     : null,
                 onTap: () {
                   setState(() => _mapLayer = kind);
@@ -440,15 +454,20 @@ class _MapBodyState extends State<_MapBody> {
                 return filters.contains(c.type!.toLowerCase());
               }).toList();
 
-        final markers = visible.map((c) => Marker(
-              point: LatLng(c.latitude!, c.longitude!),
-              width: 44,
-              height: 44,
-              child: GestureDetector(
-                onTap: () => _openSheet(c),
-                child: _ComplaintPin(type: c.type),
-              ),
-            )).toList();
+        final markers = visible.map((c) {
+          final dist = _haversineKm(_userLocation ?? _center, LatLng(c.latitude!, c.longitude!));
+          final nearby = dist <= _nearRadiusKm;
+          if (!nearby && _relevanceScore(c) < _relevanceThreshold) return null;
+          return Marker(
+            point: LatLng(c.latitude!, c.longitude!),
+            width: nearby ? 44 : 36,
+            height: nearby ? 44 : 36,
+            child: GestureDetector(
+              onTap: () => _openSheet(c),
+              child: _ComplaintPin(type: c.type, nearby: nearby),
+            ),
+          );
+        }).whereType<Marker>().toList();
 
         final tileSpec = _tileSpec(_mapLayer);
 
@@ -517,7 +536,7 @@ class _MapBodyState extends State<_MapBody> {
                       tooltip: 'Camada do mapa',
                       onTap: _openMapLayerSheet,
                       child: Icon(
-                        Icons.layers_rounded,
+                        Symbols.layers,
                         size: 22,
                         color: Theme.of(context).iconTheme.color,
                       ),
@@ -534,7 +553,7 @@ class _MapBodyState extends State<_MapBody> {
                       tooltip: 'Aproximar',
                       onTap: () => _zoomBy(1),
                       child: Icon(
-                        Icons.add_rounded,
+                        Symbols.add,
                         size: 26,
                         color: Theme.of(context).iconTheme.color,
                       ),
@@ -544,7 +563,7 @@ class _MapBodyState extends State<_MapBody> {
                       tooltip: 'Afastar',
                       onTap: () => _zoomBy(-1),
                       child: Icon(
-                        Icons.remove_rounded,
+                        Symbols.remove,
                         size: 26,
                         color: Theme.of(context).iconTheme.color,
                       ),
@@ -641,7 +660,7 @@ class _LocationButton extends StatelessWidget {
           child: const SizedBox(
             width: 44,
             height: 44,
-            child: Icon(Icons.my_location_rounded, size: 22),
+            child: Icon(Symbols.my_location, size: 22, fill: 1.0),
           ),
         ),
       ),
@@ -651,29 +670,16 @@ class _LocationButton extends StatelessWidget {
 
 class _ComplaintPin extends StatelessWidget {
   final String? type;
-  const _ComplaintPin({this.type});
-
-  static const _cats = [
-    {'key': 'infraestrutura', 'icon': Icons.construction, 'color': Colors.orange},
-    {'key': 'seguranca', 'icon': Icons.security, 'color': Colors.red},
-    {'key': 'limpeza', 'icon': Icons.cleaning_services, 'color': Colors.teal},
-    {'key': 'transito', 'icon': Icons.traffic, 'color': Colors.amber},
-    {'key': 'outros', 'icon': Icons.report_problem, 'color': Colors.grey},
-  ];
+  final bool nearby;
+  const _ComplaintPin({this.type, this.nearby = true});
 
   @override
   Widget build(BuildContext context) {
-    final cat = type == null
-        ? {'icon': Icons.warning, 'color': Colors.red}
-        : _cats.firstWhere(
-            (c) => c['key'] == type!.toLowerCase(),
-            orElse: () => {'icon': Icons.warning, 'color': Colors.red},
-          );
+    final cat = context.watch<CategoryState>().resolve(type);
+    final color = cat.color;
+    final icon = cat.icon;
 
-    final color = cat['color'] as Color;
-    final icon = cat['icon'] as IconData;
-
-    return Container(
+    final pin = Container(
       decoration: BoxDecoration(
         color: color,
         shape: BoxShape.circle,
@@ -685,8 +691,9 @@ class _ComplaintPin extends StatelessWidget {
           ),
         ],
       ),
-      child: Center(child: Icon(icon, color: Colors.white, size: 20)),
+      child: Center(child: Icon(icon, color: Colors.white, size: nearby ? 20 : 16)),
     );
+
+    return nearby ? pin : Opacity(opacity: 0.65, child: pin);
   }
 }
-

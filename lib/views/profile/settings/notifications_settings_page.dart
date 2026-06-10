@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/constants/app_colors.dart';
+import '../../../core/constants/app_symbols.dart';
 
 class NotificationSettingsPage extends StatefulWidget {
   const NotificationSettingsPage({super.key});
@@ -57,7 +58,7 @@ class _NotificationSettingsPageState extends State<NotificationSettingsPage> {
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Icon(Icons.arrow_back_ios_new_rounded,
+                          const Icon(AppSymbols.arrowBack,
                               color: Colors.white70, size: 16),
                           const SizedBox(width: 4),
                           Text(
@@ -81,7 +82,7 @@ class _NotificationSettingsPageState extends State<NotificationSettingsPage> {
                         border: Border.all(
                             color: AppColors.primary.withValues(alpha: 0.4)),
                       ),
-                      child: const Icon(Icons.notifications_outlined,
+                      child: const Icon(AppSymbols.notifications,
                           color: AppColors.primary, size: 26),
                     ),
                     SizedBox(height: screen.height * 0.015),
@@ -130,7 +131,7 @@ class _NotificationSettingsPageState extends State<NotificationSettingsPage> {
                       const SizedBox(height: 12),
                       _NotifCard(children: [
                         _NotifTile(
-                          icon: Icons.notifications_active_outlined,
+                          icon: AppSymbols.notifications,
                           title: 'Notificações do app',
                           subtitle: 'Receba alertas gerais do LifeCity',
                           value: _pushEnabled,
@@ -138,7 +139,7 @@ class _NotificationSettingsPageState extends State<NotificationSettingsPage> {
                         ),
                         _Divider(),
                         _NotifTile(
-                          icon: Icons.location_on_outlined,
+                          icon: AppSymbols.locationOn,
                           title: 'Reclamações próximas',
                           subtitle: 'Novas ocorrências na sua região',
                           value: _complaintsNearby,
@@ -147,7 +148,7 @@ class _NotificationSettingsPageState extends State<NotificationSettingsPage> {
                         ),
                         _Divider(),
                         _NotifTile(
-                          icon: Icons.update_rounded,
+                          icon: Symbols.update,
                           title: 'Atualizações das minhas reclamações',
                           subtitle: 'Mudanças de status nas suas ocorrências',
                           value: _myComplaintsUpdates,
@@ -162,7 +163,7 @@ class _NotificationSettingsPageState extends State<NotificationSettingsPage> {
                       const SizedBox(height: 12),
                       _NotifCard(children: [
                         _NotifTile(
-                          icon: Icons.mail_outline_rounded,
+                          icon: AppSymbols.email,
                           title: 'Notificações por e-mail',
                           subtitle: 'Resumos e atualizações importantes',
                           value: _emailEnabled,
