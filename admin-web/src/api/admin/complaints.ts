@@ -43,6 +43,16 @@ export type ComplaintDetail = {
   reporter_name: string | null
   reporter_email: string | null
   reporter_phone: string | null
+  priority?: number
+  sla_due_at?: string | null
+  sla_state?: 'ok' | 'at_risk' | 'breached'
+  resolved_at?: string | null
+  closed_at?: string | null
+  assigned_at?: string | null
+  assigned_ops_team_id?: string | null
+  assigned_ops_team_name?: string | null
+  assigned_user_id?: string | null
+  assigned_user_name?: string | null
 }
 
 export async function fetchAdminComplaints(params?: {

@@ -1,0 +1,147 @@
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.slaRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.slaHint {
+  font-size: 12px;
+  color: var(--lc-placeholder);
+}
+
+.formGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.fieldWide {
+  grid-column: 1 / -1;
+}
+
+.label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--lc-placeholder);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.select,
+.textarea {
+  font-family: inherit;
+  font-size: 14px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(13, 40, 24, 0.12);
+  background: #fff;
+  color: var(--lc-dark);
+}
+
+.textarea {
+  resize: vertical;
+  min-height: 72px;
+}
+
+.select:disabled,
+.textarea:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.primaryBtn,
+.secondaryBtn {
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 10px 16px;
+  border-radius: 10px;
+  cursor: pointer;
+  align-self: flex-start;
+}
+
+.primaryBtn {
+  border: none;
+  background: var(--lc-primary);
+  color: #fff;
+}
+
+.primaryBtn:hover:not(:disabled) {
+  background: var(--lc-primary-dark);
+}
+
+.secondaryBtn {
+  border: 1px solid rgba(13, 40, 24, 0.15);
+  background: #fff;
+  color: var(--lc-dark);
+}
+
+.primaryBtn:disabled,
+.secondaryBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.divider {
+  border: none;
+  border-top: 1px solid rgba(13, 40, 24, 0.08);
+  margin: 4px 0;
+}
+
+.noteSection {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.checkLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--lc-dark);
+}
+
+.readOnlyHint {
+  margin: 0;
+  font-size: 13px;
+  color: var(--lc-placeholder);
+}
+
+.timelineTitle {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--lc-dark);
+}
+
+.error {
+  margin: 0;
+  font-size: 13px;
+  color: #dc2626;
+}
+
+.success {
+  margin: 0;
+  font-size: 13px;
+  color: #059669;
+}
+
+@media (max-width: 640px) {
+  .formGrid {
+    grid-template-columns: 1fr;
+  }
+}

@@ -123,11 +123,38 @@ exports.updateStatus = async (req, res) => {
 
     try {
         const pool = await supabasePool.getPgPool();
-        const check = await pool.query('SELECT created_by FROM complaints WHERE id = $1', [id]);
-        if (check.rows.length === 0) return res.status(404).json({ message: 'Reclamação não encontrada.' });
-        if (check.rows[0].created_by !== userId) return res.status(403).json({ message: 'Sem permissão.' });
+        const check = await pool.query(
+            `SELECT created_by, status, assigned_ops_team_id
+             FROM complaints WHERE id = $1`,
+            [id]
+        );
+        if (check.rows.length === 0) {
+            return res.status(404).json({ message: 'Reclamação não encontrada.' });
+        }
 
-        await pool.query('UPDATE complaints SET status = $1 WHERE id = $2', [status, id]);
+        const row = check.rows[0];
+        if (row.created_by !== userId) {
+            return res.status(403).json({ message: 'Sem permissão.' });
+        }
+
+        const complaintStatus = row.status || 'pending';
+        const underMunicipalManagement =
+            row.assigned_ops_team_id != null ||
+            ['assigned', 'in_progress', 'closed', 'cancelled'].includes(complaintStatus);
+
+        if (underMunicipalManagement) {
+            return res.status(403).json({
+                message: 'Ocorrência em gestão pela prefeitura.',
+            });
+        }
+
+        await pool.query(
+            `UPDATE complaints
+             SET status = $1,
+                 resolved_at = CASE WHEN $1 = 'resolved' THEN NOW() ELSE resolved_at END
+             WHERE id = $2`,
+            [status, id]
+        );
         res.status(200).json({ status });
 
         if (status === 'resolved') {

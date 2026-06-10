@@ -1,4 +1,4 @@
-import { apiFetch } from '../httpClient'
+import { apiFetch, apiFetchBlob } from '../httpClient'
 
 export async function adminFetch<T>(
   path: string,
@@ -19,4 +19,8 @@ export async function adminFetch<T>(
     body,
     headers: init?.headers as Record<string, string> | undefined,
   })
+}
+
+export async function adminFetchBlob(path: string): Promise<Blob> {
+  return apiFetchBlob(path, { admin: true })
 }

@@ -132,6 +132,42 @@
   box-shadow: 0 2px 8px rgba(13, 40, 24, 0.08);
 }
 
+.mapFilterBadge {
+  position: absolute;
+  bottom: 12px;
+  left: 12px;
+  z-index: 1000;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px 8px 12px;
+  border-radius: 999px;
+  background: rgba(147, 51, 234, 0.95);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  box-shadow: 0 4px 14px rgba(147, 51, 234, 0.35);
+}
+
+.mapFilterClear {
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  border: none;
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mapFilterClear:hover {
+  background: rgba(255, 255, 255, 0.32);
+}
+
 .analyticsPane {
   padding: 16px;
   display: flex;
@@ -141,17 +177,7 @@
 }
 
 .reserved {
-  background: #fff;
-  border: 1px dashed rgba(13, 40, 24, 0.15);
-  border-radius: 14px;
-  padding: 20px;
-  text-align: center;
-}
-
-.reserved p {
-  margin: 0;
-  font-size: 13px;
-  color: var(--lc-placeholder);
+  display: none;
 }
 
 .noTenant {

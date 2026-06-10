@@ -1,3 +1,20 @@
+.wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.filterHint {
+  margin: 0;
+  font-size: 12px;
+  color: var(--lc-placeholder);
+}
+
+.filterHint strong {
+  color: #7e22ce;
+  font-weight: 600;
+}
+
 .grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));

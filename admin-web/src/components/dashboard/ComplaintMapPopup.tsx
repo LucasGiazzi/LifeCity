@@ -1,26 +1,26 @@
 import { Link } from 'react-router-dom'
 import type { ComplaintPoint } from '../../api/admin/complaints'
-import { categoryIconLabel, complaintMarkerColor } from '../../catalog/categoryUtils'
+import { CategoryIcon } from '../../catalog/CategoryIcon'
+import { resolveCategoryDisplay } from '../../catalog/categoryUtils'
 import { useCategories } from '../../catalog/CategoriesContext'
-import { formatDate, statusLabel, truncateAddress } from '../../utils/format'
+import { formatDate, statusColor, statusLabel, truncateAddress } from '../../utils/format'
 import styles from './ComplaintMapPopup.module.css'
 
 type ComplaintMapPopupProps = {
   complaint: ComplaintPoint
+  /** Popup Leaflet renderiza fora do Router — usar callback em vez de Link */
+  onViewDetails?: (id: number) => void
 }
 
-export function ComplaintMapPopup({ complaint }: ComplaintMapPopupProps) {
+export function ComplaintMapPopup({
+  complaint,
+  onViewDetails,
+}: ComplaintMapPopupProps) {
   const { resolve } = useCategories()
   const catalog = resolve(complaint.category)
-  const categoryName =
-    complaint.category_name ?? catalog?.name ?? complaint.category ?? 'Sem categoria'
-  const color = complaintMarkerColor(
-    complaint.category_color,
-    catalog?.colorHex
-  )
-  const icon = categoryIconLabel(
-    complaint.category_icon ?? catalog?.iconKey
-  )
+  const { name, iconKey, color } = resolveCategoryDisplay(complaint, catalog)
+  const status = statusLabel(complaint.status)
+  const statusTint = statusColor(complaint.status)
   const dateLabel = formatDate(complaint.created_at)
 
   return (
@@ -32,20 +32,21 @@ export function ComplaintMapPopup({ complaint }: ComplaintMapPopupProps) {
       />
       <div className={styles.body}>
         <div className={styles.topRow}>
-          <span
-            className={styles.categoryChip}
-            style={{
-              background: `${color}18`,
-              color,
-              borderColor: `${color}40`,
-            }}
-          >
-            <span className={styles.chipIcon} aria-hidden>
-              {icon}
+          <div className={styles.headline}>
+            <span
+              className={styles.iconWrap}
+              style={{ background: `${color}18`, color }}
+            >
+              <CategoryIcon iconKey={iconKey} size={18} color={color} />
             </span>
-            {categoryName}
+            <span className={styles.categoryName}>{name}</span>
+          </div>
+          <span
+            className={styles.status}
+            style={{ color: statusTint }}
+          >
+            {status}
           </span>
-          <span className={styles.status}>{statusLabel(complaint.status)}</span>
         </div>
         <p className={styles.meta}>
           <span className={styles.metaLabel}>Registada em</span>
@@ -54,12 +55,22 @@ export function ComplaintMapPopup({ complaint }: ComplaintMapPopupProps) {
         {complaint.address ? (
           <p className={styles.address}>{truncateAddress(complaint.address)}</p>
         ) : null}
-        <Link
-          to={`/admin/complaints/${complaint.id}`}
-          className={styles.cta}
-        >
-          Ver detalhes
-        </Link>
+        {onViewDetails ? (
+          <button
+            type="button"
+            className={styles.cta}
+            onClick={() => onViewDetails(complaint.id)}
+          >
+            Ver detalhes
+          </button>
+        ) : (
+          <Link
+            to={`/admin/complaints/${complaint.id}`}
+            className={styles.cta}
+          >
+            Ver detalhes
+          </Link>
+        )}
       </div>
     </div>
   )

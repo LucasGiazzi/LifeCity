@@ -270,7 +270,7 @@ Aplicar **sempre** em sessões de implementação deste ADR. Contém invariantes
 
 | ADR | Tema |
 |-----|------|
-| ADR-002 | Gestão operacional de reclamações (workflow, status, responsáveis) |
+| [ADR-003](ADR-003-gestao-operacional-ocorrencias.md) | Gestão operacional de ocorrências (workflow, equipes municipais, SLA) |
 | ADR-003 | Restrição geográfica na criação de reclamações |
 | ADR-004 | RLS completo + Supabase Auth (se aplicável) |
 

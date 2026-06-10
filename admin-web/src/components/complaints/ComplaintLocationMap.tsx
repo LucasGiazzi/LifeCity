@@ -1,4 +1,5 @@
-import { CircleMarker, MapContainer, TileLayer } from 'react-leaflet'
+import { MapContainer, Marker, TileLayer } from 'react-leaflet'
+import { createCategoryMarkerIcon } from '../../catalog/categoryMarkerIcon'
 import { complaintMarkerColor } from '../../catalog/categoryUtils'
 import styles from './ComplaintLocationMap.module.css'
 
@@ -6,14 +7,17 @@ type ComplaintLocationMapProps = {
   latitude: number
   longitude: number
   color?: string
+  iconKey?: string | null
 }
 
 export function ComplaintLocationMap({
   latitude,
   longitude,
   color = '#00c896',
+  iconKey,
 }: ComplaintLocationMapProps) {
   const fillColor = complaintMarkerColor(color, color)
+  const icon = createCategoryMarkerIcon(iconKey, fillColor, 34)
 
   return (
     <div className={styles.wrap}>
@@ -28,16 +32,7 @@ export function ComplaintLocationMap({
         attributionControl={false}
       >
         <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-        <CircleMarker
-          center={[latitude, longitude]}
-          radius={10}
-          pathOptions={{
-            color: '#0d2818',
-            fillColor,
-            fillOpacity: 0.9,
-            weight: 2,
-          }}
-        />
+        <Marker position={[latitude, longitude]} icon={icon} />
       </MapContainer>
     </div>
   )

@@ -114,3 +114,55 @@ export async function apiFetch<T>(
   }
   return data
 }
+
+export async function apiFetchBlob(
+  path: string,
+  options: ApiFetchOptions = {}
+): Promise<Blob> {
+  const {
+    method = 'GET',
+    body,
+    admin = false,
+    auth = true,
+    headers: extraHeaders = {},
+  } = options
+
+  const base = admin ? `${getApiBase()}/api/admin` : `${getApiBase()}/api`
+
+  const run = async (accessToken: string | null) => {
+    const headers: Record<string, string> = { ...extraHeaders }
+    if (body !== undefined && !headers['Content-Type']) {
+      headers['Content-Type'] = 'application/json'
+    }
+    if (auth && accessToken) {
+      headers.Authorization = `Bearer ${accessToken}`
+    }
+
+    return fetch(`${base}${path}`, {
+      method,
+      headers,
+      body: body !== undefined ? JSON.stringify(body) : undefined,
+    })
+  }
+
+  let accessToken = auth ? loadStoredSession().accessToken : null
+  let res = await run(accessToken)
+
+  if (auth && (res.status === 401 || res.status === 403)) {
+    const newToken = await refreshAccessToken()
+    if (newToken) {
+      accessToken = newToken
+      res = await run(newToken)
+    } else {
+      clientConfig?.onSessionExpired()
+      throw new Error('Sessão expirada. Inicie sessão novamente.')
+    }
+  }
+
+  if (!res.ok) {
+    const data = (await parseJson(res)) as { message?: string }
+    throw new Error(data.message ?? 'Erro na requisição.')
+  }
+
+  return res.blob()
+}

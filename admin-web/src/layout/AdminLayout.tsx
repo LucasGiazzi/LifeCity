@@ -1,9 +1,38 @@
 import { NavLink, Outlet } from 'react-router-dom'
+import { useEffect, useState } from 'react'
 import { useAuth } from '../auth/useAuth'
+import { useTenant } from '../auth/useTenant'
+import { fetchModerationPendingCount } from '../api/admin/moderation'
 import styles from './AdminLayout.module.css'
+
+function isAdminRole(role: string | undefined) {
+  return role === 'admin' || role === 'owner'
+}
 
 export function AdminLayout() {
   const { logout, user } = useAuth()
+  const { activeTenant } = useTenant()
+  const [pendingReports, setPendingReports] = useState(0)
+
+  useEffect(() => {
+    if (!isAdminRole(activeTenant?.role)) {
+      setPendingReports(0)
+      return
+    }
+
+    let cancelled = false
+    void fetchModerationPendingCount()
+      .then((count) => {
+        if (!cancelled) setPendingReports(count)
+      })
+      .catch(() => {
+        if (!cancelled) setPendingReports(0)
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [activeTenant?.role, activeTenant?.id])
 
   return (
     <div className={styles.shell}>
@@ -25,6 +54,45 @@ export function AdminLayout() {
           >
             Dashboard
           </NavLink>
+          <NavLink
+            to="/admin/inbox"
+            className={({ isActive }) =>
+              `${styles.navLink} ${isActive ? styles.navLinkActive : ''}`
+            }
+          >
+            Inbox
+          </NavLink>
+          {isAdminRole(activeTenant?.role) ? (
+            <>
+              <NavLink
+                to="/admin/teams"
+                className={({ isActive }) =>
+                  `${styles.navLink} ${isActive ? styles.navLinkActive : ''}`
+                }
+              >
+                Equipes
+              </NavLink>
+              <NavLink
+                to="/admin/settings/sla"
+                className={({ isActive }) =>
+                  `${styles.navLink} ${isActive ? styles.navLinkActive : ''}`
+                }
+              >
+                SLA
+              </NavLink>
+              <NavLink
+                to="/admin/moderation"
+                className={({ isActive }) =>
+                  `${styles.navLink} ${isActive ? styles.navLinkActive : ''}`
+                }
+              >
+                Moderação
+                {pendingReports > 0 ? (
+                  <span className={styles.navBadge}>{pendingReports}</span>
+                ) : null}
+              </NavLink>
+            </>
+          ) : null}
           <NavLink
             to="/admin/account"
             className={({ isActive }) =>

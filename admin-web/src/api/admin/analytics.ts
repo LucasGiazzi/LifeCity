@@ -9,6 +9,11 @@ export type AnalyticsSummary = {
     bairrosLoaded: boolean
     setoresLoaded: boolean
   }
+  operational?: {
+    backlog: number
+    slaAtRisk: number
+    slaBreached: number
+  }
 }
 
 export type CategoryItem = {

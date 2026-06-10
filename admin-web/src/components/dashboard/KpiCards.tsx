@@ -4,6 +4,7 @@ import type { AnalyticsSummary } from '../../api/admin/analytics'
 type KpiCardsProps = {
   summary: AnalyticsSummary | null
   loading: boolean
+  filterLabel?: string | null
 }
 
 const cards: Array<{
@@ -19,9 +20,15 @@ const cards: Array<{
   { key: 'distinctCategories', label: 'Categorias' },
 ]
 
-export function KpiCards({ summary, loading }: KpiCardsProps) {
+export function KpiCards({ summary, loading, filterLabel }: KpiCardsProps) {
   return (
-    <div className={styles.grid}>
+    <div className={styles.wrap}>
+      {filterLabel ? (
+        <p className={styles.filterHint}>
+          Filtrado: <strong>{filterLabel}</strong>
+        </p>
+      ) : null}
+      <div className={styles.grid}>
       {cards.map(({ key, label }) => (
         <div key={key} className={styles.card}>
           <span className={styles.label}>{label}</span>
@@ -30,6 +37,7 @@ export function KpiCards({ summary, loading }: KpiCardsProps) {
           </strong>
         </div>
       ))}
+      </div>
     </div>
   )
 }

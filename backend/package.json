@@ -5,7 +5,10 @@
   "main": "\t",
   "scripts": {
     "start": "node src/server.js",
-    "dev": "nodemon src/server.js"
+    "dev": "nodemon src/server.js",
+    "seed:campinas": "node scripts/seed-campinas-demo.js",
+    "seed:campinas:cleanup": "node scripts/seed-campinas-demo.js --cleanup",
+    "import:malhas:campinas": "node scripts/import-campinas-malhas.js"
   },
   "author": "",
   "license": "ISC",

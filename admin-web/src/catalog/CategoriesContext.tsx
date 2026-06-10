@@ -24,6 +24,8 @@ type CategoriesContextValue = {
 
 const CategoriesContext = createContext<CategoriesContextValue | null>(null)
 
+export { CategoriesContext }
+
 export function CategoriesProvider({ children }: { children: ReactNode }) {
   const { accessToken } = useAuth()
   const [categories, setCategories] = useState<ComplaintCategory[]>([])

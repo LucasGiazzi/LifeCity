@@ -5,15 +5,16 @@ import {
   type ComplaintDetail,
   type ComplaintPhoto,
 } from '../api/admin/complaints'
+import { ComplaintManagementPanel } from '../components/complaints/ComplaintManagementPanel'
 import { ComplaintLocationMap } from '../components/complaints/ComplaintLocationMap'
-import {
-  categoryIconLabel,
-  complaintMarkerColor,
-} from '../catalog/categoryUtils'
+import { CategoryIcon } from '../catalog/CategoryIcon'
+import { resolveCategoryDisplay } from '../catalog/categoryUtils'
 import { useCategories } from '../catalog/CategoriesContext'
+import { useTenant } from '../auth/useTenant'
 import {
   formatDate,
   formatDateTime,
+  statusColor,
   statusLabel,
 } from '../utils/format'
 import styles from './ComplaintDetailPage.module.css'
@@ -21,6 +22,11 @@ import styles from './ComplaintDetailPage.module.css'
 export function ComplaintDetailPage() {
   const { id } = useParams<{ id: string }>()
   const { resolve } = useCategories()
+  const { activeTenant } = useTenant()
+  const canEdit =
+    activeTenant?.role === 'operator' ||
+    activeTenant?.role === 'admin' ||
+    activeTenant?.role === 'owner'
   const [complaint, setComplaint] = useState<ComplaintDetail | null>(null)
   const [photos, setPhotos] = useState<ComplaintPhoto[]>([])
   const [loading, setLoading] = useState(true)
@@ -83,60 +89,65 @@ export function ComplaintDetailPage() {
   }
 
   const catalog = resolve(complaint.category)
-  const categoryName =
-    complaint.category_name ??
-    catalog?.name ??
-    complaint.category ??
-    'Sem categoria'
-  const color = complaintMarkerColor(
-    complaint.category_color,
-    catalog?.colorHex
+  const { name: categoryName, iconKey, color } = resolveCategoryDisplay(
+    complaint,
+    catalog
   )
-  const icon = categoryIconLabel(
-    complaint.category_icon ?? catalog?.iconKey
-  )
+  const statusTint = statusColor(complaint.status)
   const hasCoords =
     complaint.latitude != null && complaint.longitude != null
 
   return (
     <div className={styles.page}>
       <header className={styles.topBar}>
-        <Link to="/admin" className={styles.backLink}>
-          ← Dashboard
+        <Link to="/admin/inbox" className={styles.backLink}>
+          ← Inbox
         </Link>
-        <span className={styles.ref}>Ocorrência #{complaint.id}</span>
       </header>
 
       <section
         className={styles.hero}
-        style={{
-          background: `linear-gradient(135deg, ${color}22 0%, rgba(255,255,255,0.95) 55%, #fff 100%)`,
-          borderColor: `${color}35`,
-        }}
+        style={{ borderColor: `${color}30` }}
       >
-        <div className={styles.heroMain}>
-          <span
-            className={styles.categoryChip}
-            style={{
-              background: `${color}20`,
-              color,
-              borderColor: `${color}45`,
-            }}
-          >
-            <span aria-hidden>{icon}</span>
-            {categoryName}
-          </span>
-          <h1 className={styles.title}>{categoryName}</h1>
+        <div
+          className={styles.heroFade}
+          aria-hidden
+          style={{
+            background: `linear-gradient(90deg, rgba(255,255,255,0) 0%, ${statusTint}12 40%, ${statusTint}38 100%)`,
+          }}
+        />
+        <div className={styles.heroBody}>
+          <div className={styles.heroHeadline}>
+            <span
+              className={styles.iconWrap}
+              style={{ background: `${color}18`, color }}
+            >
+              <CategoryIcon iconKey={iconKey} size={34} color={color} />
+            </span>
+            <h1 className={styles.title}>{categoryName}</h1>
+            <span className={styles.occurrenceRef}>
+              Ocorrência #{complaint.id}
+            </span>
+          </div>
           <p className={styles.heroMeta}>
             Ocorrência em {formatDate(complaint.occurrence_date)} · Registada{' '}
             {formatDateTime(complaint.created_at)}
           </p>
-        </div>
-        <div className={styles.heroAside}>
-          <span className={styles.statusBadge}>{statusLabel(complaint.status)}</span>
           {complaint.is_within_city === false ? (
             <span className={styles.warningBadge}>Fora do município</span>
           ) : null}
+        </div>
+        <div className={styles.heroStatus}>
+          <span
+            className={styles.statusBadge}
+            style={{
+              color: statusTint,
+              background: `${statusTint}22`,
+              borderColor: `${statusTint}40`,
+            }}
+          >
+            {statusLabel(complaint.status)}
+          </span>
         </div>
       </section>
 
@@ -186,6 +197,7 @@ export function ComplaintDetailPage() {
                 latitude={complaint.latitude!}
                 longitude={complaint.longitude!}
                 color={color}
+                iconKey={iconKey}
               />
               <p className={styles.coords}>
                 {complaint.latitude!.toFixed(6)},{' '}
@@ -196,21 +208,11 @@ export function ComplaintDetailPage() {
 
           <article className={`${styles.card} ${styles.managementCard}`}>
             <h2 className={styles.cardTitle}>Gestão</h2>
-            <p className={styles.managementHint}>
-              Em breve: atribuição a equipe, alteração de status, prazos SLA e
-              histórico de ações nesta ocorrência.
-            </p>
-            <div className={styles.managementActions}>
-              <button type="button" className={styles.actionBtn} disabled>
-                Atribuir responsável
-              </button>
-              <button type="button" className={styles.actionBtn} disabled>
-                Alterar status
-              </button>
-              <button type="button" className={styles.actionBtn} disabled>
-                Registar nota interna
-              </button>
-            </div>
+            <ComplaintManagementPanel
+              complaint={complaint}
+              canEdit={canEdit}
+              onUpdated={setComplaint}
+            />
           </article>
         </div>
 
@@ -269,6 +271,22 @@ export function ComplaintDetailPage() {
               <div className={styles.row}>
                 <dt>ID</dt>
                 <dd>{complaint.id}</dd>
+              </div>
+              <div className={styles.row}>
+                <dt>Prioridade</dt>
+                <dd>{complaint.priority ?? '—'}</dd>
+              </div>
+              <div className={styles.row}>
+                <dt>Equipe</dt>
+                <dd>{complaint.assigned_ops_team_name ?? '—'}</dd>
+              </div>
+              <div className={styles.row}>
+                <dt>SLA</dt>
+                <dd>
+                  {complaint.sla_due_at
+                    ? formatDateTime(complaint.sla_due_at)
+                    : '—'}
+                </dd>
               </div>
               <div className={styles.row}>
                 <dt>Status</dt>

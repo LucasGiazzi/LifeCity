@@ -1,6 +1,8 @@
 const dotenv = require('dotenv');
 dotenv.config();
 
+const fs = require('fs');
+const path = require('path');
 const app = require('./app');
 const http = require('http');
 const jwt = require('jsonwebtoken');
@@ -294,6 +296,35 @@ async function runMigrations() {
         SET cpf = REGEXP_REPLACE(cpf, '[^0-9]', '', 'g')
         WHERE cpf IS NOT NULL AND cpf ~ '[^0-9]'
     `);
+
+    // ── ADR-003 Fase 4a: gestão operacional ─────────────────────────────────
+
+    const phase4Migrations = [
+        ['014_ops_teams', '014_ops_teams.sql'],
+        ['015_complaint_events', '015_complaint_events.sql'],
+        ['016_complaints_operational_columns', '016_complaints_operational_columns.sql'],
+        ['017_tenant_sla_policies', '017_tenant_sla_policies.sql'],
+        ['018_seed_campinas_ops', '018_seed_campinas_ops.sql'],
+        ['019_reports_target_id_text', '019_reports_target_id_text.sql'],
+    ];
+
+    for (const [name, file] of phase4Migrations) {
+        const filePath = path.join(__dirname, '../migrations', file);
+        if (fs.existsSync(filePath)) {
+            const sql = fs.readFileSync(filePath, 'utf8');
+            //await runMigration(pool, name, sql);
+        } else {
+            console.warn(`[migration] SKIP: ${name} — arquivo não encontrado`);
+        }
+    }
+
+    // ── Malhas staging + demografia Campinas ────────────────────────────────────
+
+    const malhasMigrationPath = path.join(__dirname, '../migrations/020_malhas_staging_demografia.sql');
+    if (fs.existsSync(malhasMigrationPath)) {
+        const sql = fs.readFileSync(malhasMigrationPath, 'utf8');
+        await runMigration(pool, '020_malhas_staging_demografia', sql);
+    }
 
     // ── Verificação de cidade ─────────────────────────────────────────────────
 

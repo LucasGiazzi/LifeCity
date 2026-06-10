@@ -1,43 +1,52 @@
 import styles from './MeshLayerToggles.module.css'
+import type { MeshDivision } from './DashboardMap'
 
 type MeshLayerTogglesProps = {
-  showBairros: boolean
-  showSetores: boolean
-  onToggleBairros: (value: boolean) => void
-  onToggleSetores: (value: boolean) => void
+  meshDivision: MeshDivision
+  onMeshDivisionChange: (value: MeshDivision) => void
   bairrosAvailable: boolean
   setoresAvailable: boolean
 }
 
 export function MeshLayerToggles({
-  showBairros,
-  showSetores,
-  onToggleBairros,
-  onToggleSetores,
+  meshDivision,
+  onMeshDivisionChange,
   bairrosAvailable,
   setoresAvailable,
 }: MeshLayerTogglesProps) {
   return (
     <div className={styles.panel}>
+      <span className={styles.heading}>Divisão territorial</span>
       <label className={styles.item}>
         <input type="checkbox" checked disabled readOnly />
         <span>Município</span>
       </label>
       <label className={styles.item}>
         <input
-          type="checkbox"
-          checked={showBairros}
+          type="radio"
+          name="mesh-division"
+          checked={meshDivision === null}
+          onChange={() => onMeshDivisionChange(null)}
+        />
+        <span>Nenhuma</span>
+      </label>
+      <label className={styles.item}>
+        <input
+          type="radio"
+          name="mesh-division"
+          checked={meshDivision === 'bairros'}
           disabled={!bairrosAvailable}
-          onChange={(e) => onToggleBairros(e.target.checked)}
+          onChange={() => onMeshDivisionChange('bairros')}
         />
         <span>Bairros</span>
       </label>
       <label className={styles.item}>
         <input
-          type="checkbox"
-          checked={showSetores}
+          type="radio"
+          name="mesh-division"
+          checked={meshDivision === 'setores'}
           disabled={!setoresAvailable}
-          onChange={(e) => onToggleSetores(e.target.checked)}
+          onChange={() => onMeshDivisionChange('setores')}
         />
         <span>Setores</span>
       </label>

@@ -30,6 +30,20 @@ Nunca confiar no formato recebido do Flutter.
 - Tabela `reports` com `UNIQUE(reporter_id, target_type, target_id)` — um usuário denuncia cada item só uma vez
 - Threshold: 5 denúncias → `complaints.is_hidden = TRUE`; 10 denúncias → `users.is_restricted = TRUE`
 - Queries de `getAll` e `getHighlights` de complaints filtram `WHERE is_hidden = FALSE`
+- **Fase 4c:** `reports.target_id` migrado para `TEXT` (migration `019`) — ocorrências usam `bigint`, usuários usam `uuid`; admin moderação faz join `c.id::text = r.target_id`
+
+### Gestão operacional municipal (ADR-003, Fase 4)
+- `ops_teams` / `ops_team_members` ≠ `teams` / `team_members` (gamificação cidadã)
+- Roteamento automático (`opsRoutingService`): categoria → bairro → equipe `triagem-geral`; dispara em transição para `triaged`/`assigned` sem equipe
+- Admin-web: Inbox, Equipes, SLA, Moderação; export CSV em `/complaints/export`
+- RBAC: `viewer` leitura; `operator+` workflow; `admin+` CRUD equipes/SLA/moderação
+
+### Malhas Campinas — UTB como bairros + demografia (migration 020)
+- Campinas **não tem bairros IBGE** (`malhas.bairros` vazio para `3509502`); fonte oficial: **UTB/UTR PD2018** (`pd2018_utbs.zip`, Prefeitura/DIDC)
+- Staging: schema `malhas_staging` (`utb_raw`, `setores_ibge_csv`); produção: `malhas.bairros` + `malhas.utb_demografia` + `malhas.setores_indicadores`
+- `cd_bairro` sintético: `3509502` + seq 3 dígitos; `nm_bairro` = `DENOMINACA` da UTB; lookup espacial via `geo.resolve_cd_bairro`
+- Indicadores IBGE por setor (CSV Censo 2022) ficam em `malhas.setores_indicadores` (jsonb por dataset: `renda_responsavel`, `caracteristicas_domicilios`, etc.)
+- Import: `npm run import:malhas:campinas -- --utb-zip <path> --setores-dir <IBGE/Setores> --backfill-complaints` (requer **ogr2ogr** no PATH)
 
 ### Recuperação de senha
 - Fluxo 3 telas: (1) `ForgetPasswordPage` — digita e-mail; (2) `CodeVerificationPage` — digita código de 6 dígitos; (3) `PasswordResetPage` — digita nova senha

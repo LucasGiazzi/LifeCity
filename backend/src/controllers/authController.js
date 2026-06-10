@@ -15,7 +15,7 @@ const jwt = require('jsonwebtoken')
 
 exports.login = async (req, res) => {
     const { email, password } = req.body;
-    
+    console.log('email', email);
     try {
         const pool = await supabasePool.getPgPool();
         
