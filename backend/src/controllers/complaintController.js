@@ -1,5 +1,6 @@
 const supabasePool = require('../infra/supabasePool');
 const { uploadToSupabase, listBlobs, removeFolder } = require('../infra/supabaseStorageClient');
+const { INSERT_COMPLAINT_WITH_GEO } = require('../services/complaintGeoService');
 const { checkAchievements } = require('../infra/achievementChecker');
 const { checkMissionProgress, checkMissionResolution } = require('../infra/missionProgressChecker');
 const { isWithinCityBounds } = require('../infra/cityValidator');
@@ -41,12 +42,24 @@ exports.create = async (req, res) => {
 
         const pool = await supabasePool.getPgPool();
 
+        /*
         const withinCity = isWithinCityBounds(latitude, longitude);
 
         const result = await pool.query(
             'INSERT INTO complaints (description, occurrence_date, created_by, category, address, latitude, longitude, is_within_city) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *',
             [description, occurrence_date, created_by, type || null, address || null, latitude || null, longitude || null, withinCity]
-        );
+        );*/
+        // created_at será preenchido automaticamente pelo banco (default: now())
+        // location, cd_mun, setor/bairro e tenant_id derivados de lat/lng via geo.* (ADR-001)
+        const result = await pool.query(INSERT_COMPLAINT_WITH_GEO, [
+            description,
+            occurrence_date,
+            created_by,
+            type || null,
+            address || null,
+            latitude != null ? String(latitude) : null,
+            longitude != null ? String(longitude) : null,
+        ]);
 
         const complaintId = result.rows[0].id;
 

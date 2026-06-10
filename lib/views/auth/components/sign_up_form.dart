@@ -80,7 +80,10 @@ class _SignUpFormState extends State<SignUpForm> {
           backgroundColor: AppColors.primary,
         ),
       );
-      Navigator.pushNamedAndRemoveUntil(context, AppRoutes.login, (route) => false);
+      final route = authState.needsLocationConfirmation
+          ? AppRoutes.locationConfirmation
+          : AppRoutes.entryPoint;
+      Navigator.pushNamedAndRemoveUntil(context, route, (route) => false);
     }
   }
 

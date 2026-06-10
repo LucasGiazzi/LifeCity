@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'core/state/auth_state.dart';
 import 'views/auth/login_page.dart';
+import 'views/auth/location_confirmation_page.dart';
 import 'views/entrypoint/entrypoint_ui.dart';
 import 'views/onboarding/onboarding_page.dart';
 
@@ -13,6 +14,9 @@ class Wrapper extends StatelessWidget {
     final authState = context.watch<AuthState>();
 
     if (authState.isAuthenticated) {
+      if (authState.needsLocationConfirmation) {
+        return const LocationConfirmationPage();
+      }
       return const EntryPointUI();
     }
     if (authState.hasSeenOnboarding) {

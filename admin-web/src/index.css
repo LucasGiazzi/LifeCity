@@ -1,0 +1,45 @@
+:root {
+  --lc-primary: #00c896;
+  --lc-primary-dark: #009e76;
+  --lc-dark: #0d2818;
+  --lc-dark-surface: #172e1f;
+  --lc-gradient-end: #0f2d20;
+  --lc-placeholder: #8b9bb4;
+  --lc-input-bg: #f5f5f5;
+  --lc-white-muted: rgba(255, 255, 255, 0.54);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: 'Poppins', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+/* Popup estilizado do mapa (Leaflet renderiza fora da árvore React) */
+.leaflet-container .complaint-map-popup .leaflet-popup-content-wrapper {
+  padding: 0;
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 12px 40px rgba(13, 40, 24, 0.18);
+  border: 1px solid rgba(13, 40, 24, 0.06);
+}
+
+.leaflet-container .complaint-map-popup .leaflet-popup-content {
+  margin: 0;
+  line-height: 1.4;
+}
+
+.leaflet-container .complaint-map-popup .leaflet-popup-tip {
+  box-shadow: none;
+}
