@@ -4,6 +4,8 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_symbols.dart';
+import '../../../core/services/push_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class NotificationSettingsPage extends StatefulWidget {
   const NotificationSettingsPage({super.key});
@@ -19,7 +21,23 @@ class _NotificationSettingsPageState extends State<NotificationSettingsPage> {
   bool _myComplaintsUpdates = true;
   bool _emailEnabled = false;
 
-  void _save() {
+  @override
+  void initState() {
+    super.initState();
+    _loadPrefs();
+  }
+
+  Future<void> _loadPrefs() async {
+    final enabled = await PushService.isPushEnabled();
+    if (mounted) setState(() => _pushEnabled = enabled);
+  }
+
+  Future<void> _save() async {
+    await PushService.setPushEnabled(_pushEnabled);
+    if (_pushEnabled) {
+      await PushService.instance.syncTokenIfEnabled();
+    }
+    if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
         content: Text('Preferências salvas!'),

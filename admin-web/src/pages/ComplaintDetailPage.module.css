@@ -21,6 +21,42 @@
   text-decoration: underline;
 }
 
+.tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 20px;
+  border-bottom: 1px solid rgba(13, 40, 24, 0.08);
+  padding-bottom: 0;
+}
+
+.tab,
+.tabActive {
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 10px 16px;
+  border: none;
+  background: transparent;
+  color: var(--lc-placeholder);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+}
+
+.tab:hover:not(:disabled) {
+  color: var(--lc-dark);
+}
+
+.tab:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.tabActive {
+  color: var(--lc-primary-dark);
+  border-bottom-color: var(--lc-primary);
+}
+
 .hero {
   position: relative;
   display: flex;

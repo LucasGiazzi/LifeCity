@@ -179,11 +179,10 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
           final c = _myComplaints[i];
           return ComplaintCard(
             complaint: c,
-            onTap: () => showComplaintSheet(
+            onTap: () => Navigator.pushNamed(
               context,
-              c,
-              onDeleted: _loadMyComplaints,
-              onEdited: _loadMyComplaints,
+              AppRoutes.complaintTrack,
+              arguments: c.id.toString(),
             ),
             onDelete: () => _deleteComplaint(c),
           );

@@ -1,4 +1,4 @@
-package br.com.lucas.lifecity
+package com.br.lucas.lifecity
 
 import io.flutter.embedding.android.FlutterActivity
 

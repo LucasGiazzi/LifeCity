@@ -86,7 +86,7 @@ class _EntryPointUIState extends State<EntryPointUI> {
             ? _GradientFab(
                 onPressed: () async {
                   final result = await Navigator.pushNamed(
-                      context, AppRoutes.createComplaint);
+                      context, AppRoutes.nearbyCheck);
                   if (result == true) {
                     _mapBodyKey.currentState?.reload();
                   }

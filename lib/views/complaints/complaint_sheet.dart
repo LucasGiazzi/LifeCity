@@ -4,6 +4,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/components/report_sheet.dart';
@@ -11,7 +12,9 @@ import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_symbols.dart';
 import '../../core/models/complaint_model.dart';
 import '../../core/services/complaint_service.dart';
+import '../../core/constants/municipal_complaint_status.dart';
 import '../../core/state/auth_state.dart';
+import '../../core/routes/app_routes.dart';
 
 // ─── Public entry point ──────────────────────────────────────────────────────
 
@@ -60,11 +63,7 @@ class _ComplaintSheetState extends State<ComplaintSheet> {
     'outros':         (AppSymbols.warning,           Colors.grey,   'Outros'),
   };
 
-  static const _statusMap = <String, (IconData, Color, String)>{
-    'pending':     (AppSymbols.radioButtonUnchecked, Colors.orange, 'Aberta'),
-    'in_progress': (AppSymbols.autorenew,            Colors.blue,   'Em andamento'),
-    'resolved':    (AppSymbols.checkCircle,          Colors.green,  'Resolvida'),
-  };
+  static final _statusMap = MunicipalComplaintStatus.municipalStatusMap;
 
   final _complaintService = ComplaintService();
   List<Map<String, dynamic>> _photos = [];
@@ -79,6 +78,9 @@ class _ComplaintSheetState extends State<ComplaintSheet> {
   bool _userWitnessed = false;
   bool _togglingWitness = false;
   bool _updatingStatus = false;
+  String? _watchLevel;
+  bool _watchMuted = false;
+  bool _loadingWatch = false;
   late String _status;
   final _commentController = TextEditingController();
 
@@ -92,6 +94,7 @@ class _ComplaintSheetState extends State<ComplaintSheet> {
     _loadComments();
     _loadLikeStatus();
     _loadWitnessStatus();
+    _loadWatchStatus();
   }
 
   @override
@@ -109,6 +112,99 @@ class _ComplaintSheetState extends State<ComplaintSheet> {
     });
   }
 
+  Future<void> _loadWatchStatus() async {
+    final isLoggedIn = context.read<AuthState>().isAuthenticated;
+    if (!isLoggedIn) return;
+    setState(() => _loadingWatch = true);
+    final data = await _complaintService.getWatch(widget.complaint.id);
+    if (!mounted) return;
+    setState(() {
+      _watchLevel = data?['level'] as String?;
+      _watchMuted = data?['muted'] == true;
+      _loadingWatch = false;
+    });
+  }
+
+  Future<void> _showWatchMenu() async {
+    final level = _watchLevel;
+    await showModalBottomSheet<void>(
+      context: context,
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (level == null) ...[
+              ListTile(
+                leading: const Icon(AppSymbols.notifications),
+                title: const Text('Acompanhar tudo'),
+                onTap: () async {
+                  Navigator.pop(ctx);
+                  final data = await _complaintService.patchWatch(
+                    widget.complaint.id,
+                    level: 'full',
+                  );
+                  if (mounted && data != null) {
+                    setState(() {
+                      _watchLevel = data['level'] as String?;
+                      _watchMuted = data['muted'] == true;
+                    });
+                  }
+                },
+              ),
+              ListTile(
+                leading: const Icon(AppSymbols.notifications, fill: 0.0),
+                title: const Text('Só resolução'),
+                onTap: () async {
+                  Navigator.pop(ctx);
+                  final data = await _complaintService.patchWatch(
+                    widget.complaint.id,
+                    level: 'basic',
+                  );
+                  if (mounted && data != null) {
+                    setState(() {
+                      _watchLevel = data['level'] as String?;
+                      _watchMuted = data['muted'] == true;
+                    });
+                  }
+                },
+              ),
+            ] else ...[
+              ListTile(
+                leading: Icon(_watchMuted ? AppSymbols.notifications : AppSymbols.notifications, fill: _watchMuted ? 0.0 : 1.0),
+                title: Text(_watchMuted ? 'Reativar notificações' : 'Silenciar notificações'),
+                onTap: () async {
+                  Navigator.pop(ctx);
+                  final data = await _complaintService.patchWatch(
+                    widget.complaint.id,
+                    muted: !_watchMuted,
+                  );
+                  if (mounted && data != null) {
+                    setState(() => _watchMuted = data['muted'] == true);
+                  }
+                },
+              ),
+              if (level != 'full' || _watchLevel != 'full')
+                ListTile(
+                  leading: const Icon(AppSymbols.close),
+                  title: const Text('Parar de acompanhar'),
+                  onTap: () async {
+                    Navigator.pop(ctx);
+                    final ok = await _complaintService.deleteWatch(widget.complaint.id);
+                    if (mounted && ok) {
+                      setState(() {
+                        _watchLevel = null;
+                        _watchMuted = false;
+                      });
+                    }
+                  },
+                ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
   Future<void> _toggleWitness() async {
     if (_togglingWitness) return;
     setState(() => _togglingWitness = true);
@@ -119,6 +215,7 @@ class _ComplaintSheetState extends State<ComplaintSheet> {
         _userWitnessed = data['witnessed'] == true;
         _witnessCount = (data['count'] as int?) ?? _witnessCount;
       });
+      _loadWatchStatus();
     }
     setState(() => _togglingWitness = false);
   }
@@ -174,6 +271,7 @@ class _ComplaintSheetState extends State<ComplaintSheet> {
         _userLiked = data['liked'] == true;
         _likeCount = (data['count'] as int?) ?? _likeCount;
       });
+      _loadWatchStatus();
     }
     setState(() => _togglingLike = false);
   }
@@ -516,9 +614,74 @@ class _ComplaintSheetState extends State<ComplaintSheet> {
                                     ),
                                   ),
                                 ),
+                                if (isLoggedIn) ...[
+                                  const SizedBox(width: 8),
+                                  GestureDetector(
+                                    onTap: _loadingWatch ? null : _showWatchMenu,
+                                    child: AnimatedContainer(
+                                      duration: const Duration(milliseconds: 200),
+                                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                      decoration: BoxDecoration(
+                                        color: _watchLevel != null
+                                            ? AppColors.primary.withValues(alpha: 0.12)
+                                            : Colors.grey.withValues(alpha: 0.1),
+                                        borderRadius: BorderRadius.circular(20),
+                                        border: Border.all(
+                                          color: _watchLevel != null
+                                              ? AppColors.primary
+                                              : Colors.grey.shade300,
+                                        ),
+                                      ),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Icon(
+                                            AppSymbols.notifications,
+                                            size: 18,
+                                            fill: _watchLevel != null && !_watchMuted ? 1.0 : 0.0,
+                                            color: _watchLevel != null
+                                                ? AppColors.primary
+                                                : Colors.grey.shade500,
+                                          ),
+                                          if (_watchLevel != null) ...[
+                                            const SizedBox(width: 4),
+                                            Text(
+                                              _watchLevel == 'full' ? 'Full' : 'Básico',
+                                              style: GoogleFonts.poppins(
+                                                fontSize: 12,
+                                                fontWeight: FontWeight.w500,
+                                                color: AppColors.primary,
+                                              ),
+                                            ),
+                                          ],
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ],
                               ],
                             ),
-
+                            if (isLoggedIn) ...[
+                              const SizedBox(height: 8),
+                              Align(
+                                alignment: Alignment.centerLeft,
+                                child: TextButton.icon(
+                                  onPressed: () {
+                                    Navigator.pop(context);
+                                    Navigator.pushNamed(
+                                      context,
+                                      AppRoutes.complaintTrack,
+                                      arguments: widget.complaint.id.toString(),
+                                    );
+                                  },
+                                  icon: const Icon(Symbols.timeline, size: 18),
+                                  label: Text(
+                                    'Ver acompanhamento completo',
+                                    style: GoogleFonts.poppins(fontSize: 13),
+                                  ),
+                                ),
+                              ),
+                            ],
                             if (!_loadingPhotos && _photos.isNotEmpty) ...[
                               const SizedBox(height: 16),
                               Text('Fotos', style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w600)),

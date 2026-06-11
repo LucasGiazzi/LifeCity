@@ -242,5 +242,124 @@ class ComplaintService {
       return false;
     }
   }
+
+  Future<List<Map<String, dynamic>>> getNearby({
+    required double lat,
+    required double lng,
+    int? radiusM,
+    int? limit,
+  }) async {
+    try {
+      final response = await _api.get('/api/complaints/nearby', params: {
+        'lat': lat,
+        'lng': lng,
+        if (radiusM != null) 'radius_m': radiusM,
+        if (limit != null) 'limit': limit,
+      });
+      if (response.data != null && response.data['items'] != null) {
+        return List<Map<String, dynamic>>.from(response.data['items']);
+      }
+      return [];
+    } on ApiException catch (e) {
+      print('Erro ao buscar nearby: ${e.message}');
+      return [];
+    }
+  }
+
+  Future<Map<String, dynamic>?> getComplaintById(String complaintId) async {
+    try {
+      final response = await _api.get('/api/complaints/$complaintId');
+      return Map<String, dynamic>.from(response.data as Map);
+    } on ApiException catch (e) {
+      print('Erro ao buscar detalhe: ${e.message}');
+      return null;
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> getComplaintTimeline(String complaintId) async {
+    try {
+      final response = await _api.get('/api/complaints/$complaintId/timeline');
+      if (response.data != null && response.data['events'] != null) {
+        return List<Map<String, dynamic>>.from(response.data['events']);
+      }
+      return [];
+    } on ApiException catch (e) {
+      print('Erro ao buscar timeline: ${e.message}');
+      return [];
+    }
+  }
+
+  Future<Map<String, dynamic>?> getWatch(String complaintId) async {
+    try {
+      final response = await _api.get('/api/complaints/$complaintId/watch');
+      return Map<String, dynamic>.from(response.data);
+    } on ApiException {
+      return null;
+    }
+  }
+
+  Future<Map<String, dynamic>?> patchWatch(
+    String complaintId, {
+    String? level,
+    bool? muted,
+  }) async {
+    try {
+      final response = await _api.patch('/api/complaints/$complaintId/watch', {
+        if (level != null) 'level': level,
+        if (muted != null) 'muted': muted,
+      });
+      return Map<String, dynamic>.from(response.data);
+    } on ApiException {
+      return null;
+    }
+  }
+
+  Future<bool> deleteWatch(String complaintId) async {
+    try {
+      await _api.delete('/api/complaints/$complaintId/watch');
+      return true;
+    } on ApiException {
+      return false;
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> getComplaintMessages(String complaintId) async {
+    try {
+      final response = await _api.get('/api/complaints/$complaintId/messages');
+      if (response.data != null && response.data['messages'] != null) {
+        return List<Map<String, dynamic>>.from(response.data['messages']);
+      }
+      return [];
+    } on ApiException catch (e) {
+      print('Erro ao buscar mensagens: ${e.message}');
+      return [];
+    }
+  }
+
+  Future<Map<String, dynamic>?> sendComplaintMessage(
+    String complaintId,
+    String body,
+  ) async {
+    try {
+      final response = await _api.post('/api/complaints/$complaintId/messages', {
+        'body': body,
+      });
+      if (response.data != null && response.data['message'] != null) {
+        return Map<String, dynamic>.from(response.data['message']);
+      }
+      return null;
+    } on ApiException catch (e) {
+      print('Erro ao enviar mensagem: ${e.message}');
+      return null;
+    }
+  }
+
+  Future<void> markComplaintMessagesRead(String complaintId) async {
+    try {
+      await _api.patch('/api/complaints/$complaintId/messages/read', {});
+    } on ApiException {
+      // silencioso
+    }
+  }
 }
 

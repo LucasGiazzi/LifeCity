@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
 import '../services/api_service.dart';
 import '../services/location_auth_service.dart';
+import '../services/push_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class AuthState extends ChangeNotifier {
@@ -62,6 +63,8 @@ class AuthState extends ChangeNotifier {
 
       await _saveTokens();
       await loadUserData();
+
+      await PushService.instance.syncTokenIfEnabled();
 
       notifyListeners();
       return true;

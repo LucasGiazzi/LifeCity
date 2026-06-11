@@ -37,6 +37,17 @@ Nunca confiar no formato recebido do Flutter.
 - Roteamento automático (`opsRoutingService`): categoria → bairro → equipe `triagem-geral`; dispara em transição para `triaged`/`assigned` sem equipe
 - Admin-web: Inbox, Equipes, SLA, Moderação; export CSV em `/complaints/export`
 - RBAC: `viewer` leitura; `operator+` workflow; `admin+` CRUD equipes/SLA/moderação
+- **Prod Supabase (jun/2026):** ADR-003 aplicado — 210 complaints, 439 complaint_events, GiST em `location`, 5 ops_teams Campinas
+
+### Comunicação cidadão ↔ prefeitura (ADR-004, Fase 5 — proposto)
+- **Dedup:** `GET /api/complaints/nearby` com PostGIS `ST_DWithin` + índice GiST existente; raio default 200 m
+- **Watchers:** tabela `complaint_watchers` (levels `basic`|`full`); like→basic, witness/autor→full; backfill de likes/witnesses existentes
+- **Push:** FCM + `user_device_tokens`; notificação de status **desacoplada** de `isInternal` (hoje admin manda `isInternal:true` → 0 push ao cidadão)
+- **Timeline cidadã:** subset de `complaint_events` públicos; card equipe via JOIN (`assigned_ops_team_id`) — prod tem 0 assignment público em events
+- **Chat 5d:** `complaint_messages` (022) + `complaintMessageController`; citizen `created_by` only; admin `operator+` POST; push `complaint_message` respeita `muted_at`
+- **Cripto 5e:** `messageCryptoService.js` (AES-256-GCM Node); ativa quando `TENANT_MESSAGE_MASTER_KEY` definida; audit `complaint_message_access_log`
+- **Armadilha:** novas tabelas Fase 5 usam `timestamptz`; `complaint_likes/witnesses.complaint_id` é `integer` mas PK de complaints é `bigint` — novas FKs usar `BIGINT`
+- Contrato: `docs/contracts/phase-5-citizen-communication.md`
 
 ### Malhas Campinas — UTB como bairros + demografia (migration 020)
 - Campinas **não tem bairros IBGE** (`malhas.bairros` vazio para `3509502`); fonte oficial: **UTB/UTR PD2018** (`pd2018_utbs.zip`, Prefeitura/DIDC)

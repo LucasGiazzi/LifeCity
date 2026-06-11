@@ -3,7 +3,12 @@ const { uploadToSupabase, listBlobs, removeFolder } = require('../infra/supabase
 const { INSERT_COMPLAINT_WITH_GEO } = require('../services/complaintGeoService');
 const { checkAchievements } = require('../infra/achievementChecker');
 const { checkMissionProgress, checkMissionResolution } = require('../infra/missionProgressChecker');
-const { isWithinCityBounds } = require('../infra/cityValidator');
+const watchService = require('../services/complaintWatchService');
+const { computeSlaState } = require('../services/slaService');
+const { isUnderMunicipalManagement } = require('../services/complaintWorkflowService');
+const { citizenStatusLabel, statusChangeDescription } = require('../services/complaintStatusLabels');
+
+const DEFAULT_NEARBY_RADIUS_M = parseInt(process.env.NEARBY_COMPLAINT_RADIUS_M || '200', 10);
 
 async function checkUserTrust(pool, userId) {
     try {
@@ -102,6 +107,9 @@ exports.create = async (req, res) => {
         });
 
         // Verificações em background (não bloqueiam a resposta)
+        watchService.syncWatchFromCreate(pool, complaintId, created_by).catch((err) =>
+            console.error('[watch:create]', err.message)
+        );
         checkAchievements(created_by, 'complaint_created');
         checkMissionProgress(pool, created_by);
         checkUserTrust(pool, created_by);
@@ -201,6 +209,292 @@ exports.getAll = async (req, res) => {
     } catch (error) {
         console.error('Erro ao buscar reclamações:', error);
         res.status(500).json({ message: 'Erro ao buscar reclamações.' });
+    }
+};
+
+exports.getNearby = async (req, res) => {
+    const lat = parseFloat(req.query.lat);
+    const lng = parseFloat(req.query.lng);
+
+    if (Number.isNaN(lat) || Number.isNaN(lng)) {
+        return res.status(400).json({ message: 'lat e lng são obrigatórios.' });
+    }
+
+    const radiusM = Math.min(
+        Math.max(parseInt(req.query.radius_m || String(DEFAULT_NEARBY_RADIUS_M), 10) || DEFAULT_NEARBY_RADIUS_M, 1),
+        5000
+    );
+    const limit = Math.min(Math.max(parseInt(req.query.limit || '10', 10) || 10, 1), 20);
+
+    try {
+        const pool = await supabasePool.getPgPool();
+        const params = [lng, lat, radiusM, limit];
+        let cdMunFilter = '';
+
+        if (req.user?.id) {
+            const { rows: userRows } = await pool.query(
+                'SELECT home_cd_mun FROM users WHERE id = $1',
+                [req.user.id]
+            );
+            const homeCdMun = userRows[0]?.home_cd_mun;
+            if (homeCdMun) {
+                cdMunFilter = 'AND c.cd_mun = $5';
+                params.push(homeCdMun);
+            }
+        }
+
+        const { rows } = await pool.query(
+            `SELECT c.id, c.description, c.category AS type, c.status, c.created_at,
+                    (SELECT COUNT(*)::int FROM complaint_likes cl WHERE cl.complaint_id = c.id) AS likes_count,
+                    (SELECT COUNT(*)::int FROM complaint_witnesses cw WHERE cw.complaint_id = c.id) AS witness_count,
+                    ST_Distance(
+                      c.location::geography,
+                      ST_SetSRID(ST_MakePoint($1, $2), 4326)::geography
+                    ) AS distance_m
+             FROM complaints c
+             WHERE c.is_hidden = FALSE
+               AND c.location IS NOT NULL
+               AND ST_DWithin(
+                     c.location::geography,
+                     ST_SetSRID(ST_MakePoint($1, $2), 4326)::geography,
+                     $3
+                   )
+               ${cdMunFilter}
+             ORDER BY distance_m ASC
+             LIMIT $4`,
+            params
+        );
+
+        const items = await Promise.all(
+            rows.map(async (row) => {
+                let previewPhotoUrl = null;
+                try {
+                    const photos = await listBlobs('complaints', row.id.toString(), 3600);
+                    previewPhotoUrl = photos[0]?.url ?? null;
+                } catch {
+                    previewPhotoUrl = null;
+                }
+                return {
+                    id: row.id,
+                    description: row.description,
+                    type: row.type,
+                    status: row.status,
+                    distance_m: Math.round(parseFloat(row.distance_m)),
+                    likes_count: row.likes_count,
+                    witness_count: row.witness_count,
+                    preview_photo_url: previewPhotoUrl,
+                    created_at: row.created_at,
+                };
+            })
+        );
+
+        res.status(200).json({
+            items,
+            radius_m: radiusM,
+            center: { lat, lng },
+        });
+    } catch (error) {
+        console.error('Erro ao buscar ocorrências próximas:', error);
+        res.status(500).json({ message: 'Erro ao buscar ocorrências próximas.' });
+    }
+};
+
+exports.getById = async (req, res) => {
+    const { id } = req.params;
+    const userId = req.user?.id ?? null;
+
+    try {
+        const pool = await supabasePool.getPgPool();
+        const { rows } = await pool.query(
+            `SELECT c.id, c.description, c.occurrence_date,
+                    COALESCE(cat.slug, c.category) AS type,
+                    COALESCE(cat.name, c.category) AS category_name,
+                    COALESCE(c.status, 'pending') AS status,
+                    c.address,
+                    CASE WHEN c.latitude IS NOT NULL THEN c.latitude::float8 END AS latitude,
+                    CASE WHEN c.longitude IS NOT NULL THEN c.longitude::float8 END AS longitude,
+                    c.created_at, c.created_by,
+                    c.sla_due_at, c.assigned_at, c.resolved_at, c.closed_at,
+                    c.assigned_ops_team_id,
+                    ot.id AS team_id, ot.name AS team_name,
+                    cw.level AS watch_level, cw.source AS watch_source,
+                    (cw.muted_at IS NOT NULL) AS watch_muted
+             FROM complaints c
+             LEFT JOIN ops_teams ot ON ot.id = c.assigned_ops_team_id
+             LEFT JOIN complaint_categories cat ON cat.id = c.category_id
+             LEFT JOIN complaint_watchers cw ON cw.complaint_id = c.id AND cw.user_id = $2::uuid
+             WHERE c.id = $1::bigint AND c.is_hidden = FALSE`,
+            [id, userId]
+        );
+
+        if (rows.length === 0) {
+            return res.status(404).json({ message: 'Reclamação não encontrada.' });
+        }
+
+        const row = rows[0];
+        const status = row.status || 'pending';
+        const photos = await listBlobs('complaints', id.toString(), 3600);
+
+        const complaint = {
+            id: row.id,
+            description: row.description,
+            occurrence_date: row.occurrence_date,
+            type: row.type,
+            category_name: row.category_name,
+            status,
+            status_label: citizenStatusLabel(status),
+            address: row.address,
+            latitude: row.latitude,
+            longitude: row.longitude,
+            created_at: row.created_at,
+            created_by: row.created_by,
+            sla_state: computeSlaState(row.sla_due_at, status),
+            sla_due_at: row.sla_due_at,
+            assigned_at: row.assigned_at,
+            resolved_at: row.resolved_at,
+            closed_at: row.closed_at,
+            is_under_municipal_management: isUnderMunicipalManagement({
+                status,
+                assigned_ops_team_id: row.assigned_ops_team_id,
+            }),
+            assigned_ops_team: row.team_id
+                ? { id: row.team_id, name: row.team_name }
+                : null,
+            watch: userId && row.watch_level
+                ? { level: row.watch_level, source: row.watch_source, muted: row.watch_muted }
+                : userId && row.created_by === userId
+                    ? { level: 'full', source: 'creator', muted: false }
+                    : null,
+        };
+
+        res.status(200).json({
+            complaint,
+            photos: photos.map((p) => p.url),
+        });
+    } catch (error) {
+        console.error('Erro ao buscar reclamação:', error);
+        res.status(500).json({ message: 'Erro ao buscar reclamação.' });
+    }
+};
+
+exports.getTimeline = async (req, res) => {
+    const { id } = req.params;
+
+    try {
+        const pool = await supabasePool.getPgPool();
+        const exists = await pool.query(
+            'SELECT id FROM complaints WHERE id = $1::bigint AND is_hidden = FALSE',
+            [id]
+        );
+        if (exists.rows.length === 0) {
+            return res.status(404).json({ message: 'Reclamação não encontrada.' });
+        }
+
+        const { rows } = await pool.query(
+            `SELECT ce.id, ce.event_type, ce.payload, ce.created_at
+             FROM complaint_events ce
+             WHERE ce.complaint_id = $1::bigint
+               AND ce.is_internal = FALSE
+               AND ce.event_type IN ('status_change', 'assignment', 'note')
+             ORDER BY ce.created_at ASC`,
+            [id]
+        );
+
+        const events = rows.map((ev) => {
+            const payload = ev.payload ?? {};
+            if (ev.event_type === 'status_change') {
+                const toStatus = payload.to || payload.statusTo;
+                return {
+                    id: ev.id,
+                    type: ev.event_type,
+                    label: citizenStatusLabel(toStatus),
+                    description: statusChangeDescription(payload.from, toStatus),
+                    created_at: ev.created_at,
+                    payload: { from: payload.from, to: toStatus },
+                };
+            }
+            if (ev.event_type === 'assignment') {
+                return {
+                    id: ev.id,
+                    type: ev.event_type,
+                    label: 'Equipe responsável',
+                    description: payload.opsTeamName || payload.teamName || 'Equipe municipal',
+                    created_at: ev.created_at,
+                    payload,
+                };
+            }
+            return {
+                id: ev.id,
+                type: ev.event_type,
+                label: 'Nota da prefeitura',
+                description: payload.text || '',
+                created_at: ev.created_at,
+                payload,
+            };
+        });
+
+        res.status(200).json({ events });
+    } catch (error) {
+        console.error('Erro ao buscar timeline:', error);
+        res.status(500).json({ message: 'Erro ao buscar timeline.' });
+    }
+};
+
+exports.getWatch = async (req, res) => {
+    const { id } = req.params;
+    const userId = req.user.id;
+
+    try {
+        const pool = await supabasePool.getPgPool();
+        const watch = await watchService.getWatch(pool, id, userId);
+        if (!watch) {
+            return res.status(200).json({ level: null, source: null, muted: false });
+        }
+        res.status(200).json(watch);
+    } catch (error) {
+        console.error('Erro ao buscar watch:', error);
+        res.status(500).json({ message: 'Erro ao buscar watch.' });
+    }
+};
+
+exports.patchWatch = async (req, res) => {
+    const { id } = req.params;
+    const userId = req.user.id;
+    const { level, muted } = req.body ?? {};
+
+    try {
+        const pool = await supabasePool.getPgPool();
+        if (level !== undefined) {
+            if (!['basic', 'full'].includes(level)) {
+                return res.status(400).json({ message: 'level deve ser basic ou full.' });
+            }
+            await watchService.setManualLevel(pool, id, userId, level);
+        }
+        if (muted !== undefined) {
+            await watchService.setMuted(pool, id, userId, Boolean(muted));
+        }
+        const watch = await watchService.getWatch(pool, id, userId);
+        res.status(200).json(watch ?? { level: null, source: null, muted: false });
+    } catch (error) {
+        console.error('Erro ao atualizar watch:', error);
+        res.status(500).json({ message: 'Erro ao atualizar watch.' });
+    }
+};
+
+exports.deleteWatch = async (req, res) => {
+    const { id } = req.params;
+    const userId = req.user.id;
+
+    try {
+        const pool = await supabasePool.getPgPool();
+        const removed = await watchService.removeWatchIfAllowed(pool, id, userId);
+        if (!removed) {
+            return res.status(403).json({ message: 'Não é possível remover o acompanhamento.' });
+        }
+        res.status(200).json({ message: 'Acompanhamento removido.' });
+    } catch (error) {
+        console.error('Erro ao remover watch:', error);
+        res.status(500).json({ message: 'Erro ao remover watch.' });
     }
 };
 
@@ -450,15 +744,17 @@ exports.toggleWitness = async (req, res) => {
         const existing = await pool.query(
             'SELECT id FROM complaint_witnesses WHERE complaint_id = $1 AND user_id = $2', [id, userId]
         );
-        if (existing.rows.length > 0) {
-            await pool.query('DELETE FROM complaint_witnesses WHERE complaint_id = $1 AND user_id = $2', [id, userId]);
-        } else {
+        const witnessed = existing.rows.length === 0;
+        if (witnessed) {
             await pool.query('INSERT INTO complaint_witnesses (complaint_id, user_id) VALUES ($1, $2)', [id, userId]);
+        } else {
+            await pool.query('DELETE FROM complaint_witnesses WHERE complaint_id = $1 AND user_id = $2', [id, userId]);
         }
+        await watchService.syncWatchFromWitness(pool, id, userId, witnessed);
         const countResult = await pool.query(
             'SELECT COUNT(*)::int FROM complaint_witnesses WHERE complaint_id = $1', [id]
         );
-        res.status(200).json({ witnessed: existing.rows.length === 0, count: countResult.rows[0].count });
+        res.status(200).json({ witnessed, count: countResult.rows[0].count });
     } catch (error) {
         res.status(500).json({ message: 'Erro ao processar witness.' });
     }

@@ -1,6 +1,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <!-- Permissões de localização -->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
@@ -31,6 +32,11 @@
         </activity>
 
         <meta-data android:name="flutterEmbedding" android:value="2" />
+
+        <!-- Canal padrão FCM (background/killed) — mesmo id do PushService -->
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_channel_id"
+            android:value="lifecity_complaints" />
     </application>
 
 </manifest>

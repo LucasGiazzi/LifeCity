@@ -326,6 +326,26 @@ async function runMigrations() {
         await runMigration(pool, '020_malhas_staging_demografia', sql);
     }
 
+    // ── ADR-004 Fase 5a: watchers + device tokens ─────────────────────────────
+
+    const phase5aMigrationPath = path.join(__dirname, '../migrations/021_complaint_watchers_and_tokens.sql');
+    if (fs.existsSync(phase5aMigrationPath)) {
+        const sql = fs.readFileSync(phase5aMigrationPath, 'utf8');
+        await runMigration(pool, '021_complaint_watchers_and_tokens', sql);
+    }
+
+    const phase5dMigrationPath = path.join(__dirname, '../migrations/022_complaint_messages.sql');
+    if (fs.existsSync(phase5dMigrationPath)) {
+        const sql = fs.readFileSync(phase5dMigrationPath, 'utf8');
+        await runMigration(pool, '022_complaint_messages', sql);
+    }
+
+    const phase5eMigrationPath = path.join(__dirname, '../migrations/023_complaint_messages_encryption.sql');
+    if (fs.existsSync(phase5eMigrationPath)) {
+        const sql = fs.readFileSync(phase5eMigrationPath, 'utf8');
+        await runMigration(pool, '023_complaint_messages_encryption', sql);
+    }
+
     // ── Verificação de cidade ─────────────────────────────────────────────────
 
     await runMigration(pool, 'users_cep', `

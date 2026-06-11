@@ -13,7 +13,14 @@ import '../../core/services/geocoding_service.dart';
 import '../../core/state/category_state.dart';
 
 class CreateComplaintPage extends StatefulWidget {
-  const CreateComplaintPage({super.key});
+  final double? initialLatitude;
+  final double? initialLongitude;
+
+  const CreateComplaintPage({
+    super.key,
+    this.initialLatitude,
+    this.initialLongitude,
+  });
 
   @override
   State<CreateComplaintPage> createState() => _CreateComplaintPageState();
@@ -57,8 +64,13 @@ class _CreateComplaintPageState extends State<CreateComplaintPage> {
   @override
   void initState() {
     super.initState();
+    _latitude = widget.initialLatitude;
+    _longitude = widget.initialLongitude;
     _addressController.addListener(_onAddressChanged);
     _addressFocusNode.addListener(_onAddressFocusChanged);
+    if (_latitude != null && _longitude != null) {
+      _reverseGeocode(_latitude!, _longitude!);
+    }
   }
 
   @override

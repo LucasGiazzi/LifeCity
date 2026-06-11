@@ -65,6 +65,10 @@ class NotificationModel {
         return 'Você completou uma missão!';
       case 'team_invite':
         return '$actor convidou você para uma equipe';
+      case 'complaint_status':
+        return 'Atualização na sua ocorrência';
+      case 'complaint_message':
+        return 'Nova mensagem da prefeitura';
       default:
         return 'Nova notificação';
     }

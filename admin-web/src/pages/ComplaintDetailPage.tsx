@@ -6,6 +6,7 @@ import {
   type ComplaintPhoto,
 } from '../api/admin/complaints'
 import { ComplaintManagementPanel } from '../components/complaints/ComplaintManagementPanel'
+import { ComplaintChatPanel } from '../components/complaints/ComplaintChatPanel'
 import { ComplaintLocationMap } from '../components/complaints/ComplaintLocationMap'
 import { CategoryIcon } from '../catalog/CategoryIcon'
 import { resolveCategoryDisplay } from '../catalog/categoryUtils'
@@ -31,6 +32,7 @@ export function ComplaintDetailPage() {
   const [photos, setPhotos] = useState<ComplaintPhoto[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [activeTab, setActiveTab] = useState<'details' | 'chat'>('details')
 
   useEffect(() => {
     const complaintId = Number(id)
@@ -151,6 +153,30 @@ export function ComplaintDetailPage() {
         </div>
       </section>
 
+      <nav className={styles.tabs} aria-label="Secções da ocorrência">
+        <button
+          type="button"
+          className={activeTab === 'details' ? styles.tabActive : styles.tab}
+          onClick={() => setActiveTab('details')}
+        >
+          Detalhes
+        </button>
+        <button
+          type="button"
+          className={activeTab === 'chat' ? styles.tabActive : styles.tab}
+          onClick={() => setActiveTab('chat')}
+          disabled={!complaint.created_by}
+        >
+          Conversa com cidadão
+        </button>
+      </nav>
+
+      {activeTab === 'chat' ? (
+        <article className={styles.card}>
+          <h2 className={styles.cardTitle}>Conversa com cidadão</h2>
+          <ComplaintChatPanel complaint={complaint} canSend={canEdit} />
+        </article>
+      ) : (
       <div className={styles.grid}>
         <div className={styles.mainCol}>
           <article className={styles.card}>
@@ -314,6 +340,7 @@ export function ComplaintDetailPage() {
           </article>
         </aside>
       </div>
+      )}
     </div>
   )
 }

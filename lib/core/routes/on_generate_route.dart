@@ -19,7 +19,9 @@ import '../../views/drawer/help_page.dart';
 import '../../views/drawer/terms_and_conditions_page.dart';
 import '../../views/entrypoint/entrypoint_ui.dart';
 import '../../views/events/create_event_page.dart';
+import '../../views/complaints/nearby_check_page.dart';
 import '../../views/complaints/create_complaint_page.dart';
+import '../../views/complaints/complaint_tracking_page.dart';
 import '../../views/onboarding/onboarding_page.dart';
 import '../../views/missions/create_team_page.dart';
 import '../../views/missions/team_detail_page.dart';
@@ -65,8 +67,37 @@ class RouteGenerator {
       case AppRoutes.createEvent:
         return CupertinoPageRoute(builder: (_) => const CreateEventPage());
 
+      case AppRoutes.nearbyCheck:
+        return CupertinoPageRoute(builder: (_) => const NearbyCheckPage());
+
       case AppRoutes.createComplaint:
+        final args = settings.arguments;
+        if (args is Map<String, dynamic>) {
+          return CupertinoPageRoute(
+            builder: (_) => CreateComplaintPage(
+              initialLatitude: (args['latitude'] as num?)?.toDouble(),
+              initialLongitude: (args['longitude'] as num?)?.toDouble(),
+            ),
+          );
+        }
         return CupertinoPageRoute(builder: (_) => const CreateComplaintPage());
+
+      case AppRoutes.complaintTrack:
+        final args = settings.arguments;
+        String complaintId;
+        var openChat = false;
+        if (args is Map<String, dynamic>) {
+          complaintId = args['complaintId'] as String;
+          openChat = args['openChat'] as bool? ?? false;
+        } else {
+          complaintId = args as String;
+        }
+        return CupertinoPageRoute(
+          builder: (_) => ComplaintTrackingPage(
+            complaintId: complaintId,
+            openChat: openChat,
+          ),
+        );
 
       case AppRoutes.login:
         return CupertinoPageRoute(builder: (_) => const LoginPage());
