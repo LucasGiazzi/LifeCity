@@ -77,7 +77,6 @@ class _ComplaintSheetState extends State<ComplaintSheet> {
   int _witnessCount = 0;
   bool _userWitnessed = false;
   bool _togglingWitness = false;
-  bool _updatingStatus = false;
   String? _watchLevel;
   bool _watchMuted = false;
   bool _loadingWatch = false;
@@ -276,59 +275,6 @@ class _ComplaintSheetState extends State<ComplaintSheet> {
     setState(() => _togglingLike = false);
   }
 
-  Future<void> _changeStatus(String newStatus) async {
-    if (_updatingStatus) return;
-    setState(() => _updatingStatus = true);
-    final ok = await _complaintService.updateStatus(widget.complaint.id, newStatus);
-    if (!mounted) return;
-    if (ok) setState(() => _status = newStatus);
-    setState(() => _updatingStatus = false);
-  }
-
-  void _openStatusPicker(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      builder: (_) => Container(
-        decoration: BoxDecoration(
-          color: Theme.of(context).scaffoldBackgroundColor,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-        ),
-        padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Center(
-              child: Container(
-                width: 40, height: 4,
-                decoration: BoxDecoration(color: Colors.grey.shade300, borderRadius: BorderRadius.circular(2)),
-              ),
-            ),
-            const SizedBox(height: 16),
-            Text('Atualizar status', style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.w600)),
-            const SizedBox(height: 12),
-            ..._statusMap.entries.map((e) {
-              final key = e.key;
-              final (icon, color, label) = e.value;
-              final selected = _status == key;
-              return ListTile(
-                contentPadding: EdgeInsets.zero,
-                leading: Icon(icon, color: color),
-                title: Text(label, style: GoogleFonts.poppins(fontWeight: selected ? FontWeight.w600 : FontWeight.normal)),
-                trailing: selected ? Icon(AppSymbols.check, color: color) : null,
-                onTap: () {
-                  Navigator.pop(context);
-                  if (!selected) _changeStatus(key);
-                },
-              );
-            }),
-          ],
-        ),
-      ),
-    );
-  }
-
   void _openPhoto(String url) {
     showDialog(
       context: context,
@@ -498,9 +444,6 @@ class _ComplaintSheetState extends State<ComplaintSheet> {
                             _StatusBadge(
                               status: _status,
                               statusMap: _statusMap,
-                              isOwner: isOwner,
-                              updating: _updatingStatus,
-                              onTap: isOwner ? () => _openStatusPicker(context) : null,
                             ),
                             const SizedBox(height: 10),
 
@@ -1491,16 +1434,10 @@ class _CreatorCard extends StatelessWidget {
 class _StatusBadge extends StatelessWidget {
   final String status;
   final Map<String, (IconData, Color, String)> statusMap;
-  final bool isOwner;
-  final bool updating;
-  final VoidCallback? onTap;
 
   const _StatusBadge({
     required this.status,
     required this.statusMap,
-    required this.isOwner,
-    required this.updating,
-    this.onTap,
   });
 
   @override
@@ -1508,30 +1445,20 @@ class _StatusBadge extends StatelessWidget {
     final entry = statusMap[status] ?? statusMap['pending']!;
     final (icon, color, label) = entry;
 
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-        decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.12),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: color.withValues(alpha: 0.4)),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            updating
-                ? SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2, color: color))
-                : Icon(icon, size: 14, color: color),
-            const SizedBox(width: 5),
-            Text(label, style: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.w600, color: color)),
-            if (isOwner) ...[
-              const SizedBox(width: 4),
-              Icon(AppSymbols.expandMore, size: 14, color: color),
-            ],
-          ],
-        ),
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: color.withValues(alpha: 0.4)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 14, color: color),
+          const SizedBox(width: 5),
+          Text(label, style: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.w600, color: color)),
+        ],
       ),
     );
   }

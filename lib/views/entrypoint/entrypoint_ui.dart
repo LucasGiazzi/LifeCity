@@ -7,6 +7,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:provider/provider.dart';
+import '../../core/services/location_service.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_defaults.dart';
 import '../../core/constants/app_symbols.dart';
@@ -296,13 +297,13 @@ class _MapBodyState extends State<_MapBody> {
   LatLng _center = const LatLng(-22.9099, -47.0626);
   LatLng? _userLocation;
   double? _accuracyMeters;
-  StreamSubscription<Position>? _positionStream;
+  StreamSubscription<Position>? _positionSub;
 
   List<ComplaintModel> _complaints = [];
   bool _isLoading = true;
   _MapLayerKind _mapLayer = _MapLayerKind.streets;
 
-  static const double _nearRadiusKm = 5.0;
+  static const double _nearRadiusKm = 3.0;
   static const int _relevanceThreshold = 3;
 
   @override
@@ -314,44 +315,38 @@ class _MapBodyState extends State<_MapBody> {
 
   @override
   void dispose() {
-    _positionStream?.cancel();
+    _positionSub?.cancel();
     super.dispose();
   }
 
-  Future<void> _startLocationTracking() async {
-    LocationPermission permission = await Geolocator.checkPermission();
-    if (permission == LocationPermission.denied) {
-      permission = await Geolocator.requestPermission();
-      if (permission == LocationPermission.denied) return;
+  void _startLocationTracking() {
+    final loc = LocationService.instance;
+
+    final cached = loc.lastKnownPosition;
+    if (cached != null) {
+      final latLng = LatLng(cached.latitude, cached.longitude);
+      setState(() {
+        _userLocation = latLng;
+        _accuracyMeters = cached.accuracy;
+        _center = latLng;
+      });
+      // Defer move until FlutterMap has rendered at least one frame
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _mapController.move(latLng, 15);
+      });
     }
-    if (permission == LocationPermission.deniedForever) return;
 
-    const settings = LocationSettings(
-      accuracy: LocationAccuracy.high,
-      distanceFilter: 5,
-    );
-
-    try {
-      final pos = await Geolocator.getCurrentPosition(
-          locationSettings: settings);
-      if (mounted) {
-        final loc = LatLng(pos.latitude, pos.longitude);
-        setState(() {
-          _userLocation = loc;
-          _accuracyMeters = pos.accuracy;
-          _center = loc;
-        });
-        _mapController.move(loc, 15);
-      }
-    } catch (_) {}
-
-    _positionStream = Geolocator.getPositionStream(locationSettings: settings)
-        .listen((pos) {
-      if (mounted) {
-        setState(() {
-          _userLocation = LatLng(pos.latitude, pos.longitude);
-          _accuracyMeters = pos.accuracy;
-        });
+    _positionSub = loc.positionStream.listen((pos) {
+      if (!mounted) return;
+      final latLng = LatLng(pos.latitude, pos.longitude);
+      final isFirst = _userLocation == null;
+      setState(() {
+        _userLocation = latLng;
+        _accuracyMeters = pos.accuracy;
+      });
+      if (isFirst) {
+        _center = latLng;
+        _mapController.move(latLng, 15);
       }
     });
   }

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:geolocator/geolocator.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import 'package:material_symbols_icons/symbols.dart';
@@ -10,6 +9,7 @@ import '../../core/constants/municipal_complaint_status.dart';
 import '../../core/models/complaint_model.dart';
 import '../../core/routes/app_routes.dart';
 import '../../core/services/complaint_service.dart';
+import '../../core/services/location_service.dart';
 import 'complaint_sheet.dart';
 
 class NearbyCheckPage extends StatefulWidget {
@@ -44,21 +44,9 @@ class _NearbyCheckPageState extends State<NearbyCheckPage> {
     });
 
     try {
-      var permission = await Geolocator.checkPermission();
-      if (permission == LocationPermission.denied) {
-        permission = await Geolocator.requestPermission();
-      }
-
-      Position? position;
-      if (permission == LocationPermission.always ||
-          permission == LocationPermission.whileInUse) {
-        position = await Geolocator.getCurrentPosition(
-          locationSettings: const LocationSettings(
-            accuracy: LocationAccuracy.high,
-            timeLimit: Duration(seconds: 12),
-          ),
-        );
-      }
+      final position = await LocationService.instance.getPosition(
+        timeout: const Duration(seconds: 12),
+      );
 
       _lat = position?.latitude ?? _fallbackLat;
       _lng = position?.longitude ?? _fallbackLng;

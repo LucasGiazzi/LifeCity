@@ -1,9 +1,11 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'core/components/connectivity_banner.dart';
 import 'core/routes/on_generate_route.dart';
+import 'core/services/location_service.dart';
 import 'core/services/push_service.dart';
 import 'core/state/category_state.dart';
 import 'core/state/auth_state.dart';
@@ -19,6 +21,7 @@ void main() async {
   GoogleFonts.config.allowRuntimeFetching = true;
 
   await PushService.instance.initialize(navigatorKey: rootNavigatorKey);
+  unawaited(LocationService.instance.init());
 
   final authState = AuthState();
   await authState.initialize();
@@ -53,6 +56,7 @@ class MyApp extends StatelessWidget {
     final themeProvider = context.watch<ThemeProvider>();
 
     return MaterialApp(
+      debugShowCheckedModeBanner: false,
       navigatorKey: rootNavigatorKey,
       title: 'LifeCity',
       theme: AppTheme.light(accent: themeProvider.accentColor),

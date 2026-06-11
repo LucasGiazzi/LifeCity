@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'package:geolocator/geolocator.dart';
+import '../../core/services/location_service.dart';
 import '../../core/components/app_back_button.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_defaults.dart';
@@ -156,68 +156,23 @@ class _CreateEventPageState extends State<CreateEventPage> {
   }
 
   Future<void> _getCurrentLocation() async {
-    setState(() {
-      _isGettingLocation = true;
-    });
+    setState(() => _isGettingLocation = true);
 
     try {
-      // Verificar permissões
-      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
-      if (!serviceEnabled) {
+      final position = await LocationService.instance.getPosition();
+
+      if (position == null) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text('Serviços de localização estão desabilitados.'),
+              content: Text('Não foi possível obter a localização. Verifique as permissões.'),
               backgroundColor: Colors.orange,
             ),
           );
         }
-        setState(() {
-          _isGettingLocation = false;
-        });
+        setState(() => _isGettingLocation = false);
         return;
       }
-
-      LocationPermission permission = await Geolocator.checkPermission();
-      if (permission == LocationPermission.denied) {
-        permission = await Geolocator.requestPermission();
-        if (permission == LocationPermission.denied) {
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Permissão de localização negada.'),
-                backgroundColor: Colors.orange,
-              ),
-            );
-          }
-          setState(() {
-            _isGettingLocation = false;
-          });
-          return;
-        }
-      }
-
-      if (permission == LocationPermission.deniedForever) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Permissão de localização negada permanentemente. Ative nas configurações.'),
-              backgroundColor: Colors.red,
-            ),
-          );
-        }
-        setState(() {
-          _isGettingLocation = false;
-        });
-        return;
-      }
-
-      // Obter localização atual
-      Position position = await Geolocator.getCurrentPosition(
-        locationSettings: const LocationSettings(
-          accuracy: LocationAccuracy.high,
-        ),
-      );
 
       setState(() {
         _latitude = position.latitude;
@@ -225,7 +180,6 @@ class _CreateEventPageState extends State<CreateEventPage> {
         _isGettingLocation = false;
       });
 
-      // Fazer reverse geocoding para obter o endereço
       await _reverseGeocode(position.latitude, position.longitude);
 
       if (mounted) {
@@ -238,10 +192,7 @@ class _CreateEventPageState extends State<CreateEventPage> {
         );
       }
     } catch (e) {
-      setState(() {
-        _isGettingLocation = false;
-      });
-      debugPrint('Erro ao obter localização: $e');
+      setState(() => _isGettingLocation = false);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(

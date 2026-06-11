@@ -55,7 +55,6 @@ router.get('/:id/photos', complaintController.getPhotos);
 // Rotas que exigem autenticação
 router.post('/create', authenticateToken, upload.array('photos', 10), complaintController.create);
 router.put('/:id', authenticateToken, complaintController.update);
-router.patch('/:id/status', authenticateToken, complaintController.updateStatus);
 router.delete('/:id', authenticateToken, complaintController.delete);
 
 // Watch routes (5b)

@@ -223,15 +223,6 @@ class ComplaintService {
     }
   }
 
-  Future<bool> updateStatus(String complaintId, String status) async {
-    try {
-      await _api.patch('/api/complaints/$complaintId/status', {'status': status});
-      return true;
-    } on ApiException catch (e) {
-      print('Erro ao atualizar status: ${e.message}');
-      return false;
-    }
-  }
 
   Future<bool> deleteComplaint(String complaintId) async {
     try {
