@@ -60,3 +60,4 @@ backend/secrets/
 # Node
 node_modules/
 backend/node_modules/
+backend/secrets/

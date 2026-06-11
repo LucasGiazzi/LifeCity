@@ -1,13 +1,24 @@
 import { createContext } from 'react'
-import type { AdminUser } from '../api/auth'
+import type { AdminUser, PlatformRole, TenantSummary } from '../api/auth'
+
+export type SessionPayload = {
+  accessToken: string
+  refreshToken: string
+  user: AdminUser
+  tenants?: TenantSummary[]
+  activeTenantId?: string | null
+  platformRole?: PlatformRole | null
+}
 
 export type AuthContextValue = {
   accessToken: string | null
   user: AdminUser | null
-  /** Nota: apenas UX; APIs administrativas devem validar nível no servidor. */
+  platformRole: PlatformRole | null
+  /** Gate: platformRole ou membership municipal ativa. */
   canAccessAdmin: boolean
   isLoading: boolean
-  login: (email: string, password: string) => Promise<void>
+  login: (email: string, password: string) => Promise<'platform' | 'admin'>
+  applySession: (data: SessionPayload) => void
   logout: () => void
   setUserFromMe: (user: AdminUser) => void
   updateAccessToken: (token: string) => void

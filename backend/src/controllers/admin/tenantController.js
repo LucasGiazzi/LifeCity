@@ -31,7 +31,11 @@ exports.switchTenant = async (req, res) => {
             return res.status(403).json({ message: 'Sem permissão para este município.' });
         }
 
-        const accessToken = buildAccessToken(req.user.id, membership);
+        const accessToken = buildAccessToken(req.user.id, {
+            tenant: membership,
+            platformRole: req.user.platformRole ?? null,
+            impersonating: req.user.impersonating ?? false,
+        });
 
         res.status(200).json({
             message: 'Tenant alterado com sucesso.',

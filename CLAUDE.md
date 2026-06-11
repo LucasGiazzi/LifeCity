@@ -49,6 +49,24 @@ Nunca confiar no formato recebido do Flutter.
 - **Armadilha:** novas tabelas Fase 5 usam `timestamptz`; `complaint_likes/witnesses.complaint_id` é `integer` mas PK de complaints é `bigint` — novas FKs usar `BIGINT`
 - Contrato: `docs/contracts/phase-5-citizen-communication.md`
 
+### Platform Admin — gestão de clientes (ADR-005, Fase 6)
+- **6a aplicada (jun/2026):** migrations `024`/`025`/`027`; JWT com `platformRole` + `impersonating`; middleware `requirePlatformStaff`/`requirePlatformRole`
+- **6b–6c aplicadas (jun/2026):** migrations `026`; `/api/platform/*` completo (tenants, members, audit, impersonation, billing estimate); convites públicos `GET/POST /api/auth/invite-info|accept-invite`
+- **6d aplicada (jun/2026):** admin-web `/platform/*` (PlatformLayout, wizard 7 passos, AcceptInvitePage, impersonation banner); gate `platformRole || tenants`; API client `admin-web/src/api/platform/*`
+- **6e aplicada (jun/2026):** migration `028`; `cityValidator` multi-tenant; `suspended` enforcement
+- **Staff LifeCity:** tabela `platform_users` + enum `platform_role` (`viewer`|`operator`|`admin`) — **≠** `tenant_members.role`
+- **Staff inicial (seed 027):** `lucasgiazzi@gmail.com`, `bernardo.wiemer333@gmail.com` → `admin`
+- **Gate login painel:** `POST /api/auth/login` com `panel: 'admin'` (admin-web) → 403 se sem `platform_users` **e** sem `tenant_members` ativos; app Flutter omite `panel` (login cidadão inalterado)
+- **APIs:** namespace `/api/platform/*` (CRUD tenants, membros, audit, impersonation, billing); municipal continua `/api/admin/*`
+- **admin-web gate:** `platformRole || tenants.length > 0` (substitui `user_level > 1`); UI `/platform/*` em `PlatformLayout` (accent indigo, badge Platform)
+- **Convites:** conta + `tenant_members` criados no POST invite; token SHA-256 só para **definir senha**; `setupLink` sempre na response (`ADMIN_WEB_BASE_URL`); SMTP best-effort
+- **MVP billing:** `settings.billing` snapshot no create/patch; tiers em `config/platformBillingTiers.js`; `GET /api/platform/billing/estimate`
+- **Impersonation:** `POST /platform/tenants/:id/enter` emite JWT `impersonating:true` + refresh; `requireTenantMember` bypass com revalidação `platform_users`; audit obrigatório (falha bloqueia)
+- **Geo multi-cidade (6e):** `cityValidator.getTenantGeoConfig(pool, cd_mun)` lê `tenants.settings.geo`; fallback env `CITY_*`; migration `028` popula Campinas
+- **Suspended:** `requireTenantMember` bloqueia admin municipal; exceção quando `impersonating=true`
+- **Deprecar:** `users.user_level` como gate — membership explícita (`platform_users` ou `tenant_members`)
+- Contrato: `docs/contracts/phase-6-platform-admin.md`
+
 ### Malhas Campinas — UTB como bairros + demografia (migration 020)
 - Campinas **não tem bairros IBGE** (`malhas.bairros` vazio para `3509502`); fonte oficial: **UTB/UTR PD2018** (`pd2018_utbs.zip`, Prefeitura/DIDC)
 - Staging: schema `malhas_staging` (`utb_raw`, `setores_ibge_csv`); produção: `malhas.bairros` + `malhas.utb_demografia` + `malhas.setores_indicadores`

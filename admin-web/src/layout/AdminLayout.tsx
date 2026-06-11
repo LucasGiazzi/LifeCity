@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import { useAuth } from '../auth/useAuth'
 import { useTenant } from '../auth/useTenant'
 import { fetchModerationPendingCount } from '../api/admin/moderation'
+import { ImpersonationBanner } from '../components/platform/ImpersonationBanner'
 import styles from './AdminLayout.module.css'
 
 function isAdminRole(role: string | undefined) {
@@ -116,6 +117,7 @@ export function AdminLayout() {
         </div>
       </aside>
       <main className={styles.main}>
+        <ImpersonationBanner />
         <Outlet />
       </main>
     </div>

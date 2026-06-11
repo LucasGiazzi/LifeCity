@@ -17,9 +17,11 @@ const authenticateToken = (req, res, next) => {
 
         req.user = {
             id: decoded.userId,
+            platformRole: decoded.platformRole ?? null,
             tenantId: decoded.tenantId,
             cd_mun: decoded.cd_mun,
             tenantRole: decoded.tenantRole,
+            impersonating: decoded.impersonating ?? false,
         };
         next();
     });

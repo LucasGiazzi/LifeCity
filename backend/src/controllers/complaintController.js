@@ -6,6 +6,7 @@ const { checkMissionProgress, checkMissionResolution } = require('../infra/missi
 const watchService = require('../services/complaintWatchService');
 const { computeSlaState } = require('../services/slaService');
 const { isUnderMunicipalManagement } = require('../services/complaintWorkflowService');
+const { isWithinCityBounds } = require('../infra/cityValidator');
 const { citizenStatusLabel, statusChangeDescription } = require('../services/complaintStatusLabels');
 
 const DEFAULT_NEARBY_RADIUS_M = parseInt(process.env.NEARBY_COMPLAINT_RADIUS_M || '200', 10);
@@ -66,7 +67,21 @@ exports.create = async (req, res) => {
             longitude != null ? String(longitude) : null,
         ]);
 
-        const complaintId = result.rows[0].id;
+        const complaint = result.rows[0];
+        const complaintId = complaint.id;
+
+        if (complaint.latitude != null && complaint.longitude != null && complaint.cd_mun) {
+            const cd_mun = complaint.cd_mun?.trim?.() ?? complaint.cd_mun;
+            const withinCity = await isWithinCityBounds(complaint.latitude, complaint.longitude, cd_mun);
+            if (withinCity !== null && withinCity !== complaint.is_within_city) {
+                await pool.query(
+                    'UPDATE complaints SET is_within_city = $1 WHERE id = $2',
+                    [withinCity, complaintId]
+                );
+                complaint.is_within_city = withinCity;
+            }
+            checkUserTrust(pool, created_by);
+        }
 
         // Fazer upload das fotos se houver
         if (photos.length > 0) {

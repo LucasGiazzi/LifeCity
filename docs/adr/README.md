@@ -8,6 +8,7 @@
 | [ADR-002](adr/ADR-002-complaint-categories.md) | Catálogo de categorias de reclamações | Proposto |
 | [ADR-003](adr/ADR-003-gestao-operacional-ocorrencias.md) | Gestão operacional: equipes municipais, workflow e SLA | Proposto |
 | [ADR-004](adr/ADR-004-comunicacao-cidadao-prefeitura.md) | Comunicação cidadão ↔ prefeitura: dedup, push, chat | Proposto |
+| [ADR-005](adr/ADR-005-gestao-plataforma-clientes.md) | Gestão de plataforma: clientes (prefeituras) e staff LifeCity | Proposto |
 
 ## Contratos de implementação
 
@@ -24,6 +25,10 @@
 ### ADR-004 — Comunicação cidadão
 
 5. [Fase 5 — Comunicação cidadão ↔ prefeitura](contracts/phase-5-citizen-communication.md) — sub-fases 5a → 5b → 5c → 5d → 5e
+
+### ADR-005 — Platform Admin
+
+6. [Fase 6 — Platform Admin (gestão de clientes)](contracts/phase-6-platform-admin.md) — sub-fases 6a → 6b → 6c → 6d → 6e
 
 ## Cursor
 
