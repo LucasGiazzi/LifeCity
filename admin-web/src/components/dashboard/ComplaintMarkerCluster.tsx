@@ -56,6 +56,52 @@ function mountComplaintPopup(
 
 type ComplaintMarker = L.Marker & { complaint?: ComplaintPoint }
 
+/** ~4 m — separa marcadores com coordenadas idênticas para permitir clique/spiderfy */
+const DUPLICATE_OFFSET_METERS = 4
+
+function groupByLocation(
+  items: ComplaintPoint[]
+): Map<string, ComplaintPoint[]> {
+  const groups = new Map<string, ComplaintPoint[]>()
+
+  for (const item of items) {
+    const lat = item.latitude!
+    const lng = item.longitude!
+    const key = `${lat.toFixed(7)},${lng.toFixed(7)}`
+    const group = groups.get(key) ?? []
+    group.push(item)
+    groups.set(key, group)
+  }
+
+  return groups
+}
+
+function offsetLatLng(
+  lat: number,
+  lng: number,
+  index: number,
+  total: number
+): [number, number] {
+  if (total <= 1) {
+    return [lat, lng]
+  }
+
+  const angle = (2 * Math.PI * index) / total
+  const latMeters = DUPLICATE_OFFSET_METERS * Math.cos(angle)
+  const lngMeters = DUPLICATE_OFFSET_METERS * Math.sin(angle)
+  const latOffset = latMeters / 111_000
+  const lngOffset =
+    lngMeters / (111_000 * Math.cos((lat * Math.PI) / 180))
+
+  return [lat + latOffset, lng + lngOffset]
+}
+
+function markersShareExactLocation(markers: L.Marker[]): boolean {
+  if (markers.length < 2) return false
+  const first = markers[0].getLatLng()
+  return markers.every((marker) => marker.getLatLng().equals(first))
+}
+
 function dominantCategoryColor(
   markers: ComplaintMarker[],
   resolve: ReturnType<typeof useCategories>['resolve']
@@ -120,48 +166,66 @@ export function ComplaintMarkerCluster({
     const onViewDetails = (id: number) => {
       navigate(`/admin/complaints/${id}`)
     }
-    const markers = complaints.filter(
+    const located = complaints.filter(
       (c) => c.latitude != null && c.longitude != null
     )
+    const locationGroups = groupByLocation(located)
 
     const clusterGroup = L.markerClusterGroup({
       maxClusterRadius: 56,
-      disableClusteringAtZoom: 21,
+      disableClusteringAtZoom: 18,
       spiderfyOnMaxZoom: true,
       showCoverageOnHover: false,
-      zoomToBoundsOnClick: true,
+      zoomToBoundsOnClick: false,
+      spiderfyDistanceMultiplier: 1.6,
       iconCreateFunction: (cluster) =>
         createClusterIcon(cluster, categoriesCtx.resolve),
     })
 
+    clusterGroup.on('clusterclick', (event) => {
+      const cluster = event.layer as L.MarkerCluster
+      const childMarkers = cluster.getAllChildMarkers()
+      if (childMarkers.length > 1 && markersShareExactLocation(childMarkers)) {
+        cluster.spiderfy()
+      }
+    })
+
     const popupRoots = popupRootsRef.current
 
-    for (const complaint of markers) {
-      const catalog = categoriesCtx.resolve(complaint.category)
-      const { iconKey, color } = resolveCategoryDisplay(complaint, catalog)
-      const marker = L.marker([complaint.latitude!, complaint.longitude!], {
-        icon: createCategoryMarkerIcon(iconKey, color),
-      }) as ComplaintMarker
-
-      marker.complaint = complaint
-
-      marker.bindPopup(document.createElement('div'), {
-        className: COMPLAINT_POPUP_CLASS,
-        minWidth: 280,
-        maxWidth: 300,
-      })
-
-      marker.on('popupopen', () => {
-        mountComplaintPopup(
-          marker,
-          complaint,
-          categoriesCtx,
-          popupRoots,
-          onViewDetails
+    for (const [, group] of locationGroups) {
+      group.forEach((complaint, index) => {
+        const catalog = categoriesCtx.resolve(complaint.category)
+        const { iconKey, color } = resolveCategoryDisplay(complaint, catalog)
+        const [lat, lng] = offsetLatLng(
+          complaint.latitude!,
+          complaint.longitude!,
+          index,
+          group.length
         )
-      })
+        const marker = L.marker([lat, lng], {
+          icon: createCategoryMarkerIcon(iconKey, color),
+        }) as ComplaintMarker
 
-      clusterGroup.addLayer(marker)
+        marker.complaint = complaint
+
+        marker.bindPopup(document.createElement('div'), {
+          className: COMPLAINT_POPUP_CLASS,
+          minWidth: 280,
+          maxWidth: 300,
+        })
+
+        marker.on('popupopen', () => {
+          mountComplaintPopup(
+            marker,
+            complaint,
+            categoriesCtx,
+            popupRoots,
+            onViewDetails
+          )
+        })
+
+        clusterGroup.addLayer(marker)
+      })
     }
 
     map.addLayer(clusterGroup)

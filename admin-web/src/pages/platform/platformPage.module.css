@@ -1,0 +1,379 @@
+.page {
+  padding: 24px clamp(20px, 3vw, 36px) 40px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.title {
+  margin: 0 0 4px;
+  font-size: clamp(1.35rem, 2.5vw, 1.75rem);
+  font-weight: 700;
+  color: var(--lc-dark);
+}
+
+.subtitle {
+  margin: 0;
+  font-size: 14px;
+  color: var(--lc-placeholder);
+}
+
+.error {
+  margin: 0 0 12px;
+  color: #dc2626;
+  font-size: 14px;
+}
+
+.muted {
+  color: var(--lc-placeholder);
+  font-size: 14px;
+}
+
+.card {
+  background: #fff;
+  border-radius: 16px;
+  border: 1px solid rgba(13, 40, 24, 0.08);
+  padding: 20px;
+  margin-bottom: 16px;
+}
+
+.cardTitle {
+  margin: 0 0 12px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--lc-dark);
+}
+
+.kpiGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 14px;
+  margin-bottom: 20px;
+}
+
+.kpiCard {
+  background: #fff;
+  border-radius: 14px;
+  border: 1px solid rgba(13, 40, 24, 0.08);
+  padding: 16px;
+}
+
+.kpiLabel {
+  display: block;
+  font-size: 12px;
+  color: var(--lc-placeholder);
+  margin-bottom: 6px;
+}
+
+.kpiValue {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--lc-dark);
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.table th,
+.table td {
+  text-align: left;
+  padding: 10px 12px;
+  border-bottom: 1px solid rgba(13, 40, 24, 0.08);
+}
+
+.table th {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--lc-placeholder);
+}
+
+.btn {
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 8px 14px;
+  border-radius: 10px;
+  border: 1px solid rgba(13, 40, 24, 0.15);
+  background: #fff;
+  cursor: pointer;
+  text-decoration: none;
+  color: inherit;
+  display: inline-flex;
+  align-items: center;
+}
+
+.btn:hover {
+  background: rgba(13, 40, 24, 0.04);
+}
+
+.btnPrimary {
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 8px 14px;
+  border-radius: 10px;
+  border: 1px solid #6366f1;
+  background: #6366f1;
+  color: #fff;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+}
+
+.btnPrimary:hover {
+  opacity: 0.92;
+}
+
+.btnDanger {
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 8px 14px;
+  border-radius: 10px;
+  border: 1px solid rgba(220, 38, 38, 0.35);
+  background: #fff;
+  color: #dc2626;
+  cursor: pointer;
+}
+
+.btnSm {
+  padding: 6px 10px;
+  font-size: 12px;
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 14px;
+}
+
+.label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--lc-placeholder);
+}
+
+.input,
+.select,
+.textarea {
+  font-family: inherit;
+  font-size: 14px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(13, 40, 24, 0.12);
+  background: #fff;
+}
+
+.textarea {
+  min-height: 80px;
+  resize: vertical;
+}
+
+.badge {
+  display: inline-flex;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.badgeTrial {
+  background: rgba(99, 102, 241, 0.12);
+  color: #4f46e5;
+}
+
+.badgeActive {
+  background: rgba(5, 150, 105, 0.12);
+  color: #059669;
+}
+
+.badgeSuspended {
+  background: rgba(220, 38, 38, 0.12);
+  color: #dc2626;
+}
+
+.badgeWarn {
+  background: rgba(217, 119, 6, 0.12);
+  color: #d97706;
+}
+
+.badgeOk {
+  background: rgba(5, 150, 105, 0.12);
+  color: #059669;
+}
+
+.filters {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.pagination {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 16px;
+  font-size: 14px;
+}
+
+.tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 20px;
+  border-bottom: 1px solid rgba(13, 40, 24, 0.08);
+  padding-bottom: 8px;
+}
+
+.tab,
+.tabActive {
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  padding: 8px 14px;
+  border-radius: 10px 10px 0 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  color: var(--lc-placeholder);
+  text-decoration: none;
+}
+
+.tabActive {
+  color: #4f46e5;
+  font-weight: 600;
+  background: rgba(99, 102, 241, 0.08);
+}
+
+.wizardSteps {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 24px;
+}
+
+.wizardStep,
+.wizardStepActive,
+.wizardStepDone {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: rgba(13, 40, 24, 0.06);
+  color: var(--lc-placeholder);
+}
+
+.wizardStepActive {
+  background: #6366f1;
+  color: #fff;
+}
+
+.wizardStepDone {
+  background: rgba(5, 150, 105, 0.15);
+  color: #059669;
+}
+
+.wizardNav {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.radioGroup {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.radioCard {
+  flex: 1;
+  min-width: 100px;
+  padding: 14px;
+  border-radius: 12px;
+  border: 2px solid rgba(13, 40, 24, 0.1);
+  cursor: pointer;
+  text-align: center;
+}
+
+.radioCardSelected {
+  border-color: #6366f1;
+  background: rgba(99, 102, 241, 0.06);
+}
+
+.billingPreview {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 14px;
+  margin-top: 16px;
+}
+
+.billingCard {
+  padding: 16px;
+  border-radius: 12px;
+  background: rgba(99, 102, 241, 0.06);
+  border: 1px solid rgba(99, 102, 241, 0.15);
+}
+
+.billingValue {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #4f46e5;
+}
+
+.warning {
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: #fffbeb;
+  border: 1px solid #fcd34d;
+  color: #92400e;
+  font-size: 13px;
+  margin-bottom: 16px;
+}
+
+.modalBackdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  padding: 20px;
+}
+
+.modal {
+  background: #fff;
+  border-radius: 16px;
+  padding: 24px;
+  max-width: 520px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.modalTitle {
+  margin: 0 0 16px;
+  font-size: 1.1rem;
+  font-weight: 700;
+}

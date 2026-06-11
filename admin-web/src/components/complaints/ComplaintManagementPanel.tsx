@@ -78,7 +78,9 @@ export function ComplaintManagementPanel({
       if (status !== complaint.status) {
         const result = await patchComplaintStatus(complaint.id, {
           status,
-          isInternal: true,
+          // isInternal controla apenas visibilidade na timeline admin/cidadã;
+          // notificações push/in-app seguem watchers (ADR-004 D-004).
+          isInternal: false,
         })
         latest = { ...latest, ...result.complaint }
       }

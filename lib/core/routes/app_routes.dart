@@ -19,6 +19,8 @@ class AppRoutes {
   static const entryPoint = '/entry_point';
   static const createEvent = '/create_event';
   static const createComplaint = '/create_complaint';
+  static const nearbyCheck = '/nearby_check';
+  static const complaintTrack = '/complaint_track';
 
   /* <---- Missions & Teams -----> */
   static const createTeam = '/createTeam';

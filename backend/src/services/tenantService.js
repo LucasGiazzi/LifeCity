@@ -30,21 +30,46 @@ async function getMembership(pool, userId, tenantId) {
     return rows[0] ?? null;
 }
 
-function buildAccessToken(userId, tenant) {
-    const payload = { userId };
+function buildAccessToken(userId, options = {}) {
+    const tenant = options.tenant ?? (options.id ? options : null);
+    const platformRole = options.platformRole ?? null;
+    const impersonating = options.impersonating ?? false;
+
+    const payload = {
+        userId,
+        impersonating: Boolean(impersonating),
+    };
+
+    if (platformRole) {
+        payload.platformRole = platformRole;
+    }
+
     if (tenant) {
         payload.tenantId = tenant.id;
         payload.cd_mun = tenant.cd_mun;
         payload.tenantRole = tenant.role;
     }
+
     return jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '15m' });
 }
 
-function buildRefreshToken(userId, tenantId) {
-    const payload = { userId };
+function buildRefreshToken(userId, options = {}) {
+    const tenantId = typeof options === 'string' || options === null
+        ? options
+        : (options.tenantId ?? null);
+    const impersonating = typeof options === 'object' && options !== null
+        ? (options.impersonating ?? false)
+        : false;
+
+    const payload = {
+        userId,
+        impersonating: Boolean(impersonating),
+    };
+
     if (tenantId) {
         payload.tenantId = tenantId;
     }
+
     return jwt.sign(payload, process.env.JWT_REFRESH_SECRET, { expiresIn: '7d' });
 }
 

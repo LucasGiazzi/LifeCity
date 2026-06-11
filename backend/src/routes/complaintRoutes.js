@@ -3,9 +3,10 @@ const multer = require('multer');
 const router = express.Router();
 
 const complaintController = require('../controllers/complaintController');
+const complaintMessageController = require('../controllers/complaintMessageController');
 const commentController = require('../controllers/commentController');
 const likeController = require('../controllers/likeController');
-const { authenticateToken } = require('../middleware/authMiddleware');
+const { authenticateToken, optionalAuth } = require('../middleware/authMiddleware');
 
 // Configurar multer para upload de múltiplos arquivos
 const upload = multer({
@@ -29,6 +30,9 @@ router.get('/', complaintController.getAll);
 // Rota pública: destaques por engajamento
 router.get('/highlights', complaintController.getHighlights);
 
+// Deduplicação geoespacial (ANTES de rotas /:id*)
+router.get('/nearby', optionalAuth, complaintController.getNearby);
+
 // Rota autenticada: XP e nível do usuário logado
 router.get('/me/xp', authenticateToken, complaintController.getMyXp);
 
@@ -41,14 +45,22 @@ router.get('/users/:userId/xp', complaintController.getUserXp);
 // Rota autenticada: interações de outro usuário (perfil de amigo)
 router.get('/users/:userId/interactions', authenticateToken, complaintController.getUserInteractions);
 
+// Detalhe e timeline citizen (5c)
+router.get('/:id/timeline', optionalAuth, complaintController.getTimeline);
+router.get('/:id', optionalAuth, complaintController.getById);
+
 // Rota pública para buscar fotos de uma reclamação
 router.get('/:id/photos', complaintController.getPhotos);
 
 // Rotas que exigem autenticação
 router.post('/create', authenticateToken, upload.array('photos', 10), complaintController.create);
 router.put('/:id', authenticateToken, complaintController.update);
-router.patch('/:id/status', authenticateToken, complaintController.updateStatus);
 router.delete('/:id', authenticateToken, complaintController.delete);
+
+// Watch routes (5b)
+router.get('/:id/watch', authenticateToken, complaintController.getWatch);
+router.patch('/:id/watch', authenticateToken, complaintController.patchWatch);
+router.delete('/:id/watch', authenticateToken, complaintController.deleteWatch);
 
 // Comment routes
 router.get('/:id/comments', commentController.getComments);
@@ -63,5 +75,9 @@ router.post('/:id/like', authenticateToken, likeController.toggle);
 router.get('/:id/witness', authenticateToken, complaintController.getWitnessStatus);
 router.post('/:id/witness', authenticateToken, complaintController.toggleWitness);
 
-module.exports = router;
+// Chat municipal (5d)
+router.get('/:id/messages', authenticateToken, complaintMessageController.getCitizenMessages);
+router.post('/:id/messages', authenticateToken, complaintMessageController.postCitizenMessage);
+router.patch('/:id/messages/read', authenticateToken, complaintMessageController.patchCitizenRead);
 
+module.exports = router;

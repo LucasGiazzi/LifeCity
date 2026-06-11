@@ -19,11 +19,14 @@ export type TenantSummary = {
   role: string
 }
 
+export type PlatformRole = 'viewer' | 'operator' | 'admin'
+
 export type LoginResponse = {
   message: string
   user: AdminUser & { cpf?: string | null }
   accessToken: string
   refreshToken: string
+  platformRole?: PlatformRole
   tenants?: TenantSummary[]
   activeTenantId?: string
 }
@@ -51,7 +54,7 @@ export async function loginRequest(
   const res = await fetch(`${getApiBase()}/api/auth/login`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email, password }),
+    body: JSON.stringify({ email, password, panel: 'admin' }),
   })
   const data = (await parseJson(res)) as Partial<LoginResponse> & {
     message?: string
@@ -80,4 +83,65 @@ export async function getMeRequest(): Promise<AdminUser> {
   }
   const level = Number(data.user.user_level ?? 1)
   return { ...data.user, user_level: level }
+}
+
+export type InviteInfo = {
+  email: string
+  name: string
+  tenantDisplayName: string
+  expiresAt: string
+}
+
+export type AcceptInviteResponse = {
+  message: string
+  user: AdminUser
+  accessToken: string
+  refreshToken: string
+  tenants: TenantSummary[]
+  activeTenantId?: string | null
+}
+
+export async function fetchInviteInfo(token: string): Promise<InviteInfo> {
+  const res = await fetch(
+    `${getApiBase()}/api/auth/invite-info?token=${encodeURIComponent(token)}`
+  )
+  const data = (await parseJson(res)) as Partial<InviteInfo> & {
+    message?: string
+  }
+  if (!res.ok) {
+    throw new Error(data.message ?? 'Convite inválido ou expirado.')
+  }
+  if (!data.email) {
+    throw new Error('Resposta inválida do servidor.')
+  }
+  return data as InviteInfo
+}
+
+export async function acceptInviteRequest(payload: {
+  token: string
+  password: string
+  name?: string
+}): Promise<AcceptInviteResponse> {
+  const res = await fetch(`${getApiBase()}/api/auth/accept-invite`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  })
+  const data = (await parseJson(res)) as Partial<AcceptInviteResponse> & {
+    message?: string
+  }
+  if (!res.ok) {
+    throw new Error(data.message ?? 'Não foi possível aceitar o convite.')
+  }
+  if (!data.accessToken || !data.refreshToken || !data.user) {
+    throw new Error('Resposta inválida do servidor.')
+  }
+  return {
+    ...data,
+    user: {
+      ...data.user,
+      user_level: Number(data.user.user_level ?? 1),
+    },
+    tenants: data.tenants ?? [],
+  } as AcceptInviteResponse
 }

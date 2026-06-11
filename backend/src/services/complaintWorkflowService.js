@@ -1,6 +1,9 @@
 const { TENANT_COMPLAINT_FILTER } = require('./tenantService');
 const { computeSlaDueAt, computeSlaState, TERMINAL_STATUSES } = require('./slaService');
 const { resolveAutoOpsTeam } = require('./opsRoutingService');
+const watchService = require('./complaintWatchService');
+const pushService = require('./pushNotificationService');
+const supabasePool = require('../infra/supabasePool');
 
 const ALLOWED_TRANSITIONS = {
     pending: ['triaged', 'assigned', 'in_progress', 'cancelled'],
@@ -90,16 +93,25 @@ async function insertEvent(client, {
     return rows[0];
 }
 
-async function notifyCitizen(client, { userId, actorId, complaintId }) {
-    if (!userId) {
-        return;
-    }
+async function notifyWatchersAfterStatusChange(complaintId, fromStatus, toStatus, actorId) {
+    if (fromStatus === toStatus) return;
 
-    await client.query(
-        `INSERT INTO notifications (user_id, actor_id, type, reference_type, reference_id)
-         VALUES ($1, $2, 'complaint_status', 'complaint', $3)`,
-        [userId, actorId, String(complaintId)]
-    ).catch((err) => console.error('[notification:complaint_status]', err.message));
+    try {
+        const pool = await supabasePool.getPgPool();
+        const userIds = await watchService.notifyStatusChange(
+            pool,
+            complaintId,
+            fromStatus,
+            toStatus,
+            actorId
+        );
+        if (userIds.length > 0) {
+            pushService.sendComplaintStatus(complaintId, fromStatus, toStatus, userIds)
+                .catch((err) => console.error('[push:status]', err.message));
+        }
+    } catch (err) {
+        console.error('[watch:status]', err.message);
+    }
 }
 
 async function transitionStatus(pool, {
@@ -189,15 +201,11 @@ async function transitionStatus(pool, {
             });
         }
 
-        if (!isInternal && fromStatus !== toStatus) {
-            await notifyCitizen(client, {
-                userId: complaint.created_by,
-                actorId,
-                complaintId,
-            });
-        }
-
         await client.query('COMMIT');
+
+        if (fromStatus !== toStatus) {
+            notifyWatchersAfterStatusChange(complaintId, fromStatus, toStatus, actorId);
+        }
 
         return {
             complaint: {
@@ -248,9 +256,10 @@ async function assignComplaint(pool, {
             throw err;
         }
 
+        let assignedTeamName = null;
         if (opsTeamId) {
             const { rows: teamRows } = await client.query(
-                `SELECT id FROM public.ops_teams
+                `SELECT id, name FROM public.ops_teams
                  WHERE id = $1::uuid AND tenant_id = $2::uuid AND is_active = true`,
                 [opsTeamId, tenantId]
             );
@@ -259,6 +268,7 @@ async function assignComplaint(pool, {
                 err.statusCode = 400;
                 throw err;
             }
+            assignedTeamName = teamRows[0].name;
         }
 
         if (userId) {
@@ -362,19 +372,35 @@ async function assignComplaint(pool, {
             isInternal,
         });
 
-        if (
-            !isInternal &&
-            nextStatus !== (complaint.status || 'pending') &&
-            nextStatus !== 'assigned'
-        ) {
-            await notifyCitizen(client, {
-                userId: complaint.created_by,
-                actorId,
+        if (teamChanged && nextTeamId) {
+            let teamName = assignedTeamName;
+            if (!teamName) {
+                const { rows: tn } = await client.query(
+                    'SELECT name FROM public.ops_teams WHERE id = $1::uuid',
+                    [nextTeamId]
+                );
+                teamName = tn[0]?.name ?? 'Equipe municipal';
+            }
+            await insertEvent(client, {
                 complaintId,
+                tenantId,
+                actorId,
+                eventType: 'assignment',
+                payload: {
+                    opsTeamId: nextTeamId,
+                    opsTeamName: teamName,
+                    public: true,
+                },
+                isInternal: false,
             });
         }
 
+        const prevStatus = complaint.status || 'pending';
         await client.query('COMMIT');
+
+        if (nextStatus !== prevStatus) {
+            notifyWatchersAfterStatusChange(complaintId, prevStatus, nextStatus, actorId);
+        }
 
         return {
             complaint: {
@@ -421,12 +447,30 @@ async function addNote(pool, {
         isInternal,
     });
 
-    if (!isInternal) {
-        await notifyCitizen(pool, {
-            userId: complaint.created_by,
-            actorId,
-            complaintId,
-        });
+    if (!isInternal && complaint.created_by) {
+        const pool = await supabasePool.getPgPool();
+        const { rows } = await pool.query(
+            `SELECT user_id FROM complaint_watchers
+             WHERE complaint_id = $1::bigint AND muted_at IS NULL AND level = 'full'`,
+            [complaintId]
+        );
+        const userIds = [...new Set(rows.map((r) => r.user_id))];
+        for (const userId of userIds) {
+            await pool.query(
+                `INSERT INTO notifications (user_id, actor_id, type, reference_type, reference_id, payload)
+                 VALUES ($1, $2, 'complaint_status', 'complaint', $3, $4::jsonb)`,
+                [
+                    userId,
+                    actorId,
+                    String(complaintId),
+                    JSON.stringify({
+                        complaint_id: String(complaintId),
+                        title: 'Nova nota da prefeitura',
+                        body: text.trim().slice(0, 120),
+                    }),
+                ]
+            ).catch((err) => console.error('[notification:note]', err.message));
+        }
     }
 
     return { event };

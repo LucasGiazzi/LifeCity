@@ -8,8 +8,10 @@ const {
     buildAccessToken,
     buildRefreshToken,
 } = require('../services/tenantService');
+const { getPlatformMembership } = require('../services/platformService');
 const { isValidCpf } = require('../infra/cpfValidator');
 const { isValidCityCep } = require('../infra/cityValidator');
+const { getInviteInfo, acceptInvite } = require('../services/tenantInvitationService');
 const { sendPasswordResetEmail } = require('../infra/mailer');
 const jwt = require('jsonwebtoken')
 
@@ -35,12 +37,26 @@ exports.login = async (req, res) => {
         }
         
         const userLevel = Number(user[0].user_level ?? 1);
+        const platformMembership = await getPlatformMembership(pool, user[0].id);
+        const platformRole = platformMembership?.role ?? null;
         const tenants = await getActiveTenantsForUser(pool, user[0].id);
+
+        if (req.body.panel === 'admin' && !platformRole && tenants.length === 0) {
+            return res.status(403).json({ message: 'Sem permissão para aceder ao painel.' });
+        }
+
         const activeTenant = tenants.length > 0 ? tenants[0] : null;
         const activeTenantId = activeTenant?.id ?? null;
 
-        const accessToken = buildAccessToken(user[0].id, activeTenant);
-        const refreshToken = buildRefreshToken(user[0].id, activeTenantId);
+        const accessToken = buildAccessToken(user[0].id, {
+            tenant: activeTenant,
+            platformRole,
+            impersonating: false,
+        });
+        const refreshToken = buildRefreshToken(user[0].id, {
+            tenantId: activeTenantId,
+            impersonating: false,
+        });
 
         const response = {
             message: 'Login bem sucedido',
@@ -57,6 +73,10 @@ exports.login = async (req, res) => {
             refreshToken,
             tenants,
         };
+
+        if (platformRole) {
+            response.platformRole = platformRole;
+        }
 
         if (activeTenantId) {
             response.activeTenantId = activeTenantId;
@@ -85,13 +105,39 @@ exports.refreshToken = async (req, res) => {
             return res.status(401).json({ message: 'Token de refresh inv?lido.' });
         }
     
-        let activeTenant = null;
-        if (decoded.tenantId) {
-            const pool = await supabasePool.getPgPool();
-            activeTenant = await getMembership(pool, decoded.userId, decoded.tenantId);
+        const pool = await supabasePool.getPgPool();
+        const platformMembership = await getPlatformMembership(pool, decoded.userId);
+        const platformRole = platformMembership?.role ?? null;
+        const impersonating = decoded.impersonating ?? false;
+
+        if (impersonating && !platformRole) {
+            return res.status(403).json({ message: 'Sessão de impersonation inválida.' });
         }
 
-        const accessToken = buildAccessToken(decoded.userId, activeTenant);
+        let activeTenant = null;
+        if (decoded.tenantId) {
+            if (impersonating) {
+                const { rows } = await pool.query(
+                    'SELECT id, cd_mun FROM tenants WHERE id = $1',
+                    [decoded.tenantId]
+                );
+                if (rows.length > 0) {
+                    activeTenant = {
+                        id: rows[0].id,
+                        cd_mun: rows[0].cd_mun?.trim?.() ?? rows[0].cd_mun,
+                        role: 'admin',
+                    };
+                }
+            } else {
+                activeTenant = await getMembership(pool, decoded.userId, decoded.tenantId);
+            }
+        }
+
+        const accessToken = buildAccessToken(decoded.userId, {
+            tenant: activeTenant,
+            platformRole,
+            impersonating,
+        });
 
         res.status(200).json({ message: 'Token de acesso atualizado', accessToken });
 
@@ -134,7 +180,7 @@ exports.register = async (req, res) => {
             return res.status(400).json({ message: 'CPF inválido.' });
         }
 
-        if (cep && !isValidCityCep(cep)) {
+        if (cep && !(await isValidCityCep(cep))) {
             return res.status(400).json({ message: 'CEP não pertence à cidade atendida pelo LifeCity.' });
         }
 
@@ -489,5 +535,35 @@ exports.resetPassword = async (req, res) => {
     } catch (error) {
         console.error('Erro ao redefinir senha:', error);
         res.status(500).json({ message: 'Erro ao redefinir senha.' });
+    }
+};
+
+exports.inviteInfo = async (req, res) => {
+    const { token } = req.query;
+    if (!token) {
+        return res.status(400).json({ message: 'Token é obrigatório.' });
+    }
+
+    try {
+        const pool = await supabasePool.getPgPool();
+        const info = await getInviteInfo(pool, token);
+        res.status(200).json(info);
+    } catch (error) {
+        res.status(error.status || 500).json({ message: error.message || 'Erro ao validar convite.' });
+    }
+};
+
+exports.acceptInvite = async (req, res) => {
+    const { token, password, name } = req.body ?? {};
+    if (!token || !password) {
+        return res.status(400).json({ message: 'Token e senha são obrigatórios.' });
+    }
+
+    try {
+        const pool = await supabasePool.getPgPool();
+        const result = await acceptInvite(pool, { token, password, name });
+        res.status(200).json(result);
+    } catch (error) {
+        res.status(error.status || 500).json({ message: error.message || 'Erro ao aceitar convite.' });
     }
 };

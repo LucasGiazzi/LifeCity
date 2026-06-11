@@ -53,7 +53,11 @@ app.*.map.json
 
 # Firebase
 /android/app/google-services.json
+/android/app/google-services_old.json
+backend/secrets/
+.mcp.json
 
 # Node
 node_modules/
 backend/node_modules/
+backend/secrets/

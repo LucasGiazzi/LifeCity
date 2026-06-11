@@ -326,6 +326,46 @@ async function runMigrations() {
         await runMigration(pool, '020_malhas_staging_demografia', sql);
     }
 
+    // ── ADR-004 Fase 5a: watchers + device tokens ─────────────────────────────
+
+    const phase5aMigrationPath = path.join(__dirname, '../migrations/021_complaint_watchers_and_tokens.sql');
+    if (fs.existsSync(phase5aMigrationPath)) {
+        const sql = fs.readFileSync(phase5aMigrationPath, 'utf8');
+        await runMigration(pool, '021_complaint_watchers_and_tokens', sql);
+    }
+
+    const phase5dMigrationPath = path.join(__dirname, '../migrations/022_complaint_messages.sql');
+    if (fs.existsSync(phase5dMigrationPath)) {
+        const sql = fs.readFileSync(phase5dMigrationPath, 'utf8');
+        await runMigration(pool, '022_complaint_messages', sql);
+    }
+
+    const phase5eMigrationPath = path.join(__dirname, '../migrations/023_complaint_messages_encryption.sql');
+    if (fs.existsSync(phase5eMigrationPath)) {
+        const sql = fs.readFileSync(phase5eMigrationPath, 'utf8');
+        await runMigration(pool, '023_complaint_messages_encryption', sql);
+    }
+
+    // ── ADR-005 Fase 6a: platform staff + audit ───────────────────────────────
+
+    const phase6aMigrations = [
+        ['024_platform_users', '024_platform_users.sql'],
+        ['025_platform_audit_log', '025_platform_audit_log.sql'],
+        ['026_tenant_invitations', '026_tenant_invitations.sql'],
+        ['027_seed_platform_staff', '027_seed_platform_staff.sql'],
+        ['028_seed_campinas_settings', '028_seed_campinas_settings.sql'],
+    ];
+
+    for (const [name, file] of phase6aMigrations) {
+        const filePath = path.join(__dirname, '../migrations', file);
+        if (fs.existsSync(filePath)) {
+            const sql = fs.readFileSync(filePath, 'utf8');
+            await runMigration(pool, name, sql);
+        } else {
+            console.warn(`[migration] SKIP: ${name} — arquivo não encontrado`);
+        }
+    }
+
     // ── Verificação de cidade ─────────────────────────────────────────────────
 
     await runMigration(pool, 'users_cep', `

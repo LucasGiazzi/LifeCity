@@ -4,6 +4,11 @@ plugins {
     id "dev.flutter.flutter-gradle-plugin"
 }
 
+def googleServicesFile = file('google-services.json')
+if (googleServicesFile.exists()) {
+    apply plugin: 'com.google.gms.google-services'
+}
+
 
 def localProperties = new Properties()
 def localPropertiesFile = rootProject.file('local.properties')
@@ -24,11 +29,11 @@ if (flutterVersionName == null) {
 }
 
 android {
-  namespace "br.com.lucas.lifecity"     // <= seu pacote
+  namespace "com.br.lucas.lifecity"
   compileSdk 36
 
   defaultConfig {
-    applicationId "br.com.lucas.lifecity"  // <= igual ao namespace
+    applicationId "com.br.lucas.lifecity"
     minSdkVersion flutter.minSdkVersion
     targetSdk 36
     versionCode 1               // <= ISSO resolve o "Manifest versionCode not found"
@@ -39,8 +44,13 @@ android {
   compileOptions {
     sourceCompatibility JavaVersion.VERSION_17
     targetCompatibility JavaVersion.VERSION_17
+    coreLibraryDesugaringEnabled true
   }
   kotlinOptions { jvmTarget = "17" }
+}
+
+dependencies {
+  coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.1.4'
 }
 
 

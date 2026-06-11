@@ -19,10 +19,6 @@ export function AccountPage() {
       try {
         const me = await getMeRequest()
         if (cancelled) return
-        if (me.user_level <= 1) {
-          logout()
-          return
-        }
         setProfile(me)
         setUserFromMe(me)
       } catch (e) {

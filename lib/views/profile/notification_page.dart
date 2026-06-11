@@ -5,6 +5,10 @@ import '../../core/components/app_back_button.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_symbols.dart';
 import '../../core/models/notification_model.dart';
+import '../../core/routes/app_routes.dart';
+import '../../views/complaints/complaint_sheet.dart';
+import '../../core/models/complaint_model.dart';
+import '../../core/services/complaint_service.dart';
 import '../../core/services/notification_service.dart';
 
 class NotificationPage extends StatefulWidget {
@@ -57,6 +61,47 @@ class _NotificationPageState extends State<NotificationPage> {
         achievementXp: n.achievementXp,
       );
 
+  Future<void> _onNotificationTap(NotificationModel notification) async {
+    await _markRead(notification);
+
+    if (!mounted) return;
+    if (notification.referenceType == 'complaint' &&
+        notification.referenceId != null &&
+        (notification.type == 'complaint_status' ||
+            notification.type == 'complaint_message' ||
+            notification.type == 'like' ||
+            notification.type == 'comment')) {
+      final service = ComplaintService();
+      final detail = await service.getComplaintById(notification.referenceId!);
+      final c = detail?['complaint'] as Map<String, dynamic>?;
+      if (c != null && mounted) {
+        if (notification.type == 'complaint_status' ||
+            notification.type == 'complaint_message') {
+          Navigator.pushNamed(
+            context,
+            AppRoutes.complaintTrack,
+            arguments: notification.type == 'complaint_message'
+                ? {'complaintId': notification.referenceId!, 'openChat': true}
+                : notification.referenceId,
+          );
+        } else {
+          showComplaintSheet(context, ComplaintModel.fromJson({
+            'id': c['id'],
+            'description': c['description'],
+            'type': c['type'],
+            'status': c['status'],
+            'likes_count': 0,
+            'comments_count': 0,
+            'witness_count': 0,
+            'latitude': c['latitude'],
+            'longitude': c['longitude'],
+            'created_at': c['created_at'],
+          }));
+        }
+      }
+    }
+  }
+
   Future<void> _markRead(NotificationModel notification) async {
     if (notification.isRead) return;
     await _service.markRead(notification.id);
@@ -106,7 +151,7 @@ class _NotificationPageState extends State<NotificationPage> {
                     separatorBuilder: (_, __) => const Divider(height: 1, indent: 72),
                     itemBuilder: (context, i) => _NotificationTile(
                       notification: _notifications[i],
-                      onTap: () => _markRead(_notifications[i]),
+                      onTap: () => _onNotificationTap(_notifications[i]),
                     ),
                   ),
                 ),

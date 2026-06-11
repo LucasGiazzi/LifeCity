@@ -7,6 +7,7 @@ const { requireTenantRole } = require('../middleware/requireTenantRole');
 const tenantController = require('../controllers/admin/tenantController');
 const malhasController = require('../controllers/admin/malhasController');
 const adminComplaintsController = require('../controllers/admin/adminComplaintsController');
+const complaintMessageController = require('../controllers/complaintMessageController');
 const analyticsController = require('../controllers/admin/analyticsController');
 const opsTeamsController = require('../controllers/admin/opsTeamsController');
 const tenantMembersController = require('../controllers/admin/tenantMembersController');
@@ -41,6 +42,13 @@ router.post(
     adminComplaintsController.postNote
 );
 router.get('/complaints/:id/events', adminComplaintsController.getEvents);
+router.get('/complaints/:id/messages', complaintMessageController.getAdminMessages);
+router.post(
+    '/complaints/:id/messages',
+    requireTenantRole('operator'),
+    complaintMessageController.postAdminMessage
+);
+router.patch('/complaints/:id/messages/read', complaintMessageController.patchAdminRead);
 router.get('/complaints/:id', adminComplaintsController.getById);
 
 router.get('/ops-teams', opsTeamsController.list);

@@ -1,6 +1,7 @@
 const supabasePool = require('../infra/supabasePool');
 const jwt = require('jsonwebtoken');
 const { checkAchievements } = require('../infra/achievementChecker');
+const watchService = require('../services/complaintWatchService');
 
 exports.getStatus = async (req, res) => {
     const { id } = req.params;
@@ -87,6 +88,9 @@ exports.toggle = async (req, res) => {
         res.status(200).json({ liked, count: countResult.rows[0].count });
 
         // Side effects após resposta (fire-and-forget)
+        watchService.syncWatchFromLike(pool, id, userId, liked).catch((err) =>
+            console.error('[watch:like]', err.message)
+        );
         if (liked && ownerId) {
             if (ownerId !== userId) {
                 pool.query(

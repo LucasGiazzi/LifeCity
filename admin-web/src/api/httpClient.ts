@@ -57,6 +57,8 @@ export type ApiFetchOptions = {
   body?: unknown
   /** Prefixo /api/admin */
   admin?: boolean
+  /** Prefixo /api/platform */
+  platform?: boolean
   /** Envia Authorization (default: true) */
   auth?: boolean
   headers?: Record<string, string>
@@ -70,11 +72,16 @@ export async function apiFetch<T>(
     method = 'GET',
     body,
     admin = false,
+    platform = false,
     auth = true,
     headers: extraHeaders = {},
   } = options
 
-  const base = admin ? `${getApiBase()}/api/admin` : `${getApiBase()}/api`
+  const base = admin
+    ? `${getApiBase()}/api/admin`
+    : platform
+      ? `${getApiBase()}/api/platform`
+      : `${getApiBase()}/api`
 
   const run = async (accessToken: string | null) => {
     const headers: Record<string, string> = {
@@ -123,11 +130,16 @@ export async function apiFetchBlob(
     method = 'GET',
     body,
     admin = false,
+    platform = false,
     auth = true,
     headers: extraHeaders = {},
   } = options
 
-  const base = admin ? `${getApiBase()}/api/admin` : `${getApiBase()}/api`
+  const base = admin
+    ? `${getApiBase()}/api/admin`
+    : platform
+      ? `${getApiBase()}/api/platform`
+      : `${getApiBase()}/api`
 
   const run = async (accessToken: string | null) => {
     const headers: Record<string, string> = { ...extraHeaders }

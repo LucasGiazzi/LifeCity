@@ -12,6 +12,8 @@ const achievementRoutes = require('./routes/achievementRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
 const missionRoutes = require('./routes/missionRoutes');
 const reportRoutes = require('./routes/reportRoutes');
+const userRoutes = require('./routes/userRoutes');
+const platformRoutes = require('./routes/platformRoutes');
 
 app.use(express.json());
 app.use(cors());
@@ -26,9 +28,11 @@ app.use('/api/complaints', complaintRoutes);
 app.use('/api/friendships', friendshipRoutes);
 app.use('/api/categories', categoriesRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/platform', platformRoutes);
 app.use('/api/achievements', achievementRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/missions', missionRoutes);
 app.use('/api/reports', reportRoutes);
+app.use('/api/users', userRoutes);
 
 module.exports = app;

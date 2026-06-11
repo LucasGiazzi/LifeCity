@@ -1,0 +1,61 @@
+.wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.compact {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.link {
+  margin: 0;
+  font-size: 12px;
+  word-break: break-all;
+  color: var(--lc-placeholder);
+  background: rgba(13, 40, 24, 0.04);
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(13, 40, 24, 0.08);
+}
+
+.copyBtn {
+  align-self: flex-start;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 8px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--lc-platform-accent, #6366f1);
+  background: var(--lc-platform-accent, #6366f1);
+  color: #fff;
+  cursor: pointer;
+}
+
+.copyBtn:hover {
+  opacity: 0.92;
+}
+
+.badgeSent,
+.badgeManual {
+  display: inline-flex;
+  align-items: center;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 999px;
+}
+
+.badgeSent {
+  background: rgba(5, 150, 105, 0.12);
+  color: #059669;
+}
+
+.badgeManual {
+  background: rgba(217, 119, 6, 0.12);
+  color: #d97706;
+}

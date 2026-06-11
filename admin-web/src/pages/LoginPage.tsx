@@ -5,22 +5,25 @@ import styles from './LoginPage.module.css'
 
 export function LoginPage() {
   const navigate = useNavigate()
-  const { login, canAccessAdmin, accessToken, isLoading } = useAuth()
+  const { login, canAccessAdmin, accessToken, platformRole, isLoading } =
+    useAuth()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   if (accessToken && canAccessAdmin) {
-    return <Navigate to="/admin" replace />
+    return (
+      <Navigate to={platformRole ? '/platform' : '/admin'} replace />
+    )
   }
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault()
     setError(null)
     try {
-      await login(email, password)
-      navigate('/admin', { replace: true })
+      const dest = await login(email, password)
+      navigate(dest === 'platform' ? '/platform' : '/admin', { replace: true })
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erro ao iniciar sessão.')
     }
